@@ -19,6 +19,7 @@
     "count": "次",
     "esnode_count": "个",
     "Number of nodes for the cluster to create": "要创建的节点数量",
+    "Number of ES nodes to create": "要创建的 ES 节点数量，请选择奇数个防止脑裂",
     "Volume Size": "存储容量",
     "The volume size for each node": "每个节点的存储容量",
     "Volume Class": "存储类型",

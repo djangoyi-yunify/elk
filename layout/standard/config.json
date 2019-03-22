@@ -71,12 +71,12 @@
                             "type": "integer"
                         },
                         {
-                            "description": "Number of nodes for the cluster to create",
+                            "default": 3,
+                            "description": "Number of ES nodes to create",
                             "key": "count",
                             "label": "Node Count",
-                            "min": 1,
-                            "default": 3,
-                            "range": [1, 3, 5, 7, 9],
+                            "min": 3,
+                            "max": 200,
                             "required": "yes",
                             "type": "integer"
                         },
