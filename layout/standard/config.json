@@ -72,7 +72,7 @@
                         },
                         {
                             "default": 3,
-                            "description": "Number of nodes for the cluster to create",
+                            "description": "Number of ES nodes to create",
                             "key": "count",
                             "label": "Node Count",
                             "min": 3,
@@ -91,6 +91,15 @@
                             ],
                             "required": "yes",
                             "type": "integer"
+                        },
+                        {
+                            "key": "volume_class",
+                            "label": "Volume Class",
+                            "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
+                            "type": "integer",
+                            "default": 0,
+                            "range": [0, 3, 5],
+                            "required": "yes"
                         },
                         {
                             "default": 10,

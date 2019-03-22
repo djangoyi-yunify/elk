@@ -2,7 +2,6 @@
     "name": {{cluster.name}},
     "description": {{cluster.description}},
     "vxnet": {{cluster.vxnet}},
-    "upgrade_policy": ["appv-dd93di9d", "appv-je6ftfs2", "appv-rgbvk8q2", "appv-3dbgkiwr", "appv-0nbffjvb", "appv-uvvpqdue", "appv-peerfx0a", "appv-2jen6hgl"],
     "nodes": [
         {
             "role": "es_node",
@@ -16,7 +15,8 @@
             "cpu": {{cluster.es_node.cpu}},
             "memory": {{cluster.es_node.memory}},
             "volume": {
-                "size": {{cluster.es_node.volume_size}}
+                "size": {{cluster.es_node.volume_size}},
+                "class": {{cluster.es_node.volume_class}}
             },
             "vertical_scaling_policy": "sequential",
             "services": {
