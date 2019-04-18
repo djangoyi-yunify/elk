@@ -1,0 +1,54 @@
+halfMemory=$(free -m | awk '$1=="Mem:" { print rshift($2, 1) }')
+cat > /opt/app/conf/elasticsearch/jvm.options << ES_JVM_EOF
+-Xms${halfMemory}m
+-Xmx${halfMemory}m
+
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+
+-Des.allow_insecure_settings=true
+-Des.networkaddress.cache.ttl=60
+-Des.networkaddress.cache.negative.ttl=10
+
+-XX:+AlwaysPreTouch
+
+-Xss1m
+
+-Djava.awt.headless=true
+
+-Dfile.encoding=UTF-8
+
+-Djna.nosys=true
+
+-XX:-OmitStackTraceInFastThrow
+
+-Dio.netty.noUnsafe=true
+-Dio.netty.noKeySetOptimization=true
+-Dio.netty.recycler.maxCapacityPerThread=0
+
+-Dlog4j.shutdownHookEnabled=false
+-Dlog4j2.disable.jmx=true
+
+{{- if eq (getv "/env/enable_heap_dump" "") "true" }}
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath={{ getv "/env/heap_dump_path" "/data/elasticsearch/dump" }}
+{{- end }}
+
+-XX:ErrorFile=/data/elasticsearch/logs/hs_err_pid%p.log
+
+8:-XX:+PrintGCDetails
+8:-XX:+PrintGCDateStamps
+8:-XX:+PrintTenuringDistribution
+8:-XX:+PrintGCApplicationStoppedTime
+8:-Xloggc:/data/elasticsearch/logs/gc.log
+8:-XX:+UseGCLogFileRotation
+8:-XX:NumberOfGCLogFiles=5
+8:-XX:GCLogFileSize=2m
+
+9-:-Xlog:gc*,gc+age=trace,safepoint:file=/data/elasticsearch/logs/gc.log:utctime,pid,tags:filecount=5,filesize=2m
+9-:-Djava.locale.providers=COMPAT
+
+10-:-XX:UseAVX=2
+ES_JVM_EOF
+

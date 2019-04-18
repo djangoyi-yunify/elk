@@ -1,7 +1,0 @@
-[template]
-src = "kibana.yml.tmpl"
-dest = "/opt/kibana/config/kibana.yml"
-keys = [
-    "/",
-]
-reload_cmd = ""

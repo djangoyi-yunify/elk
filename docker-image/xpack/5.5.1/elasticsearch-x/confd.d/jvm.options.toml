@@ -1,7 +1,0 @@
-[template]
-src = "jvm.options.tmpl"
-dest = "/opt/elasticsearch/config/jvm.options"
-keys = [
-    "/",
-]
-reload_cmd = "/opt/elasticsearch/bin/changeowner.sh"

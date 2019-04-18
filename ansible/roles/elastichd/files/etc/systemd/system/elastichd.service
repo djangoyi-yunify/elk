@@ -1,0 +1,16 @@
+[Unit]
+Description=ElasticHD
+
+[Service]
+Type=simple
+User=elastichd
+Group=svc
+RuntimeDirectory=elastichd
+ExecStart=/opt/elastichd/current/ElasticHD
+StartLimitInterval=30
+StartLimitBurst=3
+Restart=always
+WorkingDirectory=/opt/elastichd/current
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+cat > /opt/app/conf/cerebro/cerebro.conf << CEREBRO_CONF_EOF
+secret = "$(generatePassword)"
+basePath = "/"
+pidfile.path=/var/run/cerebro/cerebro.pid
+rest.history.size = 50 // defaults to 50 if not specified
+data.path = "/data/cerebro/data/cerebro.db"
+
+es = {
+  gzip = true
+}
+
+auth = {
+}
+
+hosts = [{
+  host = "{{ range $i, $ip := getvs "/hosts/es_node/*/ip" }}{{ if eq $i 0 }}http://{{ $ip }}:9200{{ end }}{{ end }}"
+  name = "{{ getv "/cluster/cluster_id" }}"
+  # auth = {
+  #   username = "username"
+  #   password = "secret-password"
+  # }
+}]
+CEREBRO_CONF_EOF
+

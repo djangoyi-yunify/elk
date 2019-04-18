@@ -1,0 +1,16 @@
+[Unit]
+Description=Cerebro
+
+[Service]
+Type=simple
+User=cerebro
+Group=svc
+RuntimeDirectory=cerebro
+ExecStart=/opt/cerebro/current/bin/cerebro "-Dconfig.file=/opt/app/conf/cerebro/cerebro.conf"
+StartLimitInterval=30
+StartLimitBurst=3
+Restart=always
+WorkingDirectory=/opt/cerebro/current
+
+[Install]
+WantedBy=multi-user.target

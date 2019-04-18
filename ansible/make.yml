@@ -1,0 +1,51 @@
+---
+- name: Common setup
+  hosts: all
+  strategy: free
+  roles:
+  - common
+
+- name: setup
+  hosts: all
+  strategy: free
+
+  tasks:
+
+  - include_role:
+      name: "{{ svc_name }}"
+    when: "'elasticsearch' in group_names"
+    loop:
+    - elasticsearch
+    - caddy
+    loop_control:
+      loop_var: svc_name
+
+  - include_role:
+      name: "{{ svc_name }}"
+    when: "'logstash' in group_names"
+    loop:
+    - logstash
+    - caddy
+    loop_control:
+      loop_var: svc_name
+
+  - include_role:
+      name: "{{ svc_name }}"
+    when: "'kibana' in group_names"
+    loop:
+    - kibana
+    - caddy
+    - cerebro
+    - elastichd
+    - elasticsearch-head
+    - elasticsearch-hq
+    - elasticsearch-sql
+    - nginx
+    loop_control:
+      loop_var: svc_name
+
+- name: Cleanup
+  hosts: all
+  strategy: free
+  roles:
+    - cleanup

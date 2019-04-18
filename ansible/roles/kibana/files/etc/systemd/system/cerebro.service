@@ -1,0 +1,19 @@
+[Unit]
+Description=Cerebro
+
+[Service]
+Type=simple
+User=kibana
+Group=svc
+# Load env vars from /etc/default/ and /etc/sysconfig/ if they exist.
+# Prefixing the path with '-' makes it try to load, but if the file doesn't
+# exist, it continues onward.
+RuntimeDirectory=cerebro
+ExecStart=/opt/cerebro/current/bin/cerebro "-Dconfig.file=/opt/app/conf/cerebro/cerebro.conf"
+StartLimitInterval=30
+StartLimitBurst=3
+Restart=always
+WorkingDirectory=/data/cerebro
+
+[Install]
+WantedBy=multi-user.target

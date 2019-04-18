@@ -1,0 +1,15 @@
+[Unit]
+Description=ElasticSearch SQL
+
+[Service]
+Type=simple
+User=elasticsearch-sql
+Group=svc
+ExecStart=/usr/bin/nodejs node-server.js
+StartLimitInterval=30
+StartLimitBurst=3
+Restart=always
+WorkingDirectory=/opt/elasticsearch-sql/current/site-server
+
+[Install]
+WantedBy=multi-user.target

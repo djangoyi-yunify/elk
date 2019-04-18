@@ -1,0 +1,31 @@
+confDir=/data/logstash/config
+lsConf=$confDir/logstash.conf
+lsConfLock=$lsConf.lock
+lsConfSample=/opt/app/conf/logstash/sample.conf
+
+cat > $lsConfSample << LS_MAIN_CONF_EOF
+input {
+  {{ getv "/env/input_conf_content" }}
+}
+
+filter {
+  {{ getv "/env/filter_conf_content" }}
+}
+
+output {
+  elasticsearch {
+    hosts => [ {{ range $i, $ip := getvs "/hosts/es_node/*/ip" }}{{ if $i }}, {{ end }}"http://{{ $ip }}:9200"{{ end }} ]
+    {{ getv "/env/output_es_content" }}
+    # index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+    # user => "elastic"
+    # password => "changeme"
+  }
+
+  {{ getv "/env/output_conf_content" }}
+}
+LS_MAIN_CONF_EOF
+
+if [ ! -f "$lsConf.lock" ]; then
+  mkdir -p $confDir
+  cat $lsConfSample > $lsConf
+fi

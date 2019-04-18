@@ -1,0 +1,9 @@
+---
+- name: Set up source for nodejs
+  shell: |
+    curl -sL https://deb.nodesource.com/setup_11.x | bash -
+
+- name: Install nodejs
+  apt:
+    name: nodejs
+    state: latest

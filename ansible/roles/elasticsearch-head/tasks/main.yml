@@ -1,0 +1,40 @@
+---
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: 02f17922299f65b4ab54b7ac262ddab4acfe4b07
+    parentRole: elasticsearch-head
+  loop:
+    - pkgUrl: "https://github.com/mobz/elasticsearch-head/archive/{{ version }}.tar.gz"
+  loop_control:
+    loop_var: opts
+
+- name: Install nodejs
+  include_role:
+    name: utils
+    tasks_from: install-nodejs
+  vars:
+    nodejsVersion: 10
+
+- name: Install dependencies
+  vars:
+    dir: "/opt/{{ role_name }}/current"
+  # shell: npm install
+  # args:
+  #   chdir: "{{ dir }}"
+  #   creates: "{{ dir }}/node_modules"
+  #   executable: /bin/bash
+  npm:
+    path: "{{ dir }}"
+  become: yes
+  become_user: root
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: elasticsearch-head
+

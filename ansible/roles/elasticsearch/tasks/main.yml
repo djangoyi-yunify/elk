@@ -1,0 +1,108 @@
+---
+- name: Set up confd templates
+  include_role:
+    name: utils
+    tasks_from: setup-confd
+  vars:
+    parentRole: elasticsearch
+
+- name: Install tools
+  apt:
+    name: ['openjdk-8-jre', 'unzip']
+    state: present
+
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: "{{ elkVersion }}"
+    parentRole: elasticsearch
+  loop:
+    - pkgUrl: "https://artifacts.elastic.co/downloads/{{ role_name }}/{{ role_name }}-{{ version }}.tar.gz"
+  loop_control:
+    loop_var: opts
+
+- name: Install plugins
+  include_tasks: install-plugin.yml
+  loop:
+    - name: analysis-icu
+    - name: analysis-ik
+      url: "https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v{{ elkVersion }}/elasticsearch-analysis-ik-{{ elkVersion }}.zip"
+    - name: analysis-kuromoji
+    - name: analysis-phonetic
+    - name: analysis-pinyin
+      url: "https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v{{ elkVersion }}/elasticsearch-analysis-pinyin-{{ elkVersion }}.zip"
+    - name: ingest-attachment
+    - name: ingest-geoip
+    - name: ingest-user-agent
+    - name: mapper-murmur3
+    - name: mapper-size
+    - name: repository-hdfs
+    - name: repository-s3
+    - name: sql
+      url: "https://github.com/NLPchina/elasticsearch-sql/releases/download/{{ elkVersion }}.0/elasticsearch-sql-{{ elkVersion }}.0.zip"
+  loop_control:
+    loop_var: opts
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: elasticsearch
+
+- name: Fix ingest-geoip config
+  vars:
+    src: /opt/elasticsearch/current/plugins/ingest-geoip/config/
+    dest: /opt/app/conf/elasticsearch/ingest-geoip/
+  shell: |
+    cp -r {{ src }} {{ dest }}
+    chown -R root.svc {{ dest }}
+  args:
+    creates: "{{ dest }}"
+
+- name: Prepare dict directory
+  file:
+    path: /opt/elasticsearch/current/plugins/analysis-ik/config/custom
+    owner: root
+    group: svc
+    state: directory
+
+- name: Download jieba dict
+  get_url:
+    url: "https://raw.githubusercontent.com/fxsjy/jieba/v0.39/extra_dict/dict.txt.big"
+    dest: "files/tmp/jieba.dic.txt"
+  delegate_to: localhost
+
+- name: Format jieba dict to fit IKAnalyzer
+  vars:
+    dictFile: files/tmp/jieba.dic
+  shell:
+    awk '{print $1}' files/tmp/jieba.dic.txt > {{ dictFile }}
+  args:
+    creates: "{{ dictFile }}"
+    executable: /bin/bash
+  delegate_to: localhost
+
+- name: Copy jieba dict
+  copy:
+    src: files/tmp/jieba.dic
+    dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/jieba.dic"
+    owner: root
+    group: svc
+    mode: u=rw,go=r
+
+- name: Download dict for IKAnalyzer
+  get_url:
+    url: "https://raw.githubusercontent.com/fxsjy/jieba/v0.39/extra_dict/stop_words.txt"
+    dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/extra_stopword.dic"
+    owner: root
+    group: svc
+
+- name: Fix es-sql version
+  lineinfile:
+    path: /opt/elasticsearch/current/plugins/sql/plugin-descriptor.properties
+    regexp: '^elasticsearch.version='
+    line: "elasticsearch.version={{ elkVersion }}"
+

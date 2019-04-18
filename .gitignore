@@ -1,2 +1,7 @@
-.idea
-layout/standard/elk.tar.gz
+ansible/hosts
+ansible/files/tmp
+ansible/roles/*/files/tmp
+/make.retry
+
+tests/node_modules/
+tests/package-lock.json

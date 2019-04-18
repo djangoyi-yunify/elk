@@ -1,0 +1,30 @@
+---
+- name: Copy SystemD files
+  vars:
+    src: "roles/{{ parentRole }}/files/etc/systemd/system/"
+  copy:
+    src: "{{ src }}"
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  when: src is directory
+
+- name: Copy app files
+  copy:
+    src: "{{ item }}"
+    dest: /opt/
+    owner: root
+    group: svc
+    mode: preserve
+    directory_mode: u=rwx,g=rx,o=
+  when: item is directory
+  with_items:
+    - "roles/{{ role_name }}/files/opt/"
+    - "roles/{{ parentRole }}/files/opt/"
+
+- name: Create symbolic link for ctl.sh - {{ parentRole }}
+  file:
+    src: /opt/app/bin/ctl.sh
+    dest: /usr/local/bin/appctl
+    state: link

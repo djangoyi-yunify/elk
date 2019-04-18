@@ -1,0 +1,9 @@
+cat > /opt/app/conf/logstash/logstash.yml << LS_YML_EOF
+node.name: {{ getv "/cluster/cluster_id" }}-{{ getv "/host/sid" }}
+path.config: /data/logstash/config/logstash.conf
+path.data: /data/logstash/data
+path.queue: /data/logstash/queue
+path.logs: /data/logstash/logs
+path.plugins: [/data/logstash/plugins]
+LS_YML_EOF
+

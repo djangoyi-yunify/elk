@@ -1,0 +1,19 @@
+cat > /opt/app/conf/caddy/Caddyfile << LS_CADDYFILE_EOF
+{{ getv "/host/ip" }}:80 {
+  root /data/elasticsearch
+  gzip
+  browse
+  tls off
+  log /data/caddy/logs/access.log {
+    rotate_age 7
+    rotate_keep 5
+    rotate_size 2
+  }
+
+  upload /dicts {
+    yes_without_tls
+    to "/data/elasticsearch/dicts"
+  }
+}
+LS_CADDYFILE_EOF
+

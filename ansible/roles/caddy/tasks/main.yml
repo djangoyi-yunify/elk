@@ -1,0 +1,55 @@
+---
+- name: Set up variables for Caddy
+  set_fact:
+    go_path: "{{ playbook_dir }}/files/tmp/go"
+    work_dir: files/tmp/go/src/github.com/mholt/caddy/caddy
+
+- name: Install golang
+  shell: |
+    snap install go --classic
+  delegate_to: localhost
+
+- name: Build Caddy with upload plugin
+  environment:
+    GOPATH: "{{ playbook_dir }}/files/tmp/go"
+  shell: |
+    go get github.com/mholt/caddy/caddy
+    go get github.com/caddyserver/builds
+
+    plugin=blitznote.com/src/caddy.upload
+    go get $plugin
+
+    filePath={{ work_dir }}/caddymain/run.go
+    grep -q "$plugin" $filePath || {
+      sed -i '/This is where other plugins get plugged in/a \
+              _ "$plugin"' $filePath
+    }
+
+    cd {{ work_dir }}
+    go run build.go --goos=linux --goarch=amd64
+    mv caddy ../dist/
+    tar czf {{ playbook_dir }}/files/tmp/caddy-latest.tgz -C ../dist $(ls ../dist)
+  args:
+    executable: /bin/bash
+    creates: files/tmp/caddy-latest.tgz
+  delegate_to: localhost
+
+- name: Install Caddy
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: latest
+    parentRole: caddy
+  loop:
+    - creates: caddy
+      extractArgs: []
+  loop_control:
+    loop_var: opts
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: caddy

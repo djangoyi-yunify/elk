@@ -1,0 +1,4 @@
+cat > /opt/elasticsearch-sql/current/_site/init.js << ES_SQL_INIT_JS_EOF
+localStorage.getItem('lasturl') || localStorage.setItem('lasturl', 'http://{{ getv "/host/ip" }}:9200/');
+ES_SQL_INIT_JS_EOF
+

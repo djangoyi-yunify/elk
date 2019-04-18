@@ -1,0 +1,33 @@
+---
+- name: Copy confd toml files
+  copy:
+    src: "roles/{{ role_name }}/files/etc/confd/conf.d/make.sh.toml"
+    dest: /etc/confd/conf.d/make.sh.toml
+    owner: root
+    group: root
+
+- name: Compile tmpl files
+  shell: |
+    srcDir="roles/{{ role_name }}/files/etc/confd/templates"
+    srcFiles="$(ls $srcDir/*.tmpl)"
+    extraSrcDir="roles/{{ parentRole }}/files/etc/confd/templates"
+    [ -d "$extraSrcDir" ] && srcFiles="$srcFiles $(ls $extraSrcDir/*.tmpl)"
+    destDir="roles/{{ parentRole }}/files/tmp/confd/templates"
+    rm -rf $destDir
+    mkdir -p $destDir
+    tmplFile=$destDir/make.sh.tmpl
+    for tmpl in $srcFiles; do
+      cat $tmpl >> $tmplFile
+      echo >> $tmplFile
+    done
+  args:
+    executable: /bin/bash
+  delegate_to: localhost
+
+- name: Copy confd tmpl files
+  copy:
+    src: "roles/{{ parentRole }}/files/tmp/confd/templates/make.sh.tmpl"
+    dest: /etc/confd/templates/make.sh.tmpl
+    owner: root
+    group: root
+

@@ -1,0 +1,15 @@
+[Unit]
+Description=ElasticSearch HQ
+
+[Service]
+Type=simple
+User=elasticsearch-hq
+Group=svc
+ExecStart=/usr/bin/python3 application.py
+StartLimitInterval=30
+StartLimitBurst=3
+Restart=always
+WorkingDirectory=/opt/elasticsearch-hq/current
+
+[Install]
+WantedBy=multi-user.target

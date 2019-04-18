@@ -1,0 +1,59 @@
+---
+- name: Set up variables
+  set_fact:
+    pkgType: "{{ opts.pkgType | default('tgz') }}"
+    extraOpts: "{{ opts.extractArgs | default([ '--strip-components=1' ]) }}"
+    svcHome: "/opt/{{ parentRole }}/{{ opts.version | default(version) }}"
+    svcVersion: "{{ opts.version | default(version) }}"
+    creates: "{{ opts.creates | default('bin') }}"
+
+- name: Install tools
+  apt:
+    name: ['unzip']
+    state: present
+  when: pkgType == 'zip'
+
+- name: Add the Service User - {{ parentRole }}
+  user:
+    name: "{{ parentRole }}"
+    groups: svc
+    shell: /sbin/nologin
+    create_home: no
+    home: "/opt/{{ parentRole }}/current"
+    append: yes
+    comment: "Service User"
+    state: present
+
+- name: Prepare service directories - {{ parentRole }}
+  file:
+    path: "{{ item }}"
+    owner: "{{ parentRole }}"
+    group: svc
+    state: directory
+  with_items:
+    - "{{ svcHome }}"
+
+- name: Download service package - {{ parentRole }}
+  get_url:
+    url: "{{ opts.pkgUrl }}"
+    dest: "files/tmp/{{ parentRole }}-{{ svcVersion }}.{{ pkgType }}"
+  when: opts.pkgUrl is defined
+  delegate_to: localhost
+
+- name: Extract binary - {{ parentRole }}
+  unarchive:
+    src: "files/tmp/{{ parentRole }}-{{ svcVersion }}.{{ pkgType }}"
+    dest: "{{ svcHome }}"
+    creates: "{{ svcHome }}/{{ creates }}"
+    extra_opts: "{{ extraOpts }}"
+    owner: "{{ parentRole }}"
+    group: svc
+
+- name: Create symbolic link - {{ parentRole }}
+  file:
+    src: "{{ svcVersion }}"
+    dest: "/opt/{{ parentRole }}/current"
+    owner: "{{ parentRole }}"
+    group: svc
+    state: link
+

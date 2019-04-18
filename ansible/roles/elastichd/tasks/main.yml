@@ -1,0 +1,23 @@
+---
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: "1.4"
+    parentRole: elastichd
+  loop:
+    - pkgUrl: "https://github.com/360EntSecGroup-Skylar/ElasticHD/releases/download/{{ version }}/elasticHD_linux_amd64.zip"
+      pkgType: zip
+      extractArgs: []
+      creates: ElasticHD
+  loop_control:
+    loop_var: opts
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: elastichd
+

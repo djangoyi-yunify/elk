@@ -1,0 +1,30 @@
+cat > /opt/app/conf/kibana/kibana.yml << KIBANA_YML_EOF
+server.port: 5601
+server.host: {{ getv "/host/ip" }}
+server.basePath: "{{ getv "/env/server.basePath" "" }}"
+server.maxPayloadBytes: 1048576
+server.name: node-{{ getv "/host/node_id" }}
+elasticsearch.url: http://{{ getv "/host/ip" }}:9200
+elasticsearch.preserveHost: true
+kibana.index: ".kibana"
+kibana.defaultAppId: "home"
+elasticsearch.username: "user"
+elasticsearch.password: "pass"
+server.ssl.enabled: false
+server.ssl.certificate: /path/to/your/server.crt
+server.ssl.key: /path/to/your/server.key
+elasticsearch.pingTimeout: 1500
+elasticsearch.requestTimeout: 30000
+elasticsearch.requestHeadersWhitelist: [ authorization ]
+elasticsearch.customHeaders: {}
+elasticsearch.shardTimeout: 30000
+elasticsearch.startupTimeout: 5000
+elasticsearch.logQueries: false
+pid.file: /var/run/kibana/kibana.pid
+logging.dest: /data/kibana/logs/kibana.log
+logging.silent: false
+logging.quiet: false
+logging.verbose: false
+ops.interval: 5000
+KIBANA_YML_EOF
+

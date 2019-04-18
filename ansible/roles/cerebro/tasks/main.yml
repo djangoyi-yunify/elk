@@ -1,0 +1,20 @@
+---
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: 0.7.1
+    parentRole: cerebro
+  loop:
+    - pkgUrl: "https://github.com/lmenezes/cerebro/releases/download/v{{ version }}/cerebro-{{ version }}.tgz"
+  loop_control:
+    loop_var: opts
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: cerebro
+

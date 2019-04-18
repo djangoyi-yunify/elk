@@ -1,0 +1,11 @@
+cat > /opt/elasticsearch/current/plugins/analysis-ik/config/IKAnalyzer.cfg.xml << IK_ANALYZER_CFG_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="ext_dict">custom/jieba.dic;extra_main.dic;extra_single_word_full.dic;extra_single_word_low_freq.dic;preposition.dic;quantifier.dic;suffix.dic;surname.dic</entry>
+  <entry key="ext_stopwords">stopword.dic;extra_stopword.dic;custom/stop_words.dic</entry>
+  <entry key="remote_ext_dict">{{ getv "/env/remote_ext_dict" "" }}</entry>
+  <entry key="remote_ext_stopwords">{{ getv "/env/remote_ext_stopwords" "" }}</entry>
+</properties>
+IK_ANALYZER_CFG_EOF
+

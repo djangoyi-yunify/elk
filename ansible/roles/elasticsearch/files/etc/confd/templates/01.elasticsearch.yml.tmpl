@@ -1,0 +1,67 @@
+{{- $isDataNode := eq $myRole "elasticsearch-data" }}
+{{- $masterNodes := len (ls "/hosts/es_master_node") }}
+{{- $masterQuorum := add (div $masterNodes 2) 1 }}
+{{- $hasDedicatedMaster := gt $masterNodes 0 }}
+{{- $dataNodes := len (ls "/hosts/es_node") }}
+{{- $dataQuorum := add (div $dataNodes 2) 1 }}
+
+cat > /opt/app/conf/elasticsearch/elasticsearch.yml << ES_YML_EOF
+action.destructive_requires_name: {{ getv "/env/action.destructive_requires_name" "true" }}
+bootstrap.memory_lock: true
+
+cluster.name: {{ getv "/cluster/cluster_id" }}
+
+discovery.zen.fd.ping_interval: 1s
+discovery.zen.fd.ping_retries: 3
+discovery.zen.fd.ping_timeout: 30s
+discovery.zen.minimum_master_nodes: {{ if $masterNodes }}{{ $masterQuorum }}{{ else }}{{ $dataQuorum }}{{ end }}
+discovery.zen.no_master_block: {{ getv "/env/discovery.zen.no_master_block" "write" }}
+discovery.zen.ping_timeout: 3s
+{{- $unicastHosts := or (getvs "/hosts/es_master_node/*/ip") (getvs "/hosts/es_node/*/ip") }}
+discovery.zen.ping.unicast.hosts: [ {{ range $unicastHosts }}{{ . }}, {{ end }} ]
+
+{{ if $masterNodes -}}
+gateway.expected_data_nodes: {{ $dataNodes }}
+gateway.expected_master_nodes: {{ $masterNodes }}
+gateway.recover_after_data_nodes: {{ $dataQuorum }}
+gateway.recover_after_master_nodes: {{ $masterQuorum }}
+{{ else -}}
+gateway.expected_nodes: {{ $dataNodes }}
+gateway.recover_after_nodes: {{ $dataQuorum }}
+{{ end -}}
+gateway.recover_after_time: {{ getv "/env/gateway.recover_after_time" "5m" }}
+
+http.cors.allow-origin: "{{ getv "/env/http.cors.allow-origin" "" }}"
+http.cors.enabled: {{ getv "/env/http.cors.enabled" "false" }}
+http.port: 9200
+
+indices.fielddata.cache.size: {{ getv "/env/indices.fielddata.cache.size" "90%" }}
+indices.memory.index_buffer_size: {{ getv "/env/indices.memory.index_buffer_size" "10%" }}
+indices.queries.cache.size: {{ getv "/env/indices.queries.cache.size" "10%" }}
+indices.requests.cache.size: {{ getv "/env/indices.requests.cache.size" "1%" }}
+
+network.host: {{ getv "/host/ip" }}
+
+{{ range gets "/env/node.attr.*" -}}
+{{ base .Key }}={{ .Value }}
+{{ end -}}
+node.data: {{ $isDataNode }}
+node.ingest: {{ $isDataNode }}
+node.master: {{ not (and $isDataNode $hasDedicatedMaster) }}
+node.name: {{ getv "/cluster/cluster_id" }}-{{ getv "/host/sid" }}
+
+path.data: /data/elasticsearch/data
+path.logs: /data/elasticsearch/logs
+path.repo: [ /data/elasticsearch/analysis, {{ getv "/env/path.repo" "/data/elasticsearch/repo" }} ]
+
+repositories.url.allowed_urls: [{{ getv "/env/repositories.url.allowed_urls" "" }}]
+
+{{- range ls "/env" | filter "(inline|stored|file|aggs|search|update)" }}
+{{ base . }}: {{ getv (printf "/env/%s" .) }}
+{{- end }}
+
+{{- range getvs "/env/es_additional_line*" }}
+{{ . }}
+{{- end }}
+ES_YML_EOF
+

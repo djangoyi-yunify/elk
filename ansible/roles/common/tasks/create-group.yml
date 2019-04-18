@@ -1,0 +1,5 @@
+---
+- name: Ensure group "svc" exists
+  group:
+    name: svc
+    state: present

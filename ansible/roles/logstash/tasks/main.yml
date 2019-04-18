@@ -1,0 +1,44 @@
+---
+- name: Set up confd templates
+  include_role:
+    name: utils
+    tasks_from: setup-confd
+  vars:
+    parentRole: logstash
+
+- name: Install tools
+  apt:
+    name: ['openjdk-8-jre', 'unzip']
+    state: latest
+
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: "{{ elkVersion }}"
+    parentRole: logstash
+  loop:
+    - pkgUrl: "https://artifacts.elastic.co/downloads/{{ role_name }}/{{ role_name }}-{{ version }}.tar.gz"
+  loop_control:
+    loop_var: opts
+
+- name: Install plugins
+  include_tasks: install-plugin.yml
+  loop:
+    - name: logstash-input-qingstor
+      version: b4e6fd29ead81db27e06870573add00914b539b1
+      url: https://github.com/yunify/logstash-input-qingstor/archive/b4e6fd29ead81db27e06870573add00914b539b1.zip
+    - name: logstash-output-qingstor
+      version: 0.3.6
+      url: https://github.com/yunify/logstash-output-qingstor/archive/v0.3.6.zip
+  loop_control:
+    loop_var: opts
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: logstash
+

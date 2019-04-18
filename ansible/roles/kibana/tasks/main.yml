@@ -1,0 +1,26 @@
+---
+- name: Set up confd templates
+  include_role:
+    name: utils
+    tasks_from: setup-confd
+  vars:
+    parentRole: kibana
+
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: "{{ elkVersion }}"
+    parentRole: kibana
+  loop:
+    - pkgUrl: "https://artifacts.elastic.co/downloads/kibana/kibana-{{ version }}-linux-x86_64.tar.gz"
+  loop_control:
+    loop_var: opts
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: kibana

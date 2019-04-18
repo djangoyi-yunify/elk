@@ -1,0 +1,43 @@
+---
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: 5.5.1.0
+    parentRole: elasticsearch-sql
+  loop:
+    - pkgUrl: "https://github.com/NLPchina/elasticsearch-sql/archive/{{ version }}.tar.gz"
+      extractArgs: [ '--strip-components=2', '--exclude=assembly', '--exclude=main', '--exclude=test', '--exclude=features.md' ]
+      creates: site-server
+  loop_control:
+    loop_var: opts
+
+- name: Install nodejs
+  include_role:
+    name: utils
+    tasks_from: install-nodejs
+  vars:
+    nodejsVersion: 11
+
+- name: Install express lib
+  npm:
+    name: express
+    path: "/opt/{{ role_name }}/current/site-server"
+  become: yes
+  become_user: root
+
+- name: Enhance with pre-set cluster
+  blockinfile:
+    path: "/opt/{{ role_name }}/current/_site/index.html"
+    insertbefore: "</head>"
+    marker: "    <!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    block: '    <script src="init.js"></script>'
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: elasticsearch-sql
+

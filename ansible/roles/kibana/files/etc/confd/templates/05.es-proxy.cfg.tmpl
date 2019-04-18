@@ -1,0 +1,17 @@
+cat > /etc/nginx/conf.d/es-proxy.conf << ES_PROXY_EOF
+upstream es {
+  {{- range getvs "/hosts/es_node/*/ip" }}
+  server {{ . }}:9200;
+  {{- end }}
+}
+
+server {
+  listen 9200 default_server;
+
+  client_max_body_size {{ getv "/env/nginx_client_max_body_size" }};
+
+  location / {
+    proxy_pass http://es;
+  }
+}
+ES_PROXY_EOF

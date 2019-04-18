@@ -1,0 +1,15 @@
+[Unit]
+Description=ElasticSearch Head
+
+[Service]
+Type=simple
+User=elasticsearch-head
+Group=svc
+ExecStart=/usr/bin/npm run start
+StartLimitInterval=30
+StartLimitBurst=3
+Restart=always
+WorkingDirectory=/opt/elasticsearch-head/current
+
+[Install]
+WantedBy=multi-user.target

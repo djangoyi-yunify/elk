@@ -1,0 +1,35 @@
+---
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: 3.5.0
+    parentRole: elasticsearch-hq
+    creates: applicaion.py
+  loop:
+    - pkgUrl: "https://github.com/ElasticHQ/elasticsearch-HQ/archive/v{{ version }}.tar.gz"
+  loop_control:
+    loop_var: opts
+
+- name: Install tools
+  apt:
+    name: ['python3-pip']
+    state: present
+    update_cache: no
+
+- name: Install dependencies
+  vars:
+    dir: "/opt/{{ role_name }}/current"
+  pip:
+    requirements: "{{ dir }}/requirements.txt"
+  become: yes
+  become_user: "{{ role_name }}"
+
+- name: Copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: elasticsearch-hq
+

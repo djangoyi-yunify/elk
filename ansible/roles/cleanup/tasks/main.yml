@@ -1,0 +1,8 @@
+---
+- name: Clean up
+  shell: |
+    >/var/log/syslog
+    >~/.bash_history && history -c
+  args:
+    executable: /bin/bash
+

@@ -1,0 +1,1106 @@
+{
+	"info": {
+		"_postman_id": "720870ff-1280-43ee-984e-8a5bab07f2a5",
+		"name": "ELK",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Indices",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/_cat/indices?v",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"_cat",
+						"indices"
+					],
+					"query": [
+						{
+							"key": "v",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK Multi-Type Index - Create",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bf5f225f-efc8-46cb-be37-0a8bb5e65ff9",
+						"exec": [
+							"pm.test(\"Create ik multi-type index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.acknowledged).to.be.eql(true);",
+							"    pm.expect(resp.shards_acknowledged).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"mappings\": {\n        \"user\": {\n            \"properties\": {\n                \"name\": {\n                    \"type\": \"string\",\n                    \"analyzer\": \"ik_max_word\",\n                    \"search_analyzer\": \"ik_smart\"\n                }\n            }\n        },\n        \"post\": {\n            \"properties\": {\n                \"content\": {\n                    \"type\": \"text\",\n                    \"analyzer\": \"ik_max_word\",\n                    \"search_analyzer\": \"ik_smart\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-text",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-text"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK Multi-Type Index - Input 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "852507c5-ff98-42d1-89cf-5a2991edf9a1",
+						"exec": [
+							"pm.test(\"Input ik user data to multi-type index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.created).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"青云(QingCloud)\"\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-text/user",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-text",
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK Multi-Type Index - Input 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c7d86e51-b0a0-4f4f-8477-f7c0b2e6eec9",
+						"exec": [
+							"pm.test(\"Input ik post data to multi-type index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.created).to.be.eql(true);",
+							"})",
+							"setTimeout(function() {}, 5000)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"content\": \"青云QingCloud是一家技术领先的企业级全栈云ICT服务商和解决方案提供商. 为企业构建和运维更加可靠,敏捷,高效的 IT 基础资源调度平台,显著降低TCO. 注册领取最高650元优惠券. 秒级计费. 企业级云计算. 服务: 云服务器, 云存储, 云数据库.\"\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-text/post",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-text",
+						"post"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK Multi-Type Index - Q\b\buery",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "270283d9-92b0-41a8-a7de-15562f456a50",
+						"exec": [
+							"pm.test(\"Multi-type search\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.hits.hits.length).to.be.above(0);",
+							"    pm.expect(resp.hits.hits[0].highlight.name[0]).to.include(\"<tag1>青云</tag1>\");",
+							"    pm.expect(resp.hits.hits[1].highlight.content[0]).to.include(\"<tag1>青云</tag1>\");",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\" : { \"multi_match\" : { \"query\": \"青云\", \"fields\": [ \"name\", \"content\" ] } },\n  \"highlight\" : {\n    \"pre_tags\" : [\"<tag1>\", \"<tag2>\"],\n    \"post_tags\" : [\"</tag1>\", \"</tag2>\"],\n    \"fields\" : {\n      \"name\" : {},\n      \"content\" : {}\n    }\n  }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-text/_search",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-text",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK Multi-Type Index - Delete",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f918df42-5c1f-445e-821e-e3468d48b33b",
+						"exec": [
+							"pm.test(\"Delete ik multi-type index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.acknowledged).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"mappings\": {\n        \"user\": {\n            \"properties\": {\n                \"name\": {\n                    \"type\": \"string\",\n                    \"analyzer\": \"ik_max_word\",\n                    \"search_analyzer\": \"ik_smart\"\n                }\n            }\n        },\n        \"post\": {\n            \"properties\": {\n                \"content\": {\n                    \"type\": \"text\",\n                    \"analyzer\": \"ik_max_word\",\n                    \"search_analyzer\": \"ik_smart\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-text",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-text"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CN Synonym Index - Create",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f3185589-1b40-4182-bd72-431ca6a59ec3",
+						"exec": [
+							"pm.test(\"Create Chinese synonym index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.acknowledged).to.be.eql(true);",
+							"    pm.expect(resp.shards_acknowledged).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"analysis\": {\n                \"analyzer\": {\n                    \"by_smart\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_smart\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    },\n                    \"by_max_word\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_max_word\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    }\n                },\n                \"filter\": {\n                    \"by_tfr\": {\n                        \"type\": \"stop\",\n                        \"stopwords\": [\n                            \" \"\n                        ]\n                    },\n                    \"by_sfr\": {\n                        \"type\": \"synonym\",\n                        \"synonyms_path\": \"analysis/synonym.txt\"\n                    }\n                },\n                \"char_filter\": {\n                    \"by_cfr\": {\n                        \"type\": \"mapping\",\n                        \"mappings\": [\n                            \"| => |\"\n                        ]\n                    }\n                }\n            }\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"properties\": {\n                \"content\": {\n                    \"type\": \"text\",\n                    \"index\": \"analyzed\",\n                    \"analyzer\": \"by_max_word\",\n                    \"search_analyzer\": \"by_smart\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/synonym-cn",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"synonym-cn"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CN Synonym - Input 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3c7e81f1-6fcc-435a-8c2b-f653bc9dd97f",
+						"exec": [
+							"pm.test(\"Input 1st sentence to synonym index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.created).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"content\":\"我有一个西红柿\"}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/synonym-cn/doc",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"synonym-cn",
+						"doc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CN Synonym - Input 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "bc4a0cce-2ddb-4c9a-b120-7fb02f21868d",
+						"exec": [
+							"pm.test(\"Input 2nd sentence to synonym index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.created).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"content\":\"番茄炒蛋饭\"}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/synonym-cn/doc",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"synonym-cn",
+						"doc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CN Synonym - Input 3",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "73e4177e-362b-4fbb-aa56-febc9a5fad9e",
+						"exec": [
+							"pm.test(\"Input 3rd sentence to synonym index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.created).to.be.eql(true);",
+							"})",
+							"setTimeout(function() {}, 5000)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"content\":\"西红柿鸡蛋面\"}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/synonym-cn/doc",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"synonym-cn",
+						"doc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CN Synonym - Query",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "baaca8c4-4561-49c0-8454-45a34a53748c",
+						"exec": [
+							"pm.test(\"Chinese custom synonym search\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.hits.total).to.be.eql(3);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query\" : { \"match\" : { \"content\" : \"番茄\" } },\n    \"highlight\" : {\n        \"pre_tags\" : [\"<tag1>\", \"<tag2>\"],\n        \"post_tags\" : [\"</tag1>\", \"</tag2>\"],\n        \"fields\" : {\n            \"content\" : {}\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/synonym-cn/doc/_search",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"synonym-cn",
+						"doc",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "CN Synonym Index - Delete",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0a9742ed-747b-46ef-ba3f-40d3619f5e4a",
+						"exec": [
+							"pm.test(\"Delete Chinese synonym index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.acknowledged).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"analysis\": {\n                \"analyzer\": {\n                    \"by_smart\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_smart\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    },\n                    \"by_max_word\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_max_word\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    }\n                },\n                \"filter\": {\n                    \"by_tfr\": {\n                        \"type\": \"stop\",\n                        \"stopwords\": [\n                            \" \"\n                        ]\n                    },\n                    \"by_sfr\": {\n                        \"type\": \"synonym\",\n                        \"synonyms_path\": \"analysis/synonym.txt\"\n                    }\n                },\n                \"char_filter\": {\n                    \"by_cfr\": {\n                        \"type\": \"mapping\",\n                        \"mappings\": [\n                            \"| => |\"\n                        ]\n                    }\n                }\n            }\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"properties\": {\n                \"content\": {\n                    \"type\": \"text\",\n                    \"index\": \"analyzed\",\n                    \"analyzer\": \"by_max_word\",\n                    \"search_analyzer\": \"by_smart\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/synonym-cn",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"synonym-cn"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logstash Index - Delete",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0a9742ed-747b-46ef-ba3f-40d3619f5e4a",
+						"exec": [
+							"pm.test(\"Delete Logstash index\", function() {",
+							"    let resp = pm.response;",
+							"    pm.expect(resp).to.have.property('code');",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"analysis\": {\n                \"analyzer\": {\n                    \"by_smart\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_smart\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    },\n                    \"by_max_word\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_max_word\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    }\n                },\n                \"filter\": {\n                    \"by_tfr\": {\n                        \"type\": \"stop\",\n                        \"stopwords\": [\n                            \" \"\n                        ]\n                    },\n                    \"by_sfr\": {\n                        \"type\": \"synonym\",\n                        \"synonyms_path\": \"analysis/synonym.txt\"\n                    }\n                },\n                \"char_filter\": {\n                    \"by_cfr\": {\n                        \"type\": \"mapping\",\n                        \"mappings\": [\n                            \"| => |\"\n                        ]\n                    }\n                }\n            }\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"properties\": {\n                \"content\": {\n                    \"type\": \"text\",\n                    \"index\": \"analyzed\",\n                    \"analyzer\": \"by_max_word\",\n                    \"search_analyzer\": \"by_smart\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/logstash-{{today}}",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"logstash-{{today}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logstash - Input",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "23ae3c0d-b0d5-480b-b081-21ce032b445e",
+						"exec": [
+							"pm.test(\"Input to Logstash http input API\", function() {",
+							"    let resp = pm.response;",
+							"    pm.expect(resp).to.have.property(\"code\", 200);",
+							"    pm.expect(resp.text()).to.be.eql(\"ok\");",
+							"})",
+							"setTimeout(function() {}, 10000)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[09-07 15:57:26]: call_es_api [:10105/_cluster/health] Exception [error: [Errno -5] No address associated with hostname], try to sleep 10 second."
+				},
+				"url": {
+					"raw": "{{ls-node-1}}:9700",
+					"host": [
+						"{{ls-node-1}}"
+					],
+					"port": "9700"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logstash - Query",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "79a04dd3-983c-4ea0-a072-e38e711d990a",
+						"exec": [
+							"pm.test(\"English logging query\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.hits.hits.length).to.be.above(0);",
+							"    pm.expect(resp.hits.hits[0].highlight.message[0]).to.include(\"<div>error</div>\");",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query\": {\n        \"match\": {\n            \"message\": \"error\"\n        }\n    },\n    \"highlight\": {\n        \"pre_tags\": [\n            \"<div>\"\n        ],\n        \"post_tags\": [\n            \"</div>\"\n        ],\n        \"fields\": {\n            \"message\": {}\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/logstash-*/_search",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"logstash-*",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logstash Index - Delete",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0a9742ed-747b-46ef-ba3f-40d3619f5e4a",
+						"exec": [
+							"pm.test(\"Delete Logstash index\", function() {",
+							"    let resp = pm.response;",
+							"    pm.expect(resp).to.have.property('code');",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"analysis\": {\n                \"analyzer\": {\n                    \"by_smart\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_smart\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    },\n                    \"by_max_word\": {\n                        \"type\": \"custom\",\n                        \"tokenizer\": \"ik_max_word\",\n                        \"filter\": [\n                            \"by_tfr\",\n                            \"by_sfr\"\n                        ],\n                        \"char_filter\": [\n                            \"by_cfr\"\n                        ]\n                    }\n                },\n                \"filter\": {\n                    \"by_tfr\": {\n                        \"type\": \"stop\",\n                        \"stopwords\": [\n                            \" \"\n                        ]\n                    },\n                    \"by_sfr\": {\n                        \"type\": \"synonym\",\n                        \"synonyms_path\": \"analysis/synonym.txt\"\n                    }\n                },\n                \"char_filter\": {\n                    \"by_cfr\": {\n                        \"type\": \"mapping\",\n                        \"mappings\": [\n                            \"| => |\"\n                        ]\n                    }\n                }\n            }\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"properties\": {\n                \"content\": {\n                    \"type\": \"text\",\n                    \"index\": \"analyzed\",\n                    \"analyzer\": \"by_max_word\",\n                    \"search_analyzer\": \"by_smart\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/logstash-{{today}}",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"logstash-{{today}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MM Index - Create",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"number_of_replicas\": \"0\"\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"_source\": {\n                \"enabled\": true\n            },\n            \"properties\": {\n                \"content\": {\n                    \"search_analyzer\": \"ik_max_word\",\n                    \"analyzer\": \"ik_max_word\",\n                    \"type\": \"text\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-maxword",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-maxword"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MM Index - Input",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0b57ad5c-211e-4c93-ac91-5664c83566bd",
+						"exec": [
+							"pm.test(\"Input into ik maxword index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.created).to.be.eql(true);",
+							"})",
+							"setTimeout(function() {}, 5000)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"content\": \"福布斯亚洲200最佳中小型公司：百度等入选\\n　　新浪科技讯 北京时间9月3日下午消息，据国外媒体报道，《福布斯》杂志网络版昨日评出亚洲200家年营收在10亿美元以下的业绩最好公司，中国大陆及香港地区公司占据主流，其中百度、携程等互联网公司都入选该榜单。\\n　　相比去年，今年的榜单有151个新面孔出现。在所有200家公司中，中国大陆及香港公司有71家，比去年减少7家；印度公司39家，比去年增加19家；越南公司首度入选，为一家名为Vinamilk的牛奶企业。（子云)\\n　　完整榜单如下：\\n　　1. 361度(中国内地)\\n　　2. 三生制药(中国内地)\\n　　3. Aces Electronics(中国台湾)\\n　　4. 龙杰智能卡控股(中国香港)\\n　　5. Advanced Information Technology(泰国)\\n　　6. 味千(中国)控股(中国香港)\\n　　7. 扬智科技(中国台湾)\\n　　8. 联合数字服务(Allied Digital Services，印度)\\n　　9. Amara Raja Batteries(印度)\\n　　10. 安徽中鼎(中国内地)\\n　　11. 安踏(中国内地)\\n　　12. ARA资产管理(新加坡)\\n　　13. Asashi(日本)\\n　　14. Ashiana房产(印度)\\n　　15. 亚信电子(中国台湾)\\n　　16. Attock Cement Pakistan(巴基斯坦)\\n　　17. Austin Engineering(澳大利亚)\\n　　18. 百度(中国内地)\\n　　19. 巴克科技(新加坡)\\n　　20. Banco Products(印度)\\n　　21. Bank Himpunan Saudara 1906(印度尼西亚)\\n　　22. 北京双鹭药业(中国内地)\\n　　23. 奥星制药(中国内地)\\n　　24. Bliss GVS Pharma(印度)\\n　　25. 卓越控股(中国内地)\\n　　26. Bridgetec(韩国)\\n　　27. 凌耀科技(中国台湾)\\n　　28. CBS科技(马来西亚)\\n　　29. Center Laboratories(中国台湾)\\n　　30. 中国自动化集团(中国内地)\\n　　31. 中国汽车系统(中国内地)\\n　　32. 中国动向集团(中国内地)\\n　　33. 中国教育联盟(中国内地)\\n　　34. 西安宝润(中国内地)\\n　　35. 中国安防技术(中国内地)\\n　　36. 中国神威药业集团(中国内地)\\n　　37. 中国兴业太阳能(中国内地)\\n　　38. 重庆宗申发电机(中国内地)\\n　　39. 泛华保险(中国内地)\\n　　40. Coastal Contracts(马来西亚)\\n　　41. Colombo Dockyard(斯里兰卡)\\n　　42. 京信控股(中国内地)\\n　　43. Compact Disc印度公司(印度)\\n　　44. Core Projects & Technologies(印度)\\n　　45. Cowon Systems(韩国)\\n　　46. CSG(澳大利亚)\\n　　47. 携程网(中国内地)\\n　　48. Deep Industries(印度)\\n　　49. Design Studio Furniture Manufacturer(新加坡)\\n　　50. Dhanuka Agritech(印度)\\n　　51. 东华软件(中国内地)\\n　　52. Digitech Systems(韩国)\\n　　53. Dongwoo(韩国)\\n　　54. Dynasty Ceramic(泰国)\\n　　55. E-House(中国)控股(中国香港)\\n　　56. 艾迪森光电股份(中国台湾)\\n　　57. ELGI设备(印度)\\n　　58. Emami(印度)\\n　　59. 力旺电子(中国台湾)\\n　　60. EMW(韩国)\\n　　61. Everonn教育(印度)\\n　　62. Exide Industries(印度)\\n　　63. FDC(印度)\\n　　64. 阜风集团(中国内地)\\n　　65. 福建七匹狼(中国内地)\\n　　66. 福建中福实业(中国内地)\\n　　67. Gabia(韩国)\\n　　68. Glodyne Technoserve(印度)\\n　　69. GSS America Infotech(印度)\\n　　70. 广州御银科技(中国内地)\\n　　71. 国脉科技(中国内地)\\n　　72. Hai-O Enterprise(马来西亚)\\n　　73. Hanla IMS(韩国)\\n　　74. Hartalega控股(马来西亚)\\n　　75. 协成工程(新加坡)\\n　　76. 和美投资(新加坡)\\n　　77. 华兰生物(中国内地)\\n　　78. 恒生科技(中国内地)\\n　　79. Huvitz(韩国)\\n　　80. Hyderabad Industries(印度)\\n　　81. ICSA印度公司(印度)\\n　　82. Indag Rubber(印度)\\n　　83. 系微软件(中国台湾)\\n　　84. ?象?子(中国台湾)\\n　　85. Iress Market Technology(澳大利亚)\\n　　86. 江苏恒瑞医药(中国内地)\\n　　87. 江苏中天科技(中国内地)\\n　　88. Jindal Drilling & Industries(印度)\\n　　89. Jubilant Organosys(印度)\\n　　90. 康美药业(中国内地)\\n　　91. Kaveri Seed(印度)\\n　　92. 金山(中国内地)\\n　　93. KKB Engineering(马来西亚)\\n　　94. KNR Constructions(印度)\\n　　95. Korea United Pharmaceutical(韩国)\\n　　96. Latexx Partners(马来西亚)\\n　　97. 通嘉科技(中国台湾)\\n　　98. Liberty Phosphate(印度)\\n　　99. 小肥羊集团(中国内地)\\n　　100. 丽珠医药集团(中国内地)\\n\"\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-maxword/doc",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-maxword",
+						"doc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MM Index - Query",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9a2c23eb-9272-4393-b84a-dd0517a85b1f",
+						"exec": [
+							"pm.test(\"Chinese ik maxword search\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.hits.hits.length).to.be.above(0);",
+							"    pm.expect(resp.hits.hits[0].highlight.content[0]).to.include(\"<b>中</b>\");",
+							"    pm.expect(resp.hits.hits[0].highlight.content[0]).to.include(\"<b>中国</b>\");",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"query\": {\n\t\t\"match\": { \"content\": \"中国\" }\n\t},\n\t\"highlight\": {\n\t\t\"pre_tags\": [ \"<b>\" ],\n\t\t\"post_tags\": [ \"</b>\" ],\n\t\t\"fields\": {\n\t\t\t\"content\": {}\n\t\t}\n\t}\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-maxword/_search",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-maxword",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MM Index - Delete",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "aad82718-d2a2-4663-8e9a-7bf93cd6d5b7",
+						"exec": [
+							"pm.test(\"Delete ik maxword maxword index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.acknowledged).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"number_of_replicas\": \"0\"\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"_source\": {\n                \"enabled\": true\n            },\n            \"properties\": {\n                \"content\": {\n                    \"search_analyzer\": \"ik_max_word\",\n                    \"analyzer\": \"ik_max_word\",\n                    \"type\": \"text\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-maxword",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-maxword"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MS Index - Create",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "a369f5ad-49da-48d5-b046-7a31bbc085fb",
+						"exec": [
+							"pm.test(\"Create ik maxword-smart index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.acknowledged).to.be.eql(true);",
+							"    pm.expect(resp.shards_acknowledged).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"number_of_replicas\": \"0\"\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"_source\": {\n                \"enabled\": true\n            },\n            \"properties\": {\n                \"content\": {\n                    \"analyzer\": \"ik_max_word\",\n                    \"search_analyzer\": \"ik_smart\",\n                    \"type\": \"text\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-smart",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-smart"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MS Index - Input",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3dad5bb8-7a71-4e68-8b2a-864fb9dbbd8c",
+						"exec": [
+							"pm.test(\"Input into ik maxword-smart index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.created).to.be.eql(true);",
+							"})",
+							"setTimeout(function() {}, 5000)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"content\": \"福布斯亚洲200最佳中小型公司：百度等入选\\n　　新浪科技讯 北京时间9月3日下午消息，据国外媒体报道，《福布斯》杂志网络版昨日评出亚洲200家年营收在10亿美元以下的业绩最好公司，中国大陆及香港地区公司占据主流，其中百度、携程等互联网公司都入选该榜单。\\n　　相比去年，今年的榜单有151个新面孔出现。在所有200家公司中，中国大陆及香港公司有71家，比去年减少7家；印度公司39家，比去年增加19家；越南公司首度入选，为一家名为Vinamilk的牛奶企业。（子云)\\n　　完整榜单如下：\\n　　1. 361度(中国内地)\\n　　2. 三生制药(中国内地)\\n　　3. Aces Electronics(中国台湾)\\n　　4. 龙杰智能卡控股(中国香港)\\n　　5. Advanced Information Technology(泰国)\\n　　6. 味千(中国)控股(中国香港)\\n　　7. 扬智科技(中国台湾)\\n　　8. 联合数字服务(Allied Digital Services，印度)\\n　　9. Amara Raja Batteries(印度)\\n　　10. 安徽中鼎(中国内地)\\n　　11. 安踏(中国内地)\\n　　12. ARA资产管理(新加坡)\\n　　13. Asashi(日本)\\n　　14. Ashiana房产(印度)\\n　　15. 亚信电子(中国台湾)\\n　　16. Attock Cement Pakistan(巴基斯坦)\\n　　17. Austin Engineering(澳大利亚)\\n　　18. 百度(中国内地)\\n　　19. 巴克科技(新加坡)\\n　　20. Banco Products(印度)\\n　　21. Bank Himpunan Saudara 1906(印度尼西亚)\\n　　22. 北京双鹭药业(中国内地)\\n　　23. 奥星制药(中国内地)\\n　　24. Bliss GVS Pharma(印度)\\n　　25. 卓越控股(中国内地)\\n　　26. Bridgetec(韩国)\\n　　27. 凌耀科技(中国台湾)\\n　　28. CBS科技(马来西亚)\\n　　29. Center Laboratories(中国台湾)\\n　　30. 中国自动化集团(中国内地)\\n　　31. 中国汽车系统(中国内地)\\n　　32. 中国动向集团(中国内地)\\n　　33. 中国教育联盟(中国内地)\\n　　34. 西安宝润(中国内地)\\n　　35. 中国安防技术(中国内地)\\n　　36. 中国神威药业集团(中国内地)\\n　　37. 中国兴业太阳能(中国内地)\\n　　38. 重庆宗申发电机(中国内地)\\n　　39. 泛华保险(中国内地)\\n　　40. Coastal Contracts(马来西亚)\\n　　41. Colombo Dockyard(斯里兰卡)\\n　　42. 京信控股(中国内地)\\n　　43. Compact Disc印度公司(印度)\\n　　44. Core Projects & Technologies(印度)\\n　　45. Cowon Systems(韩国)\\n　　46. CSG(澳大利亚)\\n　　47. 携程网(中国内地)\\n　　48. Deep Industries(印度)\\n　　49. Design Studio Furniture Manufacturer(新加坡)\\n　　50. Dhanuka Agritech(印度)\\n　　51. 东华软件(中国内地)\\n　　52. Digitech Systems(韩国)\\n　　53. Dongwoo(韩国)\\n　　54. Dynasty Ceramic(泰国)\\n　　55. E-House(中国)控股(中国香港)\\n　　56. 艾迪森光电股份(中国台湾)\\n　　57. ELGI设备(印度)\\n　　58. Emami(印度)\\n　　59. 力旺电子(中国台湾)\\n　　60. EMW(韩国)\\n　　61. Everonn教育(印度)\\n　　62. Exide Industries(印度)\\n　　63. FDC(印度)\\n　　64. 阜风集团(中国内地)\\n　　65. 福建七匹狼(中国内地)\\n　　66. 福建中福实业(中国内地)\\n　　67. Gabia(韩国)\\n　　68. Glodyne Technoserve(印度)\\n　　69. GSS America Infotech(印度)\\n　　70. 广州御银科技(中国内地)\\n　　71. 国脉科技(中国内地)\\n　　72. Hai-O Enterprise(马来西亚)\\n　　73. Hanla IMS(韩国)\\n　　74. Hartalega控股(马来西亚)\\n　　75. 协成工程(新加坡)\\n　　76. 和美投资(新加坡)\\n　　77. 华兰生物(中国内地)\\n　　78. 恒生科技(中国内地)\\n　　79. Huvitz(韩国)\\n　　80. Hyderabad Industries(印度)\\n　　81. ICSA印度公司(印度)\\n　　82. Indag Rubber(印度)\\n　　83. 系微软件(中国台湾)\\n　　84. ?象?子(中国台湾)\\n　　85. Iress Market Technology(澳大利亚)\\n　　86. 江苏恒瑞医药(中国内地)\\n　　87. 江苏中天科技(中国内地)\\n　　88. Jindal Drilling & Industries(印度)\\n　　89. Jubilant Organosys(印度)\\n　　90. 康美药业(中国内地)\\n　　91. Kaveri Seed(印度)\\n　　92. 金山(中国内地)\\n　　93. KKB Engineering(马来西亚)\\n　　94. KNR Constructions(印度)\\n　　95. Korea United Pharmaceutical(韩国)\\n　　96. Latexx Partners(马来西亚)\\n　　97. 通嘉科技(中国台湾)\\n　　98. Liberty Phosphate(印度)\\n　　99. 小肥羊集团(中国内地)\\n　　100. 丽珠医药集团(中国内地)\\n\"\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-smart/doc",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-smart",
+						"doc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MS Index - Query",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "115ea103-350b-4f2e-a6c6-921e60111f69",
+						"exec": [
+							"pm.test(\"Chinese ik smart search\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.hits.hits.length).to.be.above(0);",
+							"    pm.expect(resp.hits.hits[0].highlight.content[0]).to.include(\"<b>中国</b>\");",
+							"    pm.expect(resp.hits.hits[0].highlight.content[0]).to.not.include(\"<b>中</b>\");",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"query\": {\n\t\t\"match\": { \"content\": \"中国\" }\n\t},\n\t\"highlight\": {\n\t\t\"pre_tags\": [ \"<b>\" ],\n\t\t\"post_tags\": [ \"</b>\" ],\n\t\t\"fields\": {\n\t\t\t\"content\": {}\n\t\t}\n\t}\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-smart/_search",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-smart",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "IK MS Index - Delete",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "9d9604ea-059a-444a-9f7f-b203cfcb36e6",
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "8715aefa-3f5e-4564-963f-f0b27ba68f03",
+						"exec": [
+							"pm.test(\"Delete ik maxword-smart index\", function() {",
+							"    let resp = pm.response.json();",
+							"    pm.expect(resp.acknowledged).to.be.eql(true);",
+							"})"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"settings\": {\n        \"index\": {\n            \"number_of_replicas\": \"0\"\n        }\n    },\n    \"mappings\": {\n        \"doc\": {\n            \"_source\": {\n                \"enabled\": true\n            },\n            \"properties\": {\n                \"content\": {\n                    \"analyzer\": \"ik_max_word\",\n                    \"search_analyzer\": \"ik_smart\",\n                    \"type\": \"text\"\n                }\n            }\n        }\n    }\n}"
+				},
+				"url": {
+					"raw": "{{es-node-1}}:9200/ik-maxword-smart",
+					"host": [
+						"{{es-node-1}}"
+					],
+					"port": "9200",
+					"path": [
+						"ik-maxword-smart"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "7cfef59d-1c93-4678-9580-b4ed4b13e69d",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "d5a2ebaf-7853-4b49-aaad-4bbe9f5358a3",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "8a0983f0-5c03-4566-8399-5acbdb025d00",
+			"key": "es-node-1",
+			"value": "192.168.2.4",
+			"type": "string"
+		},
+		{
+			"id": "f96ac4d5-70e7-496f-a483-b9228d4efeea",
+			"key": "ls-node-1",
+			"value": "192.168.2.5",
+			"type": "string"
+		},
+		{
+			"id": "42ad1cad-9398-436e-bec2-b7fd9d388c43",
+			"key": "today",
+			"value": "2019.04.17",
+			"type": "string"
+		}
+	]
+}

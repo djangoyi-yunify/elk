@@ -1,0 +1,13 @@
+[Unit]
+Description=ElasticSearch Head
+
+[Service]
+EnvironmentFile=-/etc/default/my-application
+ExecStart=/opt/elasticsearch-head/current/
+WorkingDirectory=/opt/elasticsearch-head/current/
+IgnoreSIGPIPE=false
+KillMode=process
+User=kibana
+
+[Install]
+WantedBy=multi-user.target

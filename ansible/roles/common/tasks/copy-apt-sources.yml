@@ -1,0 +1,11 @@
+---
+- name: copy apt sources
+  vars:
+    file: etc/apt/sources.list.d/tsinghua.list
+  copy:
+    src: roles/{{ role_name }}/files/{{ file }}
+    dest: /{{ file }}
+
+- name: update apt
+  apt:
+    update_cache: yes

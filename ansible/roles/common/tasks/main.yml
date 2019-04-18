@@ -1,0 +1,7 @@
+---
+- name: Common setup
+  include_tasks: "{{ item }}.yml"
+  with_items:
+    - install-app-agent
+    - copy-apt-sources
+    - create-group
