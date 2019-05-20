@@ -1,0 +1,43 @@
+{{- $halfMemory := div (getv "/host/memory") 2 }}
+cat > /opt/app/conf/logstash/jvm.options << LS_JVM_EOF
+-Xms{{ $halfMemory }}m
+-Xmx{{ $halfMemory }}m
+
+-XX:+UseParNewGC
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+
+-Duser.language=zh
+-Duser.country=CN
+#-Duser.variant=
+
+#-Djava.io.tmpdir=/tmp/logstash
+
+-Djava.awt.headless=true
+
+-Dfile.encoding=UTF-8
+
+#-Djna.nosys=true
+
+-Djruby.compile.invokedynamic=true
+-Djruby.jit.threshold=0
+
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=/data/logstash/logs/heapdump.hprof
+
+-XX:+PrintGCDetails
+-XX:+PrintGCTimeStamps
+-XX:+PrintGCDateStamps
+-XX:+PrintClassHistogram
+-XX:+PrintTenuringDistribution
+-XX:+PrintGCApplicationStoppedTime
+
+-Xloggc:/data/logstash/logs/gc.log
+-XX:+UseGCLogFileRotation
+-XX:NumberOfGCLogFiles=5
+-XX:GCLogFileSize=2m
+
+-Djava.security.egd=file:/dev/urandom
+LS_JVM_EOF
+

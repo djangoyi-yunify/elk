@@ -1,0 +1,15 @@
+---
+- name: install Keepalived
+  shell: snap install keepalived --classic
+
+- name: copy conf files
+  copy:
+    src: roles/{{ role_name }}/files/{{ item }}/
+    dest: /{{ item }}
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  with_items:
+    - etc/logrotate.d
+    - etc/rsyslog.d
+    - etc/systemd/system

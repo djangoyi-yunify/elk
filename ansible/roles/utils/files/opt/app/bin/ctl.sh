@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
-set -e
+# Default hook functions named starting with _, e.g. _init(), _start(), etc.
+# Specific roles can override the default hooks like:
+#   start() {
+#     _start
+#     ...
+#   }
+#
+# Specific hooks will be executed if exist, otherwise the default ones.
+
+set -eo pipefail
 
 . /opt/app/bin/.env
 
@@ -19,88 +28,91 @@ retry() {
   local tried=0
   local maxAttempts=$1
   local interval=$2
-  local cmd="${@:3}"
+  local stopCode=$3
+  local cmd="${@:4}"
   local retCode=$EC_RETRY_FAILED
   while [ $tried -lt $maxAttempts ]; do
-    sleep $interval
-    tried=$((tried+1))
     $cmd && return 0 || {
       retCode=$?
-      log "'$cmd' ($tried/$maxAttempts) returned an error."
+      if [ "$retCode" = "$stopCode" ]; then
+        log "'$cmd' returned with stop code $stopCode. Stopping ..." && return $retCode
+      fi
     }
+    sleep $interval
+    tried=$((tried+1))
   done
 
   log "'$cmd' still returned errors after $tried attempts. Stopping ..." && return $retCode
+}
+
+execute() {
+  local cmd=$1
+  [ "$(type -t $cmd)" = "function" ] || cmd=_$cmd
+  $cmd ${@:2}
 }
 
 reverseSvcNames() {
   echo $svcNames | tr ' ' '\n' | tac | tr '\n' ' '
 }
 
-rolectl() {
-  systemctl $@
+svcsctl() {
+  local svcName; for svcName in $svcNames; do systemctl $@ $svcName; done
 }
 
-svc() {
-  for svcName in $svcNames; do
-    systemctl $@ $svcName
-  done
-}
-
-preInit() { :; }
-
-postInit() { :; }
-
-init() {
-  preInit
+_init() {
+  mkdir -p /data/appctl/logs
+  chown -R syslog.adm /data/appctl/logs
 
   rm -rf /data/lost+found
-  for svcName in $svcNames; do
-    mkdir -p /data/$svcName/{data,logs}
-    local svcUser=$svcName
-    grep -qE "^$svcName:" /etc/passwd || svcUser=root
-    chown -R $svcUser.svc /data/$svcName
-  done
 
-  svc enable
-
-  postInit
+  svcsctl unmask -q
+  svcsctl enable -q
 }
 
-check() {
-  svc is-active -q
+checkSvcs() {
+  svcsctl is-active -q
 }
 
-preStart() { :; }
-
-postStart() { :; }
-
-start() {
-  preStart
-  svc start
-  postStart
+checkHttpStatus() {
+  local host=${1:-$MY_IP} port=${2:-80}
+  local code="$(curl -s -o /dev/null -w "%{http_code}" $host:$port)"
+  [[ "$code" =~ ^(200|302|401|403|404)$ ]] || {
+    log "HTTP status check failed to $host:$port: code=$code."
+    return 5
+  }
 }
 
-preStop() { :; }
-
-postStop() { :; }
-
-stop() {
-  preStop
-  svcNames="$(reverseSvcNames)" svc stop
-  postStop
+checkHttpStatuses() {
+  local port; for port in $svcPorts; do checkHttpStatus $MY_IP $port; done
 }
 
-restart() {
-  stop && start
+_check() {
+  checkSvcs
+  checkHttpStatuses
 }
 
-update() {
-  svc is-enabled -q || return 0
+_start() {
+  svcsctl is-enabled -q || execute init
+  svcsctl start
+  retry ${svcStartTimeout:-120} 1 0 execute check
+}
 
-  restart
+_stop() {
+  svcNames="$(reverseSvcNames)" svcsctl stop
+}
+
+_restart() {
+  execute stop && execute start
+}
+
+_revive() {
+  execute check || execute restart
+}
+
+_update() {
+  if svcsctl is-enabled -q; then execute restart; fi
 }
 
 . /opt/app/bin/role.sh
 
-$command $args
+execute $command $args

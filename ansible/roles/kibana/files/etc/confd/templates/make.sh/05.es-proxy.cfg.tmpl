@@ -1,0 +1,61 @@
+{{- $maxConn := getv "/env/proxy.max.conn" "2000" }}
+cat > /etc/haproxy/haproxy.cfg << ES_PROXY_EOF
+global
+  log /dev/log  local0
+  log /dev/log  local1 notice
+  chroot /var/lib/haproxy
+  stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+  stats timeout 30s
+  user haproxy
+  group haproxy
+  maxconn {{ $maxConn }}
+  {{- $cores := getv "/host/cpu" }}
+  nbproc {{ $cores }}
+$(for i in {1..{{ $cores }}}; do echo "  cpu-map $i $((i - 1))"; done)
+  daemon
+
+defaults
+  log  global
+  mode  http
+  option  httplog
+  option  dontlognull
+  maxconn {{ $maxConn }}
+  timeout connect {{ getv "/env/proxy.connect.timeout" "5s" }}
+  timeout client  {{ getv "/env/proxy.timeout" "60s" }}
+  timeout server  {{ getv "/env/proxy.timeout" "60s" }}
+  errorfile 404 /etc/haproxy/errors/404.http
+
+frontend elasticsearch
+  bind :9200
+  mode http
+  {{- $bodySize := getv "/env/nginx_client_max_body_size" "20m" }}
+  {{- if not (eq $bodySize 0) }}
+  use_backend error413 if { req.body_size gt $(echo {{ $bodySize }} | awk 'function pp(p){printf "%u",$0*1024^p} /[0-9]$/{print $0}/k$/{pp(1)}/m$/{pp(2)}/[^0-9km]$/{print 0}') }
+  {{- end }}
+  default_backend elasticsearch
+
+backend elasticsearch
+  mode http
+  option forwardfor
+  balance roundrobin
+  option httpclose
+  {{- range getvs "/hosts/es_node*/*/ip" }}
+  server {{ . }}:9200 {{ . }}:9200 check
+  {{- end }}
+
+backend error413
+  errorfile 503 /etc/haproxy/errors/413.http
+
+listen statistics
+  bind {{ getv "/host/ip" }}:1936
+  mode http
+  log global
+  maxconn 10
+  timeout queue	100s
+  stats enable
+  stats hide-version
+  stats refresh 30s
+  stats show-node
+  stats uri  /admin/stats
+ES_PROXY_EOF
+

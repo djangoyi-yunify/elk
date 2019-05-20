@@ -1,0 +1,16 @@
+sysctlConf=/etc/sysctl.conf
+
+sed -i '/# >> Managed by confd./,/# << Managed by confd./d' $sysctlConf
+
+cat >> $sysctlConf << SYSCTL_CONF_EOF
+# >> Managed by confd.
+{{- range gets "/env/appctl.tcp_keepalive*" }}
+net.ipv4.{{ replace (base .Key) "appctl." "" -1 }}={{ .Value }}
+{{- end }}
+vm.max_map_count=262144
+vm.swappiness=1
+# << Managed by confd.
+SYSCTL_CONF_EOF
+
+sysctl -p
+

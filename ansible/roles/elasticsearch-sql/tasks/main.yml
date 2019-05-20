@@ -1,10 +1,10 @@
 ---
-- name: Install service
+- name: install service
   include_role:
     name: utils
     tasks_from: install-pkg
   vars:
-    version: 5.5.1.0
+    version: "{{ elkVersion }}.0"
     parentRole: elasticsearch-sql
   loop:
     - pkgUrl: "https://github.com/NLPchina/elasticsearch-sql/archive/{{ version }}.tar.gz"
@@ -13,28 +13,24 @@
   loop_control:
     loop_var: opts
 
-- name: Install nodejs
+- name: install nodejs
   include_role:
     name: utils
     tasks_from: install-nodejs
-  vars:
-    nodejsVersion: 11
 
-- name: Install express lib
+- name: install express lib
   npm:
     name: express
     path: "/opt/{{ role_name }}/current/site-server"
-  become: yes
-  become_user: root
 
-- name: Enhance with pre-set cluster
+- name: enhance with pre-set cluster
   blockinfile:
     path: "/opt/{{ role_name }}/current/_site/index.html"
     insertbefore: "</head>"
     marker: "    <!-- {mark} ANSIBLE MANAGED BLOCK -->"
     block: '    <script src="init.js"></script>'
 
-- name: Copy configuration files
+- name: copy configuration files
   include_role:
     name: utils
     tasks_from: copy-conf

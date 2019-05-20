@@ -1,17 +1,22 @@
 ---
-- name: Set up confd templates
+- name: set variables
+  set_fact:
+    ls_home: /usr/share/logstash
+
+- name: set up confd templates
   include_role:
     name: utils
     tasks_from: setup-confd
   vars:
     parentRole: logstash
 
-- name: Install tools
+- name: install tools
   apt:
-    name: ['openjdk-8-jre', 'unzip']
-    state: latest
+    name: ['openjdk-8-jre']
+    state: present
+    update_cache: no
 
-- name: Install service
+- name: install service
   include_role:
     name: utils
     tasks_from: install-pkg
@@ -19,7 +24,8 @@
     version: "{{ elkVersion }}"
     parentRole: logstash
   loop:
-    - pkgUrl: "https://artifacts.elastic.co/downloads/{{ role_name }}/{{ role_name }}-{{ version }}.tar.gz"
+    - pkgUrl: "https://artifacts.elastic.co/downloads/logstash/logstash-{{ version }}.tar.gz"
+      svcHome: "{{ ls_home }}"
   loop_control:
     loop_var: opts
 
@@ -35,10 +41,57 @@
   loop_control:
     loop_var: opts
 
-- name: Copy configuration files
+- name: work around file permissions for end user
+  file:
+    path: "{{ ls_home }}/{{ item }}"
+    owner: logstash
+    group: ubuntu
+    mode: 0664
+  loop:
+    - Gemfile
+    - Gemfile.jruby-1.9.lock
+
+- name: work around dir permissions for end user
+  file:
+    path: "{{ ls_home }}/{{ item }}"
+    owner: logstash
+    group: ubuntu
+    recurse: yes
+  loop:
+    - vendor
+
+- name: copy configuration files
   include_role:
     name: utils
     tasks_from: copy-conf
   vars:
     parentRole: logstash
 
+- name: add logstash bin dir to system-wide path
+  copy:
+    dest: /etc/profile.d/logstash-path.sh
+    content: 'PATH=$PATH:{{ ls_home }}/bin'
+
+- name: create sbin under LS home
+  file:
+    path: "{{ ls_home }}/sbin"
+    owner: logstash
+    group: ubuntu
+    state: directory
+
+- name: add logstash sbin scripts
+  copy:
+    dest: "{{ ls_home }}/sbin/restart.sh"
+    mode: 0755
+    owner: logstash
+    group: ubuntu
+    content: |
+      #!/usr/bin/env bash
+      systemctl restart logstash
+
+- name: set up password
+  include_role:
+    name: utils
+    tasks_from: setup-pwd
+  vars:
+    password: "{{ endUserPwd }}"

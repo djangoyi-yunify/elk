@@ -1,0 +1,14 @@
+[Unit]
+Description=LVS and VRRP High Availability Monitor
+After=network-online.target syslog.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/keepalived.pid
+KillMode=process
+ExecStart=/snap/bin/keepalived -D
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

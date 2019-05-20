@@ -12,7 +12,7 @@
     "Volume Size": "Volume Size",
     "Instance Class": "Instance Class",
     "The volume size for each node": "The volume size for each node",
-    "ElasticSearch Node": "ElasticSearch Node",
+    "Elasticsearch Node": "Elasticsearch Node",
     "Kibana Node": "Kibana Node",
     "Logstash Node": "Logstash Node",
     "ES Head Node": "ES Head Node",

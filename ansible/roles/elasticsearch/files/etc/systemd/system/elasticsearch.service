@@ -7,22 +7,17 @@ After=network-online.target
 [Service]
 RuntimeDirectory=elasticsearch
 PrivateTmp=true
-Environment=ES_HOME=/opt/elasticsearch/current
+Environment=ES_JVM_OPTIONS=/opt/app/conf/elasticsearch/jvm.options
 Environment=CONF_DIR=/opt/app/conf/elasticsearch
-Environment=DATA_DIR=/data/elasticsearch/data
-Environment=LOG_DIR=/data/elasticsearch/logs
 Environment=PID_DIR=/var/run/elasticsearch
-EnvironmentFile=/opt/app/conf/elasticsearch/.env
-
 WorkingDirectory=/data/elasticsearch
-
 User=elasticsearch
 Group=svc
 
-ExecStart=/opt/elasticsearch/current/bin/elasticsearch -p ${PID_DIR}/elasticsearch.pid --quiet \
-                                                -Edefault.path.logs=${LOG_DIR} \
-                                                -Edefault.path.data=${DATA_DIR} \
-                                                -Edefault.path.conf=${CONF_DIR}
+ExecStart=/opt/elasticsearch/current/bin/elasticsearch \
+                                                -p ${PID_DIR}/elasticsearch.pid \
+                                                --quiet \
+                                                -Epath.conf=${CONF_DIR}
 
 # StandardOutput is configured to redirect to journalctl since
 # some error messages may be logged in standard output before

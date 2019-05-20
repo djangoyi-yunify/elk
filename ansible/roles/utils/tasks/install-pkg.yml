@@ -1,16 +1,21 @@
 ---
-- name: Set up variables
+- name: set up default svc home var
+  set_fact:
+    defaultSvcHome: "/opt/{{ parentRole }}/{{ opts.version | default(version) }}"
+
+- name: set up variables
   set_fact:
     pkgType: "{{ opts.pkgType | default('tgz') }}"
     extraOpts: "{{ opts.extractArgs | default([ '--strip-components=1' ]) }}"
-    svcHome: "/opt/{{ parentRole }}/{{ opts.version | default(version) }}"
+    svcHome: "{{ opts.svcHome | default(defaultSvcHome) }}"
     svcVersion: "{{ opts.version | default(version) }}"
     creates: "{{ opts.creates | default('bin') }}"
 
-- name: Install tools
+- name: install tools
   apt:
     name: ['unzip']
     state: present
+    update_cache: no
   when: pkgType == 'zip'
 
 - name: Add the Service User - {{ parentRole }}
@@ -19,7 +24,7 @@
     groups: svc
     shell: /sbin/nologin
     create_home: no
-    home: "/opt/{{ parentRole }}/current"
+    home: "{{ svcHome }}"
     append: yes
     comment: "Service User"
     state: present
@@ -49,11 +54,18 @@
     owner: "{{ parentRole }}"
     group: svc
 
-- name: Create symbolic link - {{ parentRole }}
+- name: set permissions - {{ parentRole }}
+  file:
+    path: "{{ svcHome }}"
+    owner: "{{ parentRole }}"
+    group: svc
+    recurse: yes
+
+- name: create symbolic link - {{ parentRole }}
   file:
     src: "{{ svcVersion }}"
     dest: "/opt/{{ parentRole }}/current"
     owner: "{{ parentRole }}"
     group: svc
     state: link
-
+  when: svcHome == defaultSvcHome

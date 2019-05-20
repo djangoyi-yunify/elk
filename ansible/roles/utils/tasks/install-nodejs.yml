@@ -1,9 +1,11 @@
 ---
-- name: Set up source for nodejs
-  shell: |
-    curl -sL https://deb.nodesource.com/setup_11.x | bash -
+- name: set up source for nodejs
+  shell: curl -sL https://deb.nodesource.com/setup_12.x | bash -
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
 
-- name: Install nodejs
+- name: install nodejs
   apt:
-    name: nodejs
-    state: latest
+    name: nodejs=12.*
+    state: present
+    update_cache: yes

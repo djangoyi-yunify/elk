@@ -2,6 +2,10 @@
   "name": {{cluster.name}},
   "description": {{cluster.description}},
   "vxnet": {{cluster.vxnet}},
+  "multi_zone_policy": "round_robin",
+  "advanced_actions": [
+    "scale_horizontal"
+  ],
   "upgrade_policy": [
     "appv-7xf9bg1l",
     "appv-dd93di9d",
@@ -13,12 +17,20 @@
     "appv-peerfx0a",
     "appv-2jen6hgl"
   ],
+  "upgrading_policy": "sequential",
+  "upgrade_roles": {
+    "add": [
+      "es_node_2",
+      "es_node_3",
+      "es_master_node"
+    ]
+  },
   "nodes": [{
     "role": "es_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-q6pd0byf"
+      "image": "img-v2azlbwo"
     },
     "instance_class": {{cluster.es_node.instance_class}},
     "count": {{cluster.es_node.count}},
@@ -26,79 +38,102 @@
     "memory": {{cluster.es_node.memory}},
     "volume": {
       "size": {{cluster.es_node.volume_size}},
+      "mount_point": ["/data", "/data2", "/data3"],
       "class": {{cluster.es_node.volume_class}}
     },
     "vertical_scaling_policy": "sequential",
     "services": {
       "init": {
-        "cmd": "/opt/common/bin/init.sh elasticsearch:v1.2.6"
+        "cmd": "appctl init"
       },
       "start": {
-        "cmd": "/opt/common/bin/start.sh elasticsearch:v1.2.6"
+        "cmd": "appctl start"
       },
       "stop": {
-        "cmd": "/opt/common/bin/stop.sh elasticsearch:v1.2.6"
+        "cmd": "appctl stop"
       },
       "restart": {
-        "cmd": "/opt/common/bin/dorestart.sh elasticsearch:v1.2.6"
+        "cmd": "appctl restart"
       },
       "scale_in": {
-        "nodes_to_execute_on": 1,
-        "pre_check": "/opt/common/bin/destroy.sh",
-        "cmd": "echo 0",
-        "timeout": 86400
+        "pre_check": "appctl preScaleIn",
+        "cmd": "appctl scale in",
+        "timeout": 24000
       },
-      "collect_es_log": {
-        "cmd": "/opt/common/bin/collect_es_log.sh",
-        "type": "custom"
+      "scale_out": {
+        "cmd": "appctl scale out",
+        "timeout": 1800
+      },
+      "destroy": {
+        "allow_force": false,
+        "post_stop_service": false,
+        "cmd": "appctl destroy"
+      },
+      "restart_rolling": {
+        "type": "custom",
+        "cmd": "appctl restart role"
+      },
+      "clear_dump": {
+        "type": "custom",
+        "cmd": "appctl clearDump"
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 1,
+        "timeout": 7500
       }
     },
     "env": {
       "action.destructive_requires_name": {{env.es_node.action.destructive_requires_name}},
-      "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
-      "logstash_node_ip": {{env.es_node.logstash_node_ip}},
+      "appctl.tcp_keepalive_intvl": {{env.es_node.appctl.tcp_keepalive_intvl}},
+      "appctl.tcp_keepalive_probes": {{env.es_node.appctl.tcp_keepalive_probes}},
+      "appctl.tcp_keepalive_time": {{env.es_node.appctl.tcp_keepalive_time}},
+      "appctl.upgrade.enabled": true,
+      "clean_logs_older_than_n_days": {{env.es_node.clean_logs_older_than_n_days}},
       "discovery.zen.no_master_block": {{env.es_node.discovery.zen.no_master_block}},
-      "gateway.recover_after_time": {{env.es_node.gateway.recover_after_time}},
-      "http.cors.enabled": {{env.es_node.http.cors.enabled}},
-      "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
-      "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
-      "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
-      "indices.requests.cache.size": {{env.es_node.indices.requests.cache.size}},
-      "script.inline": {{env.es_node.script.inline}},
-      "script.stored": {{env.es_node.script.stored}},
-      "script.file": {{env.es_node.script.file}},
-      "script.aggs": {{env.es_node.script.aggs}},
-      "script.search": {{env.es_node.script.search}},
-      "script.update": {{env.es_node.script.update}},
-      "remote_ext_dict": {{env.es_node.remote_ext_dict}},
-      "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
-      "path.repo": {{env.es_node.path.repo}},
-      "repositories.url.allowed_urls": {{env.es_node.repositories.url.allowed_urls}},
+      "enable_heap_dump": {{env.es_node.enable_heap_dump}},
       "es_additional_line1": {{env.es_node.es_additional_line1}},
       "es_additional_line2": {{env.es_node.es_additional_line2}},
       "es_additional_line3": {{env.es_node.es_additional_line3}},
+      "gateway.recover_after_time": {{env.es_node.gateway.recover_after_time}},
+      "heap_dump_path": {{env.es_node.heap_dump_path}},
+      "http.cors.enabled": {{env.es_node.http.cors.enabled}},
+      "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
+      "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
+      "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
+      "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
+      "indices.requests.cache.size": {{env.es_node.indices.requests.cache.size}},
       "logger.action.level": {{env.es_node.logger.action.level}},
-      "rootLogger.level": {{env.es_node.rootLogger.level}},
       "logger.deprecation.level": {{env.es_node.logger.deprecation.level}},
       "logger.index_search_slowlog_rolling.level": {{env.es_node.logger.index_search_slowlog_rolling.level}},
       "logger.index_indexing_slowlog.level": {{env.es_node.logger.index_indexing_slowlog.level}},
-      "enable_heap_dump": {{env.es_node.enable_heap_dump}},
-      "heap_dump_path": {{env.es_node.heap_dump_path}},
-      "clean_logs_older_than_n_days": {{env.es_node.clean_logs_older_than_n_days}}
+      "node.attr.data": {{env.es_node.node.attr.data}},
+      "path.repo": {{env.es_node.path.repo}},
+      "repositories.url.allowed_urls": {{env.es_node.repositories.url.allowed_urls}},
+      "reindex.remote.whitelist": {{env.es_node.reindex.remote.whitelist}},
+      "remote_ext_dict": {{env.es_node.remote_ext_dict}},
+      "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
+      "rootLogger.level": {{env.es_node.rootLogger.level}},
+      "script.aggs": {{env.es_node.script.aggs}},
+      "script.inline": {{env.es_node.script.inline}},
+      "script.file": {{env.es_node.script.file}},
+      "script.search": {{env.es_node.script.search}},
+      "script.stored": {{env.es_node.script.stored}},
+      "script.update": {{env.es_node.script.update}}
     },
     "health_check": {
       "enable": true,
       "interval_sec": 60,
       "timeout_sec": 10,
-      "action_timeout_sec": 30,
+      "action_timeout_sec": 150,
       "healthy_threshold": 2,
       "unhealthy_threshold": 2,
-      "check_cmd": "curl --connect-timeout 10 http://localhost:80/ && curl --connect-timeout 10 http://localhost:9200/",
-      "action_cmd": "systemctl start caddy;/opt/common/bin/start.sh elasticsearch:v1.2.6"
+      "check_cmd": "appctl check",
+      "action_cmd": "appctl revive"
     },
     "monitor": {
       "enable": true,
-      "cmd": "/opt/common/bin/monitor.sh elasticsearch:v1.2.6",
+      "cmd": "appctl measure",
       "items": {
         "cluster_status": {
           "unit": "",
@@ -110,7 +145,7 @@
           "unit": "%",
           "value_type": "int",
           "statistics_type": "avg",
-          "scale_factor_when_display": 0.1
+          "scale_factor_when_display": 0.01
         },
         "cluster_jvm_threads_count": {
           "unit": "",
@@ -180,7 +215,8 @@
         "active_shards_percent_as_number": {
           "unit": "%",
           "value_type": "int",
-          "statistics_type": "latest"
+          "statistics_type": "latest",
+          "scale_factor_when_display": 0.01
         }
       },
       "groups": {
@@ -191,50 +227,398 @@
       "alarm": ["cluster_status", "number_of_nodes", "cluster_jvm_heap_used_in_percent", "cluster_jvm_threads_count", "relocating_shards", "unassigned_shards", "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"]
     }
   }, {
-    "role": "kbn_node",
+    "role": "es_node_2",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-q6pd0byf"
+      "image": "img-v2azlbwo"
     },
-    "instance_class": {{cluster.kbn_node.instance_class}},
-    "count": {{cluster.kbn_node.count}},
-    "cpu": {{cluster.kbn_node.cpu}},
-    "memory": {{cluster.kbn_node.memory}},
+    "instance_class": {{cluster.es_node_2.instance_class}},
+    "count": {{cluster.es_node_2.count}},
+    "cpu": {{cluster.es_node_2.cpu}},
+    "memory": {{cluster.es_node_2.memory}},
+    "volume": {
+      "size": {{cluster.es_node_2.volume_size}},
+      "mount_point": ["/data", "/data2", "/data3"],
+      "class": {{cluster.es_node_2.volume_class}}
+    },
+    "vertical_scaling_policy": "sequential",
     "services": {
       "init": {
-        "cmd": "/opt/common/bin/init.sh kibana:v1.2.6;/opt/common/bin/switch_elastichd.sh;/opt/common/bin/switch_elasticsearch_head.sh;/opt/common/bin/switch_cerebro.sh;/opt/common/bin/switch_elasticsearch_sql.sh"
+        "cmd": "appctl init"
       },
       "start": {
-        "cmd": "/opt/common/bin/start.sh kibana:v1.2.6;/opt/common/bin/switch_elastichd.sh;/opt/common/bin/switch_elasticsearch_head.sh;/opt/common/bin/switch_cerebro.sh;/opt/common/bin/switch_elasticsearch_sql.sh"
+        "cmd": "appctl start"
       },
       "stop": {
-        "cmd": "/opt/common/bin/stop.sh kibana:v1.2.6"
+        "cmd": "appctl stop"
+      },
+      "restart": {
+        "cmd": "appctl restart"
+      },
+      "scale_in": {
+        "cmd": "appctl scale in",
+        "timeout": 24000
+      },
+      "scale_out": {
+        "cmd": "appctl scale out",
+        "timeout": 1800
+      },
+      "destroy": {
+        "allow_force": false,
+        "post_stop_service": false,
+        "cmd": "appctl destroy"
+      },
+      "restart_rolling": {
+        "type": "custom",
+        "cmd": "appctl restart role"
+      },
+      "clear_dump": {
+        "type": "custom",
+        "cmd": "appctl clearDump"
       }
     },
     "env": {
-      "enable_elasticsearch_head": {{env.kbn_node.enable_elasticsearch_head}},
-      "enable_elastichd": {{env.kbn_node.enable_elastichd}},
-      "enable_cerebro": {{env.kbn_node.enable_cerebro}},
-      "enable_elasticsearch_sql": {{env.kbn_node.enable_elasticsearch_sql}},
-      "nginx_client_max_body_size": {{env.kbn_node.nginx_client_max_body_size}}
+      "action.destructive_requires_name": {{env.es_node.action.destructive_requires_name}},
+      "appctl.tcp_keepalive_intvl": {{env.es_node.appctl.tcp_keepalive_intvl}},
+      "appctl.tcp_keepalive_probes": {{env.es_node.appctl.tcp_keepalive_probes}},
+      "appctl.tcp_keepalive_time": {{env.es_node.appctl.tcp_keepalive_time}},
+      "appctl.upgrade.enabled": true,
+      "clean_logs_older_than_n_days": {{env.es_node.clean_logs_older_than_n_days}},
+      "discovery.zen.no_master_block": {{env.es_node.discovery.zen.no_master_block}},
+      "enable_heap_dump": {{env.es_node.enable_heap_dump}},
+      "es_additional_line1": {{env.es_node.es_additional_line1}},
+      "es_additional_line2": {{env.es_node.es_additional_line2}},
+      "es_additional_line3": {{env.es_node.es_additional_line3}},
+      "gateway.recover_after_time": {{env.es_node.gateway.recover_after_time}},
+      "heap_dump_path": {{env.es_node.heap_dump_path}},
+      "http.cors.enabled": {{env.es_node.http.cors.enabled}},
+      "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
+      "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
+      "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
+      "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
+      "indices.requests.cache.size": {{env.es_node.indices.requests.cache.size}},
+      "logger.action.level": {{env.es_node.logger.action.level}},
+      "logger.deprecation.level": {{env.es_node.logger.deprecation.level}},
+      "logger.index_search_slowlog_rolling.level": {{env.es_node.logger.index_search_slowlog_rolling.level}},
+      "logger.index_indexing_slowlog.level": {{env.es_node.logger.index_indexing_slowlog.level}},
+      "node.attr.data": {{env.es_node_2.node.attr.data}},
+      "path.repo": {{env.es_node.path.repo}},
+      "repositories.url.allowed_urls": {{env.es_node.repositories.url.allowed_urls}},
+      "reindex.remote.whitelist": {{env.es_node.reindex.remote.whitelist}},
+      "remote_ext_dict": {{env.es_node.remote_ext_dict}},
+      "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
+      "rootLogger.level": {{env.es_node.rootLogger.level}},
+      "script.aggs": {{env.es_node.script.aggs}},
+      "script.inline": {{env.es_node.script.inline}},
+      "script.file": {{env.es_node.script.file}},
+      "script.search": {{env.es_node.script.search}},
+      "script.stored": {{env.es_node.script.stored}},
+      "script.update": {{env.es_node.script.update}}
     },
     "health_check": {
       "enable": true,
       "interval_sec": 60,
       "timeout_sec": 10,
-      "action_timeout_sec": 30,
+      "action_timeout_sec": 150,
       "healthy_threshold": 2,
       "unhealthy_threshold": 2,
-      "check_cmd": "/opt/common/bin/health_check.sh",
-      "action_cmd": "/opt/common/bin/start.sh kibana:v1.2.6;/opt/common/bin/switch_elastichd.sh;/opt/common/bin/switch_elasticsearch_head.sh;/opt/common/bin/switch_cerebro.sh;/opt/common/bin/switch_elasticsearch_sql.sh"
+      "check_cmd": "appctl check",
+      "action_cmd": "appctl revive"
+    }
+  }, {
+    "role": "es_node_3",
+    "container": {
+      "type": "kvm",
+      "zone": "pek3a",
+      "image": "img-v2azlbwo"
+    },
+    "instance_class": {{cluster.es_node_3.instance_class}},
+    "count": {{cluster.es_node_3.count}},
+    "cpu": {{cluster.es_node_3.cpu}},
+    "memory": {{cluster.es_node_3.memory}},
+    "volume": {
+      "size": {{cluster.es_node_3.volume_size}},
+      "mount_point": ["/data", "/data2", "/data3"],
+      "class": {{cluster.es_node_3.volume_class}}
+    },
+    "vertical_scaling_policy": "sequential",
+    "services": {
+      "init": {
+        "cmd": "appctl init"
+      },
+      "start": {
+        "cmd": "appctl start"
+      },
+      "stop": {
+        "cmd": "appctl stop"
+      },
+      "restart": {
+        "cmd": "appctl restart"
+      },
+      "scale_in": {
+        "cmd": "appctl scale in",
+        "timeout": 24000
+      },
+      "scale_out": {
+        "cmd": "appctl scale out",
+        "timeout": 1800
+      },
+      "destroy": {
+        "allow_force": false,
+        "post_stop_service": false,
+        "cmd": "appctl destroy"
+      },
+      "restart_rolling": {
+        "type": "custom",
+        "cmd": "appctl restart role"
+      },
+      "clear_dump": {
+        "type": "custom",
+        "cmd": "appctl clearDump"
+      }
+    },
+    "env": {
+      "action.destructive_requires_name": {{env.es_node.action.destructive_requires_name}},
+      "appctl.tcp_keepalive_intvl": {{env.es_node.appctl.tcp_keepalive_intvl}},
+      "appctl.tcp_keepalive_probes": {{env.es_node.appctl.tcp_keepalive_probes}},
+      "appctl.tcp_keepalive_time": {{env.es_node.appctl.tcp_keepalive_time}},
+      "appctl.upgrade.enabled": true,
+      "clean_logs_older_than_n_days": {{env.es_node.clean_logs_older_than_n_days}},
+      "discovery.zen.no_master_block": {{env.es_node.discovery.zen.no_master_block}},
+      "enable_heap_dump": {{env.es_node.enable_heap_dump}},
+      "es_additional_line1": {{env.es_node.es_additional_line1}},
+      "es_additional_line2": {{env.es_node.es_additional_line2}},
+      "es_additional_line3": {{env.es_node.es_additional_line3}},
+      "gateway.recover_after_time": {{env.es_node.gateway.recover_after_time}},
+      "heap_dump_path": {{env.es_node.heap_dump_path}},
+      "http.cors.enabled": {{env.es_node.http.cors.enabled}},
+      "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
+      "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
+      "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
+      "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
+      "indices.requests.cache.size": {{env.es_node.indices.requests.cache.size}},
+      "logger.action.level": {{env.es_node.logger.action.level}},
+      "logger.deprecation.level": {{env.es_node.logger.deprecation.level}},
+      "logger.index_search_slowlog_rolling.level": {{env.es_node.logger.index_search_slowlog_rolling.level}},
+      "logger.index_indexing_slowlog.level": {{env.es_node.logger.index_indexing_slowlog.level}},
+      "node.attr.data": {{env.es_node_3.node.attr.data}},
+      "path.repo": {{env.es_node.path.repo}},
+      "repositories.url.allowed_urls": {{env.es_node.repositories.url.allowed_urls}},
+      "reindex.remote.whitelist": {{env.es_node.reindex.remote.whitelist}},
+      "remote_ext_dict": {{env.es_node.remote_ext_dict}},
+      "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
+      "rootLogger.level": {{env.es_node.rootLogger.level}},
+      "script.aggs": {{env.es_node.script.aggs}},
+      "script.inline": {{env.es_node.script.inline}},
+      "script.file": {{env.es_node.script.file}},
+      "script.search": {{env.es_node.script.search}},
+      "script.stored": {{env.es_node.script.stored}},
+      "script.update": {{env.es_node.script.update}}
+    },
+    "health_check": {
+      "enable": true,
+      "interval_sec": 60,
+      "timeout_sec": 10,
+      "action_timeout_sec": 150,
+      "healthy_threshold": 2,
+      "unhealthy_threshold": 2,
+      "check_cmd": "appctl check",
+      "action_cmd": "appctl revive"
+    }
+  }, {
+    "role": "es_master_node",
+    "container": {
+      "type": "kvm",
+      "zone": "pek3a",
+      "image": "img-v2azlbwo"
+    },
+    "instance_class": {{cluster.es_master_node.instance_class}},
+    "count": {{cluster.es_master_node.count}},
+    "cpu": {{cluster.es_master_node.cpu}},
+    "memory": {{cluster.es_master_node.memory}},
+    "volume": {
+      "size": {{cluster.es_master_node.volume_size}},
+      "class": {{cluster.es_master_node.volume_class}}
+    },
+    "vertical_scaling_policy": "sequential",
+    "services": {
+      "init": {
+        "cmd": "appctl init"
+      },
+      "start": {
+        "cmd": "appctl start"
+      },
+      "stop": {
+        "cmd": "appctl stop"
+      },
+      "restart": {
+        "cmd": "appctl restart"
+      },
+      "scale_in": {
+        "cmd": "appctl scale in",
+        "timeout": 24000
+      },
+      "scale_out": {
+        "cmd": "appctl scale out",
+        "timeout": 1800
+      },
+      "restart_rolling": {
+        "type": "custom",
+        "cmd": "appctl restart role"
+      },
+      "clear_dump": {
+        "type": "custom",
+        "cmd": "appctl clearDump"
+      }
+    },
+    "env": {
+      "action.destructive_requires_name": {{env.es_node.action.destructive_requires_name}},
+      "appctl.tcp_keepalive_intvl": {{env.es_node.appctl.tcp_keepalive_intvl}},
+      "appctl.tcp_keepalive_probes": {{env.es_node.appctl.tcp_keepalive_probes}},
+      "appctl.tcp_keepalive_time": {{env.es_node.appctl.tcp_keepalive_time}},
+      "clean_logs_older_than_n_days": {{env.es_node.clean_logs_older_than_n_days}},
+      "discovery.zen.no_master_block": {{env.es_node.discovery.zen.no_master_block}},
+      "enable_heap_dump": {{env.es_node.enable_heap_dump}},
+      "es_additional_line1": {{env.es_node.es_additional_line1}},
+      "es_additional_line2": {{env.es_node.es_additional_line2}},
+      "es_additional_line3": {{env.es_node.es_additional_line3}},
+      "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
+      "gateway.recover_after_time": {{env.es_node.gateway.recover_after_time}},
+      "heap_dump_path": {{env.es_node.heap_dump_path}},
+      "http.cors.enabled": {{env.es_node.http.cors.enabled}},
+      "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
+      "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
+      "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
+      "indices.requests.cache.size": {{env.es_node.indices.requests.cache.size}},
+      "logger.action.level": {{env.es_node.logger.action.level}},
+      "logger.deprecation.level": {{env.es_node.logger.deprecation.level}},
+      "logger.index_search_slowlog_rolling.level": {{env.es_node.logger.index_search_slowlog_rolling.level}},
+      "logger.index_indexing_slowlog.level": {{env.es_node.logger.index_indexing_slowlog.level}},
+      "path.repo": {{env.es_node.path.repo}},
+      "repositories.url.allowed_urls": {{env.es_node.repositories.url.allowed_urls}},
+      "reindex.remote.whitelist": {{env.es_node.reindex.remote.whitelist}},
+      "remote_ext_dict": {{env.es_node.remote_ext_dict}},
+      "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
+      "rootLogger.level": {{env.es_node.rootLogger.level}},
+      "script.aggs": {{env.es_node.script.aggs}},
+      "script.inline": {{env.es_node.script.inline}},
+      "script.file": {{env.es_node.script.file}},
+      "script.search": {{env.es_node.script.search}},
+      "script.stored": {{env.es_node.script.stored}},
+      "script.update": {{env.es_node.script.update}}
+    },
+    "health_check": {
+      "enable": true,
+      "interval_sec": 60,
+      "timeout_sec": 10,
+      "healthy_threshold": 2,
+      "unhealthy_threshold": 2,
+      "check_cmd": "appctl check",
+      "action_cmd": "appctl revive",
+      "action_timeout_sec": 150
+    },
+    "monitor": {
+      "enable": true,
+      "cmd": "appctl measure",
+      "items": {
+        "cluster_status": {
+          "unit": "",
+          "value_type": "str",
+          "statistics_type": "latest",
+          "enums": ["green", "yellow", "red"]
+        },
+        "cluster_jvm_heap_used_in_percent": {
+          "unit": "%",
+          "value_type": "int",
+          "statistics_type": "avg",
+          "scale_factor_when_display": 0.01
+        },
+        "cluster_jvm_threads_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_indices_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_shards_primaries_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_shards_replication_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_docs_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_docs_deleted_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_nodes": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "relocating_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "initializing_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "unassigned_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_pending_tasks": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_in_flight_fetch": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "task_max_waiting_in_queue_millis": {
+          "unit": "ms",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "active_shards_percent_as_number": {
+          "unit": "%",
+          "value_type": "int",
+          "statistics_type": "latest",
+          "scale_factor_when_display": 0.01
+        }
+      },
+      "groups": {
+        "cluster_docs_group": ["cluster_docs_count", "cluster_docs_deleted_count"],
+        "cluster_shards_group": ["cluster_shards_primaries_count", "cluster_shards_replication_count", "relocating_shards", "initializing_shards", "unassigned_shards"]
+      },
+      "display": ["cluster_status", "number_of_nodes", "cluster_indices_count", "cluster_jvm_heap_used_in_percent", "cluster_jvm_threads_count", "cluster_docs_group", "cluster_shards_group", "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"],
+      "alarm": ["cluster_status", "number_of_nodes", "cluster_jvm_heap_used_in_percent", "cluster_jvm_threads_count", "relocating_shards", "unassigned_shards", "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"]
     }
   }, {
     "role": "lst_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-u9npxydv"
+      "image": "img-qn7e0v0q"
     },
     "instance_class": {{cluster.lst_node.instance_class}},
     "count": {{cluster.lst_node.count}},
@@ -246,19 +630,26 @@
     "user_access": true,
     "services": {
       "init": {
-        "cmd": "/usr/share/logstash/sbin/init.sh"
+        "cmd": "appctl init"
       },
       "start": {
-        "cmd": "/usr/share/logstash/sbin/start.sh"
+        "cmd": "appctl start"
       },
       "stop": {
-        "cmd": "/usr/share/logstash/sbin/stop.sh"
+        "cmd": "appctl stop"
       },
       "restart": {
-        "cmd": "/usr/share/logstash/sbin/dorestart.sh"
+        "cmd": "appctl restart"
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 2,
+        "timeout": 60
       }
     },
     "env": {
+      "config.reload.automatic": {{env.lst_node.config.reload.automatic}},
+      "config.reload.interval": {{env.lst_node.config.reload.interval}},
       "input_conf_content": {{env.lst_node.input_conf_content}},
       "filter_conf_content": {{env.lst_node.filter_conf_content}},
       "output_conf_content": {{env.lst_node.output_conf_content}},
@@ -269,21 +660,88 @@
       "enable": true,
       "interval_sec": 60,
       "timeout_sec": 10,
-      "action_timeout_sec": 30,
       "healthy_threshold": 2,
       "unhealthy_threshold": 2,
-      "check_cmd": "curl --connect-timeout 10 http://localhost:80/ && curl --connect-timeout 10 http://localhost:9600/",
-      "action_cmd": "systemctl start caddy;/usr/share/logstash/sbin/start.sh"
+      "check_cmd": "appctl check"
+    }
+  }, {
+    "role": "kbn_node",
+    "container": {
+      "type": "kvm",
+      "zone": "pek3a",
+      "image": "img-afprub5i"
+    },
+    "instance_class": {{cluster.kbn_node.instance_class}},
+    "count": {{cluster.kbn_node.count}},
+    "cpu": {{cluster.kbn_node.cpu}},
+    "memory": {{cluster.kbn_node.memory}},
+    "services": {
+      "init": {
+        "cmd": "appctl init"
+      },
+      "start": {
+        "cmd": "appctl start"
+      },
+      "stop": {
+        "cmd": "appctl stop"
+      },
+      "restart": {
+        "cmd": "appctl restart"
+      },
+      "upgrade": {
+        "cmd": "appctl init",
+        "order": 3,
+        "timeout": 60
+      }
+    },
+    "env": {
+      "server.basePath": {{env.kbn_node.server.basePath}},
+      "server.rewriteBasePath": {{env.kbn_node.server.rewriteBasePath}},
+      "enable_elasticsearch_head": {{env.kbn_node.enable_elasticsearch_head}},
+      "enable_elastichd": {{env.kbn_node.enable_elastichd}},
+      "enable_cerebro": {{env.kbn_node.enable_cerebro}},
+      "enable_elasticsearch_hq": {{env.kbn_node.enable_elasticsearch_hq}},
+      "enable_elasticsearch_sql": {{env.kbn_node.enable_elasticsearch_sql}},
+      "proxy.balance.policy": {{env.kbn_node.proxy.balance.policy}},
+      "proxy.connect.timeout": {{env.kbn_node.proxy.connect.timeout}},
+      "proxy.timeout": {{env.kbn_node.proxy.timeout}},
+      "proxy.max.conn": {{env.kbn_node.proxy.max.conn}},
+      "nginx_client_max_body_size": {{env.kbn_node.nginx_client_max_body_size}}
+    },
+    "health_check": {
+      "enable": true,
+      "interval_sec": 60,
+      "timeout_sec": 10,
+      "action_timeout_sec": 150,
+      "healthy_threshold": 2,
+      "unhealthy_threshold": 2,
+      "check_cmd": "appctl check",
+      "action_cmd": "appctl revive"
     }
   }],
-  "advanced_actions": [ "scale_horizontal", "change_vxnet" ],
+  "env": {
+    "web.console.password": ""
+  },
   "endpoints": {
+    "reserved_ips": {
+      "esvip": {
+        "value": ""
+      }
+    },
     "ElasticSearch": {
       "port": 9200,
       "protocol": "http"
     },
+    "Logstash": {
+      "port": 9600,
+      "protocol": "http"
+    },
     "Kibana": {
       "port": 5601,
+      "protocol": "http"
+    },
+    "Cerebro on Kibana": {
+      "port": 9000,
       "protocol": "http"
     },
     "ES Head on Kibana": {
@@ -292,10 +750,6 @@
     },
     "ElasticHD on Kibana": {
       "port": 9800,
-      "protocol": "http"
-    },
-    "Logstash": {
-      "port": 9600,
       "protocol": "http"
     }
   }

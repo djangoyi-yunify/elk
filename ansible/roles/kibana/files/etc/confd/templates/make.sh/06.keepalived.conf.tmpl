@@ -1,0 +1,27 @@
+cat > /etc/keepalived/keepalived.conf << KEEPALIVED_EOF
+global_defs {
+  enable_script_security
+  script_user root root
+}
+
+vrrp_script check_haproxy {
+  script "/usr/bin/killall -0 haproxy"
+  interval 2
+  weight 2
+}
+
+vrrp_instance {{ getv "/cluster/cluster_id" }} {
+  state BACKUP
+  interface eth0
+  virtual_router_id {{ index (split $esVip ".") 3 }}
+  priority {{ getv "/host/sid" }}
+
+  virtual_ipaddress {
+    {{ $esVip }}
+  }
+
+  track_script {
+    check_haproxy
+  }
+}
+KEEPALIVED_EOF
