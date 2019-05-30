@@ -1,7 +1,8 @@
 ---
-- name: Common setup
+- name: common setup
   include_tasks: "{{ item }}.yml"
   with_items:
-    - install-app-agent
-    - copy-apt-sources
-    - create-group
+  - install-app-agent
+  - setup-apt
+  - create-group
+  - disable-motd

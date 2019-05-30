@@ -1,0 +1,12 @@
+---
+- name: download jq
+  get_url:
+    url: https://github.com/stedolan/jq/releases/download/jq-{{ jqVersion }}/jq-linux64
+    dest: files/tmp/jq-{{ jqVersion }}
+  delegate_to: localhost
+
+- name: install jq
+  copy:
+    src: files/tmp/jq-{{ jqVersion }}
+    dest: /usr/bin/jq
+    mode: 0755

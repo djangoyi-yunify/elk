@@ -1,0 +1,9 @@
+---
+- name: set up var
+  set_fact:
+    userPassword: "{{ password | default(adminPwd) }}"
+
+- name: set password
+  user:
+    name: ubuntu
+    password: "{{ userPassword | password_hash('sha512') }}"

@@ -6,11 +6,12 @@ Type=simple
 User=cerebro
 Group=svc
 RuntimeDirectory=cerebro
-ExecStart=/opt/cerebro/current/bin/cerebro "-Dconfig.file=/opt/app/conf/cerebro/cerebro.conf"
+EnvironmentFile=/opt/app/conf/cerebro/.env
+ExecStart=/opt/cerebro/current/bin/cerebro $OPTS
 StartLimitInterval=30
 StartLimitBurst=3
 Restart=always
-WorkingDirectory=/opt/cerebro/current
+WorkingDirectory=/data/cerebro
 
 [Install]
 WantedBy=multi-user.target

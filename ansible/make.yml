@@ -1,5 +1,5 @@
 ---
-- name: Common setup
+- name: common setup
   hosts: all
   strategy: free
   roles:
@@ -8,6 +8,8 @@
 - name: setup
   hosts: all
   strategy: free
+  vars_files:
+    - /root/.qcacode
 
   tasks:
 
@@ -40,7 +42,8 @@
     - elasticsearch-head
     - elasticsearch-hq
     - elasticsearch-sql
-    - nginx
+    - haproxy
+    - keepalived
     loop_control:
       loop_var: svc_name
 

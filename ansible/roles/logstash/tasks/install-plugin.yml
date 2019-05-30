@@ -1,14 +1,19 @@
 ---
 - name: setting facts - LS plugins
   set_fact:
-    ls_home: /opt/logstash/current
     local_dir: files/tmp/ls-plugins
-    remote_dir: /opt/logstash/current/plugins
+    remote_dir: "{{ ls_home }}/plugins"
 
 - name: Check if the plugin was installed - {{ opts.name }}
-  command: "grep -q {{ opts.name }} {{ ls_home }}/Gemfile"
+  command: grep -q 'gem "{{ opts.name }}"' {{ ls_home }}/Gemfile
   register: installed
   ignore_errors: True
+
+- name: install unzip
+  apt:
+    name: ['unzip']
+    state: present
+    update_cache: no
 
 - name: Prepare LS plugins directory
   file:
@@ -25,7 +30,7 @@
 
 - name: Download LS plugin - {{ opts.name }}
   get_url:
-    url: "{{ opts.url | default('https://github.com/logstash-plugins/{{ opts.name }}/archive/v{{ opts.version }}.zip') }}"
+    url: "{{ opts.url | default('https://github.com/logstash-plugins/' + opts.name + '/archive/v' + opts.version + '.zip') }}"
     dest: "{{ local_dir }}/{{ opts.name }}-{{ opts.version }}.zip"
   delegate_to: localhost
   when: installed is failed
@@ -44,11 +49,12 @@
     path: "{{ ls_home }}/Gemfile"
     regexp: '^gem "{{ opts.name }}"'
     line: 'gem "{{ opts.name }}", :path => "./plugins/{{ opts.name }}-{{ opts.version }}"'
+    insertafter: EOF
 
 - name: Install LS plugin - {{ opts.name }}
-  shell: "{{ ls_home }}/bin/logstash-plugin install --no-verify"
+  shell: |
+    {{ ls_home }}/bin/logstash-plugin install --no-verify
+    chown -R {{ role_name }}.svc {{ ls_home }}
   args:
     chdir: "{{ ls_home }}"
-  become: yes
-  become_user: root
   when: installed is failed

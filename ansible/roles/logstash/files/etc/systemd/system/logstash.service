@@ -3,13 +3,13 @@ Description=logstash
 
 [Service]
 Type=simple
-User=root
-Group=root
+User=logstash
+Group=svc
 # Load env vars from /etc/default/ and /etc/sysconfig/ if they exist.
 # Prefixing the path with '-' makes it try to load, but if the file doesn't
 # exist, it continues onward.
 EnvironmentFile=/opt/app/conf/logstash/.env
-ExecStart=/opt/logstash/current/bin/logstash
+ExecStart=/usr/share/logstash/bin/logstash
 Restart=always
 WorkingDirectory=/data/logstash
 Nice=19

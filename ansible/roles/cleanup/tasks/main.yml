@@ -5,4 +5,3 @@
     >~/.bash_history && history -c
   args:
     executable: /bin/bash
-

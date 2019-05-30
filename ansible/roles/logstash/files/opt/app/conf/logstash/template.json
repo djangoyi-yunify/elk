@@ -1,8 +1,10 @@
+
 {
     "template": "*",
-    "version": 50501,
+    "version": 50601,
     "settings": {
         "index.refresh_interval": "5s",
+        "index.routing.allocation.require.data": "hot",
         "index": {
             "analysis": {
                 "analyzer": {

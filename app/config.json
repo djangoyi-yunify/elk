@@ -1,698 +1,1077 @@
 {
-    "properties": [
-        {
-            "description": "ELK cluster properties",
-            "key": "cluster",
-            "properties": [
-                {
-                    "default": "ELK",
-                    "description": "The name of the ELK service",
-                    "key": "name",
-                    "label": "Name",
-                    "required": "no",
-                    "type": "string"
-                },
-                {
-                    "default": "",
-                    "description": "The description of the ELK service",
-                    "key": "description",
-                    "label": "Description",
-                    "required": "no",
-                    "type": "string"
-                },
-                {
-                    "default": "",
-                    "description": "Choose a vxnet to join",
-                    "key": "vxnet",
-                    "label": "VxNet",
-                    "required": "yes",
-                    "type": "string"
-                },
-                {
-                    "description": "role-based node properties",
-                    "key": "es_node",
-                    "label": "ElasticSearch Node",
-                    "properties": [
-                        {
-                            "default": 2,
-                            "description": "CPUs of each node",
-                            "key": "cpu",
-                            "label": "CPU",
-                            "range": [
-                                1,
-                                2,
-                                4,
-                                8,
-                                12,
-                                16
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 4096,
-                            "description": "Memory of each node",
-                            "key": "memory",
-                            "label": "Memory",
-                            "range": [
-                                2048,
-                                4096,
-                                6144,
-                                8192,
-                                12288,
-                                16384,
-                                24576,
-                                32768,
-                                40960,
-                                49152,
-                                65536
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 3,
-                            "description": "Number of ES nodes to create",
-                            "key": "count",
-                            "label": "Node Count",
-                            "min": 3,
-                            "max": 200,
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 0,
-                            "description": "The instance type for the cluster to run, such as high performance, high performance plus",
-                            "key": "instance_class",
-                            "label": "Instance Class",
-                            "range": [
-                                0,
-                                1
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "key": "volume_class",
-                            "label": "Volume Class",
-                            "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
-                            "type": "integer",
-                            "default": 0,
-                            "range": [0, 3, 5],
-                            "required": "yes"
-                        },
-                        {
-                            "default": 10,
-                            "description": "The volume size for each node",
-                            "key": "volume_size",
-                            "label": "Volume Size",
-                            "min": 10,
-                            "required": "yes",
-                            "type": "integer"
-                        }
-                    ],
-                    "type": "array"
-                },
-                {
-                    "description": "role-based node properties",
-                    "key": "kbn_node",
-                    "label": "Kibana Node",
-                    "properties": [
-                        {
-                            "default": 2,
-                            "description": "CPUs of each node",
-                            "key": "cpu",
-                            "label": "CPU",
-                            "range": [
-                                1,
-                                2,
-                                4,
-                                8
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 4096,
-                            "description": "Memory of each node",
-                            "key": "memory",
-                            "label": "Memory",
-                            "range": [
-                                2048,
-                                4096,
-                                6144,
-                                8192
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 1,
-                            "description": "Number of nodes for the cluster to create",
-                            "key": "count",
-                            "label": "Node Count",
-                            "range": [0, 1],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 0,
-                            "description": "The instance type for the cluster to run, such as high performance, high performance plus",
-                            "key": "instance_class",
-                            "label": "Instance Class",
-                            "range": [
-                                0,
-                                1
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        }
-                    ],
-                    "type": "array"
-                },
-                {
-                    "description": "role-based node properties",
-                    "key": "lst_node",
-                    "label": "Logstash Node",
-                    "properties": [
-                        {
-                            "default": 2,
-                            "description": "CPUs of each node",
-                            "key": "cpu",
-                            "label": "CPU",
-                            "range": [
-                                1,
-                                2,
-                                4,
-                                8,
-                                12,
-                                16
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 4096,
-                            "description": "Memory of each node",
-                            "key": "memory",
-                            "label": "Memory",
-                            "range": [
-                                2048,
-                                4096,
-                                6144,
-                                8192,
-                                12288,
-                                16384
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 1,
-                            "description": "Number of nodes for the cluster to create",
-                            "key": "count",
-                            "label": "Node Count",
-                            "min": 0,
-                            "max": 10,
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 0,
-                            "description": "The instance type for the cluster to run, such as high performance, high performance plus",
-                            "key": "instance_class",
-                            "label": "Instance Class",
-                            "range": [
-                                0,
-                                1
-                            ],
-                            "required": "yes",
-                            "type": "integer"
-                        },
-                        {
-                            "default": 10,
-                            "description": "The volume size for each node",
-                            "key": "volume_size",
-                            "label": "Volume Size",
-                            "min": 10,
-                            "required": "yes",
-                            "type": "integer"
-                        }
-                    ],
-                    "type": "array"
-                }
-            ],
-            "type": "array"
-        },
-        {
-            "description": "application configuration properties",
-            "key": "env",
-            "properties": [
-                {
-                    "description": "The role configuration properties of the application",
-                    "key": "es_node",
-                    "properties": [
-                        {
-                            "changeable": true,
-                            "default": "true",
-                            "description": "In order to enable allowing to delete indices via wildcards or _all, set this config to false.",
-                            "key": "action.destructive_requires_name",
-                            "label": "action.destructive_requires_name",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "90%",
-                            "description": "The max size of the field data cache.",
-                            "key": "indices.fielddata.cache.size",
-                            "label": "indices.fielddata.cache.size",
-                            "required": "yes",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "The ip of one of logstash node used to collect logs on elasticsearch.",
-                            "key": "logstash_node_ip",
-                            "label": "logstash_node_ip",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "write",
-                            "description": "The discovery.zen.no_master_block settings controls what operations should be rejected when there is no active master.",
-                            "key": "discovery.zen.no_master_block",
-                            "label": "discovery.zen.no_master_block",
-                            "range": [
-                                "all",
-                                "write"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "5m",
-                            "description": "If the expected number of nodes is not achieved, the recovery process waits for the configured amount of time before trying to recover regardless. Defaults to 5m if one of the expected_nodes settings is configured.",
-                            "key": "gateway.recover_after_time",
-                            "label": "gateway.recover_after_time",
-                            "required": "yes",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "true",
-                            "description": "Enable or disable cross-origin resource sharing, i.e. whether a browser on another origin can execute requests against Elasticsearch.",
-                            "key": "http.cors.enabled",
-                            "label": "http.cors.enabled",
-                            "range": [
-                                "true",
-                                "false"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "*",
-                            "description": "Which origins to allow.",
-                            "key": "http.cors.allow-origin",
-                            "label": "http.cors.allow-origin",
-                            "required": "yes",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "10%",
-                            "description": "Controls the memory size for the filter cache , defaults to 10%. Accepts either a percentage value, like 5%, or an exact value, like 512mb.",
-                            "key": "indices.queries.cache.size",
-                            "label": "indices.queries.cache.size",
-                            "required": "yes",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "10%",
-                            "description": "Accepts either a percentage or a byte size value. It defaults to 10%, meaning that 10% of the total heap allocated to a node will be used as the indexing buffer size shared across all shards.",
-                            "key": "indices.memory.index_buffer_size",
-                            "label": "indices.memory.index_buffer_size",
-                            "required": "yes",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "2%",
-                            "description": "The shard-level request cache module caches the local results on each shard. The cache is managed at the node level, and has a default maximum size of 1% of the heap.",
-                            "key": "indices.requests.cache.size",
-                            "label": "indices.requests.cache.size",
-                            "required": "yes",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "true",
-                            "description": "Specify whether scripts with inline type are allowed.",
-                            "key": "script.inline",
-                            "label": "script.inline",
-                            "range": [
-                                "true",
-                                "false"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "true",
-                            "description": "Specify whether scripts with stored type are allowed.",
-                            "key": "script.stored",
-                            "label": "script.stored",
-                            "range": [
-                                "true",
-                                "false"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "false",
-                            "description": "Specify whether scripts with file type are allowed.",
-                            "key": "script.file",
-                            "label": "script.file",
-                            "range": [
-                                "true",
-                                "false"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "true",
-                            "description": "Specify whether scripts can be executed in aggregations context.",
-                            "key": "script.aggs",
-                            "label": "script.aggs",
-                            "range": [
-                                "true",
-                                "false"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "true",
-                            "description": "Specify whether scripts can be executed in search context.",
-                            "key": "script.search",
-                            "label": "script.search",
-                            "range": [
-                                "true",
-                                "false"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "true",
-                            "description": "Specify whether scripts can be executed in update context.",
-                            "key": "script.update",
-                            "label": "script.update",
-                            "range": [
-                                "true",
-                                "false"
-                            ],
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "Specify the location of extensional dictionary from remote.",
-                            "key": "remote_ext_dict",
-                            "label": "remote_ext_dict",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "Specify the location of extensional stopwords dictionary from remote.",
-                            "key": "remote_ext_stopwords",
-                            "label": "remote_ext_stopwords",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "[]",
-                            "description": "Specify the location of shared file system repository.",
-                            "key": "path.repo",
-                            "label": "path.repo",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "[]",
-                            "description": "Specify the location of read-only URL repository.",
-                            "key": "repositories.url.allowed_urls",
-                            "label": "repositories.url.allowed_urls",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "The additional configuration in elasticsearch.yml.",
-                            "key": "es_additional_line1",
-                            "label": "es_additional_line1",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "The additional configuration in elasticsearch.yml.",
-                            "key": "es_additional_line2",
-                            "label": "es_additional_line2",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "The additional configuration in elasticsearch.yml.",
-                            "key": "es_additional_line3",
-                            "label": "es_additional_line3",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "info",
-                            "description": "The logger.action.level configuration in log4j2.properties.",
-                            "key": "logger.action.level",
-                            "label": "logger.action.level",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "info",
-                            "description": "The rootLogger.level configuration in log4j2.properties.",
-                            "key": "rootLogger.level",
-                            "label": "rootLogger.level",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "warn",
-                            "description": "The logger.deprecation.level configuration in log4j2.properties.",
-                            "key": "logger.deprecation.level",
-                            "label": "logger.deprecation.level",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "trace",
-                            "description": "The logger.index_search_slowlog_rolling.level configuration in log4j2.properties.",
-                            "key": "logger.index_search_slowlog_rolling.level",
-                            "label": "logger.index_search_slowlog_rolling.level",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "trace",
-                            "description": "The logger.index_indexing_slowlog.level configuration in log4j2.properties.",
-                            "key": "logger.index_indexing_slowlog.level",
-                            "label": "logger.index_indexing_slowlog.level",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": false,
-                            "description": "Whether to enable heap dump on out of memory error.",
-                            "key": "enable_heap_dump",
-                            "label": "enable_heap_dump",
-                            "range": [
-                                true,
-                                false
-                            ],
-                            "required": "no",
-                            "type": "boolean"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "/data/elasticsearch/dump",
-                            "description": "The path of heap dump.",
-                            "key": "heap_dump_path",
-                            "label": "heap_dump_path",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": 7,
-                            "description": "Clean logs older than n days, n can be changed here.",
-                            "key": "clean_logs_older_than_n_days",
-                            "label": "clean_logs_older_than_n_days",
-                            "required": "no",
-                            "type": "integer"
-                        }
-                    ],
-                    "type": "array"
-                },
-                {
-                    "description": "The role configuration properties of the application",
-                    "key": "kbn_node",
-                    "properties": [
-                        {
-                            "changeable": true,
-                            "default": true,
-                            "description": "Whether to enable elasticsearch-head.",
-                            "key": "enable_elasticsearch_head",
-                            "label": "enable_elasticsearch_head",
-                            "range": [
-                                true,
-                                false
-                            ],
-                            "required": "no",
-                            "type": "boolean"
-                        },
-                        {
-                            "changeable": true,
-                            "default": true,
-                            "description": "Whether to enable ElasticHD.",
-                            "key": "enable_elastichd",
-                            "label": "enable_elastichd",
-                            "range": [
-                                true,
-                                false
-                            ],
-                            "required": "no",
-                            "type": "boolean"
-                        },
-                        {
-                            "changeable": true,
-                            "default": true,
-                            "description": "Whether to enable Cerebro.",
-                            "key": "enable_cerebro",
-                            "label": "enable_cerebro",
-                            "range": [
-                                true,
-                                false
-                            ],
-                            "required": "no",
-                            "type": "boolean"
-                        },
-                        {
-                            "changeable": true,
-                            "default": true,
-                            "description": "Whether to enable elasticsearch-sql.",
-                            "key": "enable_elasticsearch_sql",
-                            "label": "enable_elasticsearch_sql",
-                            "range": [
-                                true,
-                                false
-                            ],
-                            "required": "no",
-                            "type": "boolean"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "20m",
-                            "description": "Sets the maximum allowed size of the client request body in nginx.",
-                            "key": "nginx_client_max_body_size",
-                            "label": "nginx_client_max_body_size",
-                            "required": "no",
-                            "type": "string"
-                        }
-                    ],
-                    "type": "array"
-                },
-                {
-                    "description": "The role configuration properties of the application",
-                    "key": "lst_node",
-                    "properties": [
-                        {
-                            "changeable": true,
-                            "default": "http { host => \"0.0.0.0\"  port => 9700 }",
-                            "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in input section",
-                            "key": "input_conf_content",
-                            "label": "input_conf_content",
-                            "required": "yes",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in filter section",
-                            "key": "filter_conf_content",
-                            "label": "filter_conf_content",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in output section",
-                            "key": "output_conf_content",
-                            "label": "output_conf_content",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in output elasticsearch section",
-                            "key": "output_es_content",
-                            "label": "output_es_content",
-                            "required": "no",
-                            "type": "string"
-                        },
-                        {
-                            "changeable": true,
-                            "default": "",
-                            "description": "This config is used to adding content into Gemfile for logstash",
-                            "key": "gemfile_append_content",
-                            "label": "gemfile_append_content",
-                            "required": "no",
-                            "type": "string"
-                        }
-                    ],
-                    "type": "array"
-                }
-            ],
-            "type": "array"
-        }
-    ],
-    "type": "array"
+  "type": "array",
+  "properties": [{
+    "key": "cluster",
+    "description": "ELK cluster properties",
+    "type": "array",
+    "properties": [{
+      "key": "name",
+      "label": "Name",
+      "description": "The name of the ELK service",
+      "type": "string",
+      "default": "ELK",
+      "required": "no"
+    }, {
+      "key": "description",
+      "label": "Description",
+      "description": "The description of the ELK service",
+      "type": "string",
+      "default": "",
+      "required": "no"
+    }, {
+      "key": "vxnet",
+      "label": "VxNet",
+      "description": "Choose a vxnet to join",
+      "type": "string",
+      "default": "",
+      "required": "yes"
+    }, {
+      "key": "resource_group",
+      "label": "Express Configuration",
+      "description": "Test: ES * 2, Logstash * 1, Kibana * 1; Pre-prod: ES * 2, ES M * 1, Logstash * 1, Kibana * 1; Prod HA: ES * 3, ES Master * 3, Logstash * 1, Kibana * 2",
+      "type": "string",
+      "default": "Pre-prod",
+      "range": [
+        "Test",
+        "Pre-prod",
+        "Prod HA"
+      ]
+    }, {
+      "key": "es_node",
+      "label": "Elasticsearch Node",
+      "description": "ES general-purpose node",
+      "type": "array",
+      "properties": [{
+        "key": "cpu",
+        "label": "CPU",
+        "description": "CPUs of each node",
+        "type": "integer",
+        "range": [
+          1,
+          2,
+          4,
+          8,
+          12,
+          16,
+          32
+        ],
+        "default": 2,
+        "resource_group": [1, 2, 2],
+        "required": "yes"
+      }, {
+        "description": "Memory of each node",
+        "key": "memory",
+        "label": "Memory",
+        "type": "integer",
+        "range": [
+          2048,
+          4096,
+          6144,
+          8192,
+          12288,
+          16384,
+          24576,
+          32768,
+          40960,
+          49152,
+          65536
+        ],
+        "default": 4096,
+        "resource_group": [2048, 4096, 4096],
+        "required": "yes"
+      }, {
+        "key": "count",
+        "label": "Node Count",
+        "description": "Number of ES nodes to create",
+        "type": "integer",
+        "min": 2,
+        "max": 200,
+        "default": 3,
+        "resource_group": [2, 2, 3],
+        "required": "yes"
+      }, {
+        "key": "instance_class",
+        "label": "Instance Class",
+        "description": "The instance type for the cluster to run, such as high performance, high performance plus",
+        "type": "integer",
+        "range": [
+          0,
+          1
+        ],
+        "default": 1,
+        "required": "yes"
+      }, {
+        "key": "volume_class",
+        "label": "Volume Class",
+        "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
+        "type": "integer",
+        "default": 3,
+        "range": [
+          0,
+          2,
+          3,
+          5
+        ],
+        "required": "yes"
+      }, {
+        "key": "volume_size",
+        "label": "Volume Size",
+        "description": "The volume size for each ES node",
+        "type": "integer",
+        "min": 30,
+        "step": 30,
+        "auto_scale_step": 30,
+        "default": 60,
+        "required": "yes"
+      }]
+    }, {
+      "key": "es_master_node",
+      "label": "Elasticsearch Master Node",
+      "description": "role-based node properties",
+      "type": "array",
+      "properties": [{
+        "key": "cpu",
+        "label": "CPU",
+        "description": "CPUs of each node",
+        "type": "integer",
+        "range": [
+          1,
+          2,
+          4,
+          8,
+          12,
+          16,
+          32
+        ],
+        "default": 1,
+        "resource_group": [1, 2, 2],
+        "required": "yes"
+      }, {
+        "key": "memory",
+        "label": "Memory",
+        "description": "Memory of each node",
+        "type": "integer",
+        "range": [
+          2048,
+          4096,
+          6144,
+          8192,
+          12288,
+          16384,
+          24576,
+          32768,
+          40960,
+          49152,
+          65536
+        ],
+        "default": 2048,
+        "resource_group": [2048, 2048, 4096],
+        "required": "yes"
+      }, {
+        "key": "count",
+        "label": "Node Count",
+        "description": "Number of ES master nodes to create",
+        "type": "integer",
+        "range": [
+          0,
+          1,
+          3,
+          5
+        ],
+        "default": 3,
+        "resource_group": [0, 1, 3],
+        "required": "yes"
+      }, {
+        "key": "instance_class",
+        "label": "Instance Class",
+        "description": "The instance type for the cluster to run, such as high performance, high performance plus",
+        "type": "integer",
+        "range": [
+          0,
+          1
+        ],
+        "default": 0,
+        "required": "yes"
+      }, {
+        "key": "volume_class",
+        "label": "Volume Class",
+        "description": "The volume type for each instance, such as high performance, high performance plus",
+        "type": "integer",
+        "range": [
+          0,
+          3
+        ],
+        "default": 0,
+        "required": "yes"
+      }, {
+        "key": "volume_size",
+        "label": "Volume Size",
+        "description": "The volume size for each node",
+        "type": "integer",
+        "min": 10,
+        "auto_scale_step": 10,
+        "default": 10,
+        "required": "yes"
+      }]
+    }, {
+      "key": "es_node_2",
+      "label": "Elasticsearch Node 2",
+      "description": "ES node group can be used to hold hot-warm-cold data by label node.attr.data",
+      "type": "array",
+      "properties": [{
+        "key": "cpu",
+        "label": "CPU",
+        "description": "CPUs of each node",
+        "type": "integer",
+        "range": [
+          1,
+          2,
+          4,
+          8,
+          12,
+          16,
+          32
+        ],
+        "default": 2,
+        "resource_group": [1, 2, 2],
+        "required": "yes"
+      }, {
+        "description": "Memory of each node",
+        "key": "memory",
+        "label": "Memory",
+        "type": "integer",
+        "range": [
+          2048,
+          4096,
+          6144,
+          8192,
+          12288,
+          16384,
+          24576,
+          32768,
+          40960,
+          49152,
+          65536
+        ],
+        "default": 4096,
+        "resource_group": [2048, 4096, 4096],
+        "required": "yes"
+      }, {
+        "key": "count",
+        "label": "Node Count",
+        "description": "Number of ES nodes to create",
+        "type": "integer",
+        "min": 0,
+        "max": 200,
+        "default": 0,
+        "required": "yes"
+      }, {
+        "key": "instance_class",
+        "label": "Instance Class",
+        "description": "The instance type for the cluster to run, such as high performance, high performance plus",
+        "type": "integer",
+        "range": [
+          0,
+          1
+        ],
+        "default": 0,
+        "required": "yes"
+      }, {
+        "key": "volume_class",
+        "label": "Volume Class",
+        "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
+        "type": "integer",
+        "default": 0,
+        "range": [
+          0,
+          2,
+          3,
+          5
+        ],
+        "required": "yes"
+      }, {
+        "key": "volume_size",
+        "label": "Volume Size",
+        "description": "The volume size for each ES node",
+        "type": "integer",
+        "min": 30,
+        "step": 30,
+        "auto_scale_step": 30,
+        "default": 60,
+        "required": "yes"
+      }]
+    }, {
+      "key": "es_node_3",
+      "label": "Elasticsearch Node 3",
+      "description": "ES node group can be used to hold hot-warm-cold data by label node.attr.data",
+      "type": "array",
+      "properties": [{
+        "key": "cpu",
+        "label": "CPU",
+        "description": "CPUs of each node",
+        "type": "integer",
+        "range": [
+          1,
+          2,
+          4,
+          8,
+          12,
+          16,
+          32
+        ],
+        "default": 2,
+        "resource_group": [1, 2, 2],
+        "required": "yes"
+      }, {
+        "description": "Memory of each node",
+        "key": "memory",
+        "label": "Memory",
+        "type": "integer",
+        "range": [
+          2048,
+          4096,
+          6144,
+          8192,
+          12288,
+          16384,
+          24576,
+          32768,
+          40960,
+          49152,
+          65536
+        ],
+        "default": 4096,
+        "resource_group": [2048, 4096, 4096],
+        "required": "yes"
+      }, {
+        "key": "count",
+        "label": "Node Count",
+        "description": "Number of ES nodes to create",
+        "type": "integer",
+        "min": 0,
+        "max": 200,
+        "default": 0,
+        "required": "yes"
+      }, {
+        "key": "instance_class",
+        "label": "Instance Class",
+        "description": "The instance type for the cluster to run, such as high performance, high performance plus",
+        "type": "integer",
+        "range": [
+          0,
+          1
+        ],
+        "default": 1,
+        "required": "yes"
+      }, {
+        "key": "volume_class",
+        "label": "Volume Class",
+        "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
+        "type": "integer",
+        "default": 2,
+        "range": [
+          0,
+          2,
+          3,
+          5
+        ],
+        "required": "yes"
+      }, {
+        "key": "volume_size",
+        "label": "Volume Size",
+        "description": "The volume size for each ES node",
+        "type": "integer",
+        "min": 30,
+        "step": 30,
+        "auto_scale_step": 30,
+        "default": 60,
+        "required": "yes"
+      }]
+    }, {
+      "key": "lst_node",
+      "label": "Logstash Node",
+      "description": "Logstash node",
+      "type": "array",
+      "properties": [{
+        "key": "cpu",
+        "label": "CPU",
+        "description": "CPUs of each node",
+        "type": "integer",
+        "range": [
+          1,
+          2,
+          4,
+          8,
+          12,
+          16,
+          32
+        ],
+        "default": 2,
+        "resource_group": [1, 2, 2],
+        "required": "yes"
+      }, {
+        "key": "memory",
+        "label": "Memory",
+        "description": "Memory of each node",
+        "type": "integer",
+        "range": [
+          1024,
+          2048,
+          4096,
+          6144,
+          8192,
+          12288,
+          16384,
+          32768,
+          40960,
+          49152,
+          65536
+        ],
+        "default": 4096,
+        "resource_group": [1024, 4096, 4096],
+        "required": "yes"
+      }, {
+        "key": "count",
+        "label": "Node Count",
+        "description": "Number of nodes for the cluster to create",
+        "type": "integer",
+        "range": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "default": 1,
+        "resource_group": [1, 1, 1],
+        "required": "yes"
+      }, {
+        "key": "instance_class",
+        "label": "Instance Class",
+        "description": "The instance type for the cluster to run, such as high performance, high performance plus",
+        "type": "integer",
+        "range": [
+          0,
+          1,
+          101,
+          201,
+          301
+        ],
+        "default": 0,
+        "required": "yes"
+      }, {
+        "key": "volume_size",
+        "label": "Volume Size",
+        "description": "The volume size for each node",
+        "type": "integer",
+        "min": 10,
+        "auto_scale_step": 10,
+        "default": 10,
+        "required": "yes"
+      }]
+    }, {
+      "key": "kbn_node",
+      "label": "Kibana Node",
+      "description": "Kibana node",
+      "type": "array",
+      "properties": [{
+        "key": "cpu",
+        "label": "CPU",
+        "description": "CPUs of each node",
+        "type": "integer",
+        "range": [
+          1,
+          2,
+          4,
+          8
+        ],
+        "default": 2,
+        "resource_group": [1, 2, 2],
+        "required": "yes"
+      }, {
+        "key": "memory",
+        "label": "Memory",
+        "description": "Memory of each node",
+        "type": "integer",
+        "range": [
+          2048,
+          4096,
+          6144,
+          8192
+        ],
+        "default": 4096,
+        "resource_group": [2048, 4096, 4096],
+        "required": "yes"
+      }, {
+        "key": "count",
+        "label": "Node Count",
+        "description": "Number of Kibana nodes to create",
+        "type": "integer",
+        "range": [
+          0,
+          1,
+          2
+        ],
+        "default": 1,
+        "resource_group": [1, 1, 2],
+        "required": "yes"
+      }, {
+        "key": "instance_class",
+        "label": "Instance Class",
+        "description": "The instance type for the cluster to run, such as high performance, high performance plus",
+        "type": "integer",
+        "range": [
+          0,
+          1,
+          101,
+          201,
+          301
+        ],
+        "default": 0,
+        "required": "yes"
+      }]
+    }]
+  }, {
+    "key": "env",
+    "description": "application configuration properties",
+    "type": "array",
+    "properties": [{
+      "key": "es_node",
+      "description": "The role configuration properties of the application",
+      "type": "array",
+      "properties": [{
+        "key": "action.destructive_requires_name",
+        "label": "action.destructive_requires_name",
+        "description": "In order to enable allowing to delete indices via wildcards or _all, set this config to false.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "discovery.zen.no_master_block",
+        "label": "discovery.zen.no_master_block",
+        "description": "The discovery.zen.no_master_block settings controls what operations should be rejected when there is no active master.",
+        "type": "string",
+        "range": [
+          "all",
+          "write"
+        ],
+        "default": "write",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "gateway.recover_after_time",
+        "label": "gateway.recover_after_time",
+        "description": "If the expected number of nodes is not achieved, the recovery process waits for the configured amount of time before trying to recover regardless. Defaults to 5m if one of the expected_nodes settings is configured.",
+        "type": "string",
+        "pattern": "[0-9]+[smh]",
+        "default": "5m",
+        "changeable": true,
+        "required": "yes"
+      }, {
+        "key": "http.cors.enabled",
+        "label": "http.cors.enabled",
+        "description": "Enable or disable cross-origin resource sharing, i.e. whether a browser on another origin can execute requests against Elasticsearch.",
+        "type": "boolean",
+        "default": false,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "http.cors.allow-origin",
+        "label": "http.cors.allow-origin",
+        "description": "Which origins to allow.",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "indices.fielddata.cache.size",
+        "label": "indices.fielddata.cache.size",
+        "description": "The max size of the field data cache.",
+        "type": "string",
+        "default": "90%",
+        "changeable": true,
+        "required": "yes"
+      }, {
+        "key": "indices.memory.index_buffer_size",
+        "label": "indices.memory.index_buffer_size",
+        "description": "Accepts either a percentage or a byte size value. It defaults to 10%, meaning that 10% of the total heap allocated to a node will be used as the indexing buffer size shared across all shards.",
+        "type": "string",
+        "default": "10%",
+        "changeable": true,
+        "required": "yes"
+      }, {
+        "key": "indices.queries.cache.size",
+        "label": "indices.queries.cache.size",
+        "description": "Controls the memory size for the filter cache , defaults to 10%. Accepts either a percentage value, like 5%, or an exact value, like 512mb.",
+        "type": "string",
+        "default": "10%",
+        "changeable": true,
+        "required": "yes"
+      }, {
+        "key": "indices.requests.cache.size",
+        "label": "indices.requests.cache.size",
+        "description": "The shard-level request cache module caches the local results on each shard. The cache is managed at the node level, and has a default maximum size of 1% of the heap.",
+        "type": "string",
+        "default": "1%",
+        "changeable": true,
+        "required": "yes"
+      }, {
+        "key": "node.attr.data",
+        "label": "node.attr.data",
+        "description": "Custom attribute for ES node",
+        "type": "string",
+        "default": "hot",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "script.inline",
+        "label": "script.inline",
+        "description": "Specify whether scripts with inline type are allowed.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "script.stored",
+        "label": "script.stored",
+        "description": "Specify whether scripts with stored type are allowed.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "script.file",
+        "label": "script.file",
+        "description": "Specify whether scripts with file type are allowed.",
+        "type": "boolean",
+        "default": false,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "script.aggs",
+        "label": "script.aggs",
+        "description": "Specify whether scripts can be executed in aggregations context.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "script.search",
+        "label": "script.search",
+        "description": "Specify whether scripts can be executed in search context.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "script.update",
+        "label": "script.update",
+        "description": "Specify whether scripts can be executed in update context.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "reindex.remote.whitelist",
+        "label": "reindex.remote.whitelist",
+        "description": "Remote hosts for 'reindex' operation have to be explicitly whitelisted in elasticsearch.yaml using the reindex.remote.whitelist property. It can be set to a comma delimited list of allowed remote host and port combinations (e.g. otherhost:9200, another:9200, 127.0.10.*:9200, localhost:*)",
+        "type": "string",
+        "pattern": "^$|^([a-z0-9-.*]+:[0-9*]+(, *)?)+$",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "remote_ext_dict",
+        "label": "remote_ext_dict",
+        "description": "Specify the location of extensional dictionary from remote.",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "remote_ext_stopwords",
+        "label": "remote_ext_stopwords",
+        "description": "Specify the location of extensional stopwords dictionary from remote.",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "path.repo",
+        "label": "path.repo",
+        "description": "Specify the location of shared file system repository.",
+        "type": "string",
+        "default": "[]",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "repositories.url.allowed_urls",
+        "label": "repositories.url.allowed_urls",
+        "description": "Specify the location of read-only URL repository.",
+        "type": "string",
+        "default": "[]",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "es_additional_line1",
+        "label": "es_additional_line1",
+        "description": "The additional configuration in elasticsearch.yml.",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "es_additional_line2",
+        "label": "es_additional_line2",
+        "description": "The additional configuration in elasticsearch.yml.",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "es_additional_line3",
+        "label": "es_additional_line3",
+        "description": "The additional configuration in elasticsearch.yml.",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "logger.action.level",
+        "label": "logger.action.level",
+        "description": "The logger.action.level configuration in log4j2.properties.",
+        "type": "string",
+        "range": [
+          "debug",
+          "trace",
+          "info",
+          "warn",
+          "error"
+        ],
+        "default": "info",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "rootLogger.level",
+        "label": "rootLogger.level",
+        "description": "The rootLogger.level configuration in log4j2.properties.",
+        "type": "string",
+        "range": [
+          "debug",
+          "trace",
+          "info",
+          "warn",
+          "error"
+        ],
+        "default": "info",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "logger.deprecation.level",
+        "label": "logger.deprecation.level",
+        "description": "The logger.deprecation.level configuration in log4j2.properties.",
+        "type": "string",
+        "range": [
+          "debug",
+          "trace",
+          "info",
+          "warn",
+          "error"
+        ],
+        "default": "warn",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "logger.index_search_slowlog_rolling.level",
+        "label": "logger.index_search_slowlog_rolling.level",
+        "description": "The logger.index_search_slowlog_rolling.level configuration in log4j2.properties.",
+        "type": "string",
+        "range": [
+          "debug",
+          "trace",
+          "info",
+          "warn",
+          "error"
+        ],
+        "default": "trace",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "logger.index_indexing_slowlog.level",
+        "label": "logger.index_indexing_slowlog.level",
+        "description": "The logger.index_indexing_slowlog.level configuration in log4j2.properties.",
+        "type": "string",
+        "range": [
+          "debug",
+          "trace",
+          "info",
+          "warn",
+          "error"
+        ],
+        "default": "trace",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "enable_heap_dump",
+        "label": "enable_heap_dump",
+        "description": "Whether to enable heap dump on out of memory error.",
+        "type": "boolean",
+        "default": false,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "heap_dump_path",
+        "label": "heap_dump_path",
+        "description": "The path of heap dump.",
+        "type": "string",
+        "default": "/data/elasticsearch/dump",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "clean_logs_older_than_n_days",
+        "label": "clean_logs_older_than_n_days",
+        "description": "Clean logs older than n days, n can be changed here.",
+        "type": "integer",
+        "min": 0,
+        "default": 7,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "appctl.tcp_keepalive_intvl",
+        "label": "tcp_keepalive_intvl",
+        "description": "the interval between subsequent keepalive probes, regardless of what the connection has exchanged in the meantime",
+        "type": "integer",
+        "min": 0,
+        "default": 75,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "appctl.tcp_keepalive_probes",
+        "label": "tcp_keepalive_probes",
+        "description": "the number of unacknowledged probes to send before considering the connection dead and notifying the application layer",
+        "type": "integer",
+        "min": 0,
+        "default": 9,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "appctl.tcp_keepalive_time",
+        "label": "tcp_keepalive_time",
+        "description": "the interval between the last data packet sent (simple ACKs are not considered data) and the first keepalive probe; after the connection is marked to need keepalive, this counter is not used any further",
+        "type": "integer",
+        "min": 0,
+        "default": 7200,
+        "changeable": true,
+        "required": "no"
+      }]
+    }, {
+      "key": "es_node_2",
+      "description": "The role configuration properties of the application",
+      "type": "array",
+      "properties": [{
+        "key": "node.attr.data",
+        "label": "node.attr.data (#2)",
+        "description": "Custom attribute for ES node",
+        "type": "string",
+        "default": "warm",
+        "changeable": true,
+        "required": "no"
+      }]
+    }, {
+      "key": "es_node_3",
+      "description": "The role configuration properties of the application",
+      "type": "array",
+      "properties": [{
+        "key": "node.attr.data",
+        "label": "node.attr.data (#3)",
+        "description": "Custom attribute for ES node",
+        "type": "string",
+        "default": "cold",
+        "changeable": true,
+        "required": "no"
+      }]
+    }, {
+      "key": "kbn_node",
+      "description": "The role configuration properties of the application",
+      "type": "array",
+      "properties": [{
+        "key": "enable_elasticsearch_head",
+        "label": "enable_elasticsearch_head",
+        "description": "Whether to enable elasticsearch-head.",
+        "type": "boolean",
+        "default": false,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "enable_elastichd",
+        "label": "enable_elastichd",
+        "description": "Whether to enable ElasticHD.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "enable_cerebro",
+        "label": "enable_cerebro",
+        "description": "Whether to enable Cerebro.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "enable_elasticsearch_hq",
+        "label": "enable_elasticsearch_hq",
+        "description": "Whether to enable elasticsearch-hq.",
+        "type": "boolean",
+        "default": false,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "enable_elasticsearch_sql",
+        "label": "enable_elasticsearch_sql",
+        "description": "Whether to enable elasticsearch-sql.",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "proxy.balance.policy",
+        "label": "ES Proxy Balance Policy",
+        "description": "Define the load balancing algorithm to be used in a backend",
+        "type": "string",
+        "range": [
+          "roundrobin",
+          "static-rr",
+          "leastconn",
+          "first",
+          "source"
+        ],
+        "default": "roundrobin",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "proxy.connect.timeout",
+        "label": "ES Proxy Connect Timeout",
+        "description": "Sets the timeout for HAProxy to connect ES services, can be ms, s, m, or h, e.g. 50s for 50 seconds",
+        "type": "string",
+        "pattern": "[1-9]*[0-9]+(ms|s|m|h)?",
+        "default": "5s",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "proxy.timeout",
+        "label": "ES Proxy Timeout",
+        "description": "Sets the timeout for HAProxy to get response from ES services, can be ms, s, m, or h, e.g. 50s for 50 seconds",
+        "type": "string",
+        "pattern": "[1-9]*[0-9]+(ms|s|m|h)?",
+        "default": "60s",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "proxy.max.conn",
+        "label": "ES Proxy Max Connections",
+        "description": "Sets the maximum per-process number of concurrent connections",
+        "type": "number",
+        "min": 0,
+        "max": 65535,
+        "default": 2000,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "nginx_client_max_body_size",
+        "label": "ES Proxy Max Request",
+        "description": "Sets the maximum allowed size of the client request body",
+        "type": "string",
+        "pattern": "[0-9]+[km]?",
+        "default": "20m",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "server.basePath",
+        "label": "server.basePath",
+        "description": "Enables you to specify a path to mount Kibana at if you are running behind a proxy. Use the server.rewriteBasePath setting to tell Kibana if it should remove the basePath from requests it receives, and to prevent a deprecation warning at startup. This setting cannot end in a slash (/).",
+        "type": "string",
+        "pattern": "^(/[^/]+)*$",
+        "required": "no",
+        "default": ""
+      }, {
+        "key": "server.rewriteBasePath",
+        "label": "server.rewriteBasePath",
+        "description": "Specifies whether Kibana should rewrite requests that are prefixed with server.basePath or require that they are rewritten by your reverse proxy",
+        "type": "boolean",
+        "default": true,
+        "changeable": true,
+        "required": "no"
+      }]
+    }, {
+      "key": "lst_node",
+      "description": "The role configuration properties of the application",
+      "type": "array",
+      "properties": [{
+        "key": "config.reload.automatic",
+        "label": "config.reload.automatic",
+        "description": "Periodically check if the configuration has changed and reload the pipeline. This can also be triggered manually through the SIGHUP signal",
+        "type": "boolean",
+        "default": false,
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "config.reload.interval",
+        "label": "config.reload.interval",
+        "description": "How often to check if the pipeline configuration has changed (in seconds)",
+        "type": "string",
+        "pattern": "[0-9]+",
+        "default": "3",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "input_conf_content",
+        "label": "input_conf_content",
+        "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in input section",
+        "type": "string",
+        "default": "http { port => 9700 }",
+        "changeable": true,
+        "required": "yes"
+      }, {
+        "key": "filter_conf_content",
+        "label": "filter_conf_content",
+        "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in filter section",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "output_conf_content",
+        "label": "output_conf_content",
+        "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in output section",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "output_es_content",
+        "label": "output_es_content",
+        "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in output elasticsearch section",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "gemfile_append_content",
+        "label": "gemfile_append_content",
+        "description": "This config is used to adding content into Gemfile for logstash",
+        "type": "string",
+        "default": "",
+        "changeable": true,
+        "required": "no"
+      }]
+    }]
+  }]
 }

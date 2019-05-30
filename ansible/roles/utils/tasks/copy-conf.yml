@@ -1,30 +1,50 @@
 ---
-- name: Copy SystemD files
-  vars:
-    src: "roles/{{ parentRole }}/files/etc/systemd/system/"
+- name: copy SystemD files
   copy:
-    src: "{{ src }}"
-    dest: /etc/systemd/system/
+    src: roles/{{ parentRole }}/files/{{ path }}/
+    dest: /{{ path }}
     owner: root
     group: root
     mode: u=rw,go=r
-  when: src is directory
+  loop:
+    - etc/systemd/system
+  loop_control:
+    loop_var: path
+  when: ('roles/' + parentRole + '/files/' + path + '/') is directory
 
-- name: Copy app files
+- name: copy logging config files
   copy:
-    src: "{{ item }}"
+    src: roles/{{ role_name }}/files/{{ path }}/
+    dest: /{{ path }}
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  loop:
+    - etc/logrotate.d
+    - etc/rsyslog.d
+  loop_control:
+    loop_var: path
+  when: ('roles/' + role_name + '/files/' + path + '/') is directory
+
+- name: copy app files
+  copy:
+    src: "{{ path }}"
     dest: /opt/
     owner: root
     group: svc
     mode: preserve
     directory_mode: u=rwx,g=rx,o=
-  when: item is directory
-  with_items:
+  when: path is directory
+  loop:
     - "roles/{{ role_name }}/files/opt/"
     - "roles/{{ parentRole }}/files/opt/"
+  loop_control:
+    loop_var: path
 
-- name: Create symbolic link for ctl.sh - {{ parentRole }}
+- name: create symbolic link for ctl.sh - {{ parentRole }}
+  vars:
+    src_file: /opt/app/bin/ctl.sh
   file:
-    src: /opt/app/bin/ctl.sh
-    dest: /usr/local/bin/appctl
+    src: "{{ src_file }}"
+    dest: /usr/bin/appctl
     state: link
