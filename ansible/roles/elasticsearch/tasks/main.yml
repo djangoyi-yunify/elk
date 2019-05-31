@@ -8,7 +8,7 @@
 
 - name: install tools
   apt:
-    name: ['openjdk-8-jdk', 'unzip']
+    name: ['openjdk-8-jdk', 'openjdk-8-dbg', 'unzip']
     state: present
     update_cache: no
 

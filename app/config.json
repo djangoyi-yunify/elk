@@ -1073,5 +1073,52 @@
         "required": "no"
       }]
     }]
+  }, {
+    "key": "service_params",
+    "description": "custom services parameters",
+    "type": "array",
+    "properties": [{
+      "key": "dump.node.ip",
+      "label": "ES Node IP",
+      "description": "The node IP of ES on which to dump JVM heap",
+      "type": "string",
+      "pattern": "^((\\d+\\.){3}\\d+)?$",
+      "default": "",
+      "required": "yes"
+    }, {
+      "key": "dump.timeout",
+      "label": "Operation Timeout",
+      "description": "The dump timeout in seconds",
+      "type": "integer",
+      "min": 30,
+      "max": 1800,
+      "default": 300,
+      "required": "no"
+    }, {
+      "key": "clear.dump.node.ip",
+      "label": "ES Node IP",
+      "description": "The node IP of ES on which to clear dump JVM heap",
+      "type": "string",
+      "pattern": "^((\\d+\\.){3}\\d+)?$",
+      "default": "",
+      "required": "no"
+    }, {
+      "key": "restart.node.ip",
+      "label": "ES Node IP",
+      "description": "The node IP of ES on which to restart",
+      "type": "string",
+      "pattern": "^((\\d+\\.){3}\\d+)?$",
+      "default": "",
+      "required": "no"
+    }, {
+      "key": "restart.timeout",
+      "label": "Operation Timeout",
+      "description": "The restart timeout in seconds",
+      "type": "integer",
+      "min": 60,
+      "max": 1800,
+      "default": 600,
+      "required": "no"
+    }]
   }]
 }

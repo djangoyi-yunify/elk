@@ -3,8 +3,8 @@
 set -e
 
 coreSvcs="
-keepalived
 haproxy:9200
+keepalived
 kibana:5601
 caddy:80
 "
@@ -45,6 +45,7 @@ prepareDirs() {
 init() {
   _init
   prepareDirs
+  ln -s /opt/app/conf/caddy/index.html /data
 }
 
 check() {

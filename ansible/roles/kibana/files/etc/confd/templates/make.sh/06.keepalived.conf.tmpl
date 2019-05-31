@@ -1,4 +1,13 @@
-cat > /etc/keepalived/keepalived.conf << KEEPALIVED_EOF
+firstKibanaSid="$(echo {{ join (getvs "/hosts/kbn_node/*/sid") " " }} | xargs -n1 | sort -n | head -1)"
+if [ "$firstKibanaSid" = "{{ $mySid }}" ]; then
+  keepalivedRole=MASTER
+  keepalivedPriority=100
+else
+  keepalivedRole=BACKUP
+  keepalivedPriority=1
+fi
+
+cat > /opt/app/conf/keepalived/keepalived.conf << KEEPALIVED_EOF
 global_defs {
   enable_script_security
   script_user root root
@@ -11,10 +20,10 @@ vrrp_script check_haproxy {
 }
 
 vrrp_instance {{ getv "/cluster/cluster_id" }} {
-  state BACKUP
+  state $keepalivedRole
   interface eth0
   virtual_router_id {{ index (split $esVip ".") 3 }}
-  priority {{ getv "/host/sid" }}
+  priority $keepalivedPriority
 
   virtual_ipaddress {
     {{ $esVip }}
