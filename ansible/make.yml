@@ -17,8 +17,8 @@
       name: "{{ svc_name }}"
     when: "'elasticsearch' in group_names"
     loop:
-    - elasticsearch
     - caddy
+    - elasticsearch
     loop_control:
       loop_var: svc_name
 

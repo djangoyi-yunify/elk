@@ -72,7 +72,7 @@ discovery.zen.fd.ping_timeout: 30s
 discovery.zen.minimum_master_nodes: {{ if $mastersCount }}{{ $masterQuorum }}{{ else }}{{ $genericQuorum }}{{ end }}
 discovery.zen.no_master_block: {{ getv "/env/discovery.zen.no_master_block" "write" }}
 discovery.zen.ping_timeout: 3s
-discovery.zen.ping.unicast.hosts: [ $discoveryHosts ]
+discovery.zen.ping.unicast.hosts: [ ${discoveryHosts/{{ $myIp }},/} ]
 
 {{ if $mastersCount -}}
 gateway.expected_data_nodes: {{ $genNodesCount }}
@@ -104,7 +104,8 @@ node.attr.data: "{{ getv "/env/node.attr.data" "hot" }}"
 node.data: {{ not $isDedicatedMaster }}
 node.ingest: {{ not $isDedicatedMaster }}
 node.master: {{ or $isDedicatedMaster (not $mastersCount) }}
-node.name: {{ getv "/cluster/cluster_id" }}{{ range split $myRole "elasticsearch-" | filter "2|3" }}-g{{ . }}{{ end }}-{{ getv "/host/sid" }}
+{{- $groupsMap := map "2" "n2" "3" "n3" "master" "m" }}
+node.name: {{ getv "/cluster/cluster_id" }}{{ range split $myRole "-" | filter "2|3|master" }}-{{ index $groupsMap . }}{{ end }}-{{ getv "/host/sid" }}
 
 path.data: [ $dataDirs ]
 path.logs: /data/elasticsearch/logs

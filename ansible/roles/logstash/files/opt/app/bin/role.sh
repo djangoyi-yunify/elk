@@ -23,11 +23,8 @@ prepareDirs() {
 init() {
   _init
   prepareDirs
-}
-
-start() {
-  cp /opt/app/conf/caddy/index.html /data/elasticsearch
-  _start
+  local htmlPath=/data/elasticsearch/index.html
+  [ -e $htmlPath ] || ln -s /opt/app/conf/caddy/index.html $htmlPath
 }
 
 checkVersion() {
