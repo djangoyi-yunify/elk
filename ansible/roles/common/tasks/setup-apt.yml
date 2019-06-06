@@ -3,7 +3,6 @@
   systemd:
     name: "{{ svc_name }}"
     state: stopped
-    enabled: no
     masked: yes
   loop:
   - apt-daily.timer

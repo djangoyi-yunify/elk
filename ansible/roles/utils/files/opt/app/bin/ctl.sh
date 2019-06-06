@@ -66,7 +66,6 @@ _init() {
   rm -rf /data/lost+found
 
   svcsctl unmask -q
-  svcsctl enable -q
 }
 
 checkSvcs() {
@@ -110,7 +109,7 @@ _revive() {
 }
 
 _update() {
-  if svcsctl is-enabled -q; then execute restart; fi
+  if [ "$(svcsctl is-enabled)" = "disabled" ]; then execute restart; fi # only update when unmasked
 }
 
 . /opt/app/bin/role.sh

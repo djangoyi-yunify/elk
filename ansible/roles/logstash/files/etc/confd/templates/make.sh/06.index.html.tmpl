@@ -82,6 +82,7 @@ cat > /opt/app/conf/caddy/index.html << LS_HTML_EOF
         <li><span class="sub-1">⊞</span><a href="./dicts/">dicts</a></li>
         <li><span class="sub-1">⊞</span><a href="./logs/">logs</a>（已废弃，请到 Elasticsearch 节点查看）</li>
         <li><span class="sub-1">⊟</span>logstash</a></li>
+        <li><span class="sub-2">⊞</span><a href="./logstash/dump/">dump</a></li>
         <li><span class="sub-2">⊞</span><a href="./logstash/logs/">logs</a></li>
         {{- else }}
         <li><span>⊞</span><a href="//{{ . }}/">{{ . }}</a></li>

@@ -12,10 +12,11 @@ cat > /opt/app/conf/caddy/Caddyfile << LS_CADDYFILE_EOF
   }
 }
 
-{{ $myIp }}:80/logstash/logs {
-  root /data/logstash/logs
+{{ $myIp }}:80/logstash {
+  root /data/logstash
   gzip
-  browse
+  browse /logs
+  browse /dump
   tls off
 }
 LS_CADDYFILE_EOF

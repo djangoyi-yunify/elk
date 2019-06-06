@@ -7,10 +7,16 @@
     group: root
     mode: u=rw,go=r
   loop:
-    - etc/systemd/system
+    - lib/systemd/system
   loop_control:
     loop_var: path
   when: ('roles/' + parentRole + '/files/' + path + '/') is directory
+
+- name: disable auto start
+  systemd:
+    name: "{{ parentRole }}"
+    state: stopped
+    masked: yes
 
 - name: copy logging config files
   copy:
