@@ -1,26 +1,27 @@
 ---
+- name: set var
+  set_fact:
+    systemd_path: roles/{{ parentRole }}/files/lib/systemd/system/
+
 - name: copy SystemD files
   copy:
-    src: roles/{{ parentRole }}/files/{{ path }}/
-    dest: /{{ path }}
+    src: "{{ systemd_path }}"
+    dest: /lib/systemd/system
     owner: root
     group: root
     mode: u=rw,go=r
-  loop:
-    - lib/systemd/system
-  loop_control:
-    loop_var: path
-  when: ('roles/' + parentRole + '/files/' + path + '/') is directory
+  when: systemd_path is directory
 
 - name: disable auto start
   systemd:
     name: "{{ parentRole }}"
     state: stopped
     masked: yes
+  when: systemd_path is directory
 
 - name: copy logging config files
   copy:
-    src: roles/{{ role_name }}/files/{{ path }}/
+    src: roles/{{ parentRole }}/files/{{ path }}/
     dest: /{{ path }}
     owner: root
     group: root
@@ -30,7 +31,7 @@
     - etc/rsyslog.d
   loop_control:
     loop_var: path
-  when: ('roles/' + role_name + '/files/' + path + '/') is directory
+  when: ('roles/' + parentRole + '/files/' + path + '/') is directory
 
 - name: copy app files
   copy:
@@ -42,7 +43,6 @@
     directory_mode: u=rwx,g=rx,o=
   when: path is directory
   loop:
-    - "roles/{{ role_name }}/files/opt/"
     - "roles/{{ parentRole }}/files/opt/"
   loop_control:
     loop_var: path

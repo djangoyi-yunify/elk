@@ -109,7 +109,7 @@ _revive() {
 }
 
 _update() {
-  if [ "$(svcsctl is-enabled)" = "disabled" ]; then execute restart; fi # only update when unmasked
+  if [ "$(systemctl is-enabled $MY_ROLE)" = "disabled" ]; then execute restart; fi # only update when unmasked
 }
 
 . /opt/app/bin/role.sh

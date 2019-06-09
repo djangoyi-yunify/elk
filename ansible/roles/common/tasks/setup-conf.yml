@@ -1,0 +1,7 @@
+---
+- name: copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: common
