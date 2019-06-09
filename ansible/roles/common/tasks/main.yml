@@ -6,3 +6,4 @@
   - setup-apt
   - create-group
   - disable-motd
+  - setup-conf

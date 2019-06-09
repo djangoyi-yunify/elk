@@ -31,14 +31,9 @@
     dest: "/opt/keepalived/current"
     state: link
 
-- name: copy conf files
-  copy:
-    src: roles/{{ role_name }}/files/{{ item }}/
-    dest: /{{ item }}
-    owner: root
-    group: root
-    mode: u=rw,go=r
-  with_items:
-    - etc/logrotate.d
-    - etc/rsyslog.d
-    - etc/systemd/system
+- name: copy configuration files
+  include_role:
+    name: utils
+    tasks_from: copy-conf
+  vars:
+    parentRole: keepalived

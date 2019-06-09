@@ -45,7 +45,7 @@ prepareDirs() {
 init() {
   _init
   prepareDirs
-  ln -s /opt/app/conf/caddy/index.html /data
+  ln -sf /opt/app/conf/caddy/index.html /data/index.html
 }
 
 check() {

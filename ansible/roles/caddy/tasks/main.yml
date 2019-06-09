@@ -46,10 +46,3 @@
       extractArgs: []
   loop_control:
     loop_var: opts
-
-- name: Copy configuration files
-  include_role:
-    name: utils
-    tasks_from: copy-conf
-  vars:
-    parentRole: caddy
