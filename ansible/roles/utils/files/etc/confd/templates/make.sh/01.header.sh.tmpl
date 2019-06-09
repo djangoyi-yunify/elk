@@ -2,7 +2,6 @@
 
 set -eo pipefail
 
-{{- $elkVersion := getv "/env/elk.version" "5.6.16" }}
 {{- $rolesMap := map "es_node" "elasticsearch-1" "es_node_2" "elasticsearch-2" "es_node_3" "elasticsearch-3" "es_master_node" "elasticsearch-master" "kbn_node" "kibana" "lst_node" "logstash" }}
 {{- $myRole := index $rolesMap (getv "/host/role") }}
 {{- $mySid := getv "/host/sid" }}

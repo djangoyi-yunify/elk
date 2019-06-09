@@ -7,17 +7,13 @@ After=network-online.target
 [Service]
 RuntimeDirectory=elasticsearch
 PrivateTmp=true
-Environment=ES_JVM_OPTIONS=/opt/app/conf/elasticsearch/jvm.options
-Environment=CONF_DIR=/opt/app/conf/elasticsearch
-Environment=PID_DIR=/var/run/elasticsearch
+EnvironmentFile=/opt/app/conf/elasticsearch/.env
+
 WorkingDirectory=/data/elasticsearch
 User=elasticsearch
-Group=svc
+Group=elasticsearch
 
-ExecStart=/opt/elasticsearch/current/bin/elasticsearch \
-                                                -p ${PID_DIR}/elasticsearch.pid \
-                                                --quiet \
-                                                -Epath.conf=${CONF_DIR}
+ExecStart=/opt/elasticsearch/current/bin/elasticsearch -p ${PID_DIR}/elasticsearch.pid --quiet
 
 # StandardOutput is configured to redirect to journalctl since
 # some error messages may be logged in standard output before
@@ -32,7 +28,7 @@ StandardError=inherit
 LimitNOFILE=65536
 
 # Specifies the maximum number of processes
-LimitNPROC=2048
+LimitNPROC=4096
 
 # Specifies the maximum size of virtual memory
 LimitAS=infinity

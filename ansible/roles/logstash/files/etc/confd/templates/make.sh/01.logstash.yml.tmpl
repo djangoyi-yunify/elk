@@ -1,6 +1,6 @@
 cat > /opt/app/conf/logstash/logstash.yml << LS_YML_EOF
 config.reload.automatic: {{ getv "/env/config.reload.automatic" "false" }}
-config.reload.interval: {{ getv "/env/config.reload.interval" "3" }}
+config.reload.interval: {{ getv "/env/config.reload.interval" "3s" }}
 
 http.host: "{{ getv "/host/ip" }}"
 

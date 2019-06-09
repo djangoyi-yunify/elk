@@ -98,7 +98,7 @@
   "cluster_shards_primaries_count": "集群主分片数",
   "cluster_shards_replication_count": "集群副本分片数",
   "initializing_shards": "初始化中的分片数",
-  "Whether to enable elasticsearch-head.": "是否启用elasticsearch-head",
+  "Whether to enable elasticsearch-head.": "是否启用elasticsearch-head，启用前请先设置 ES 节点的 http.cors.enabled 为 true 并设置合适的 http.cors.allow-origin",
   "Whether to enable ElasticHD.": "是否启用ElasticHD",
   "Whether to enable Cerebro.": "是否启用Cerebro",
   "Whether to enable elasticsearch-hq.": "是否启用Elasticsearch-HQ",

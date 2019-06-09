@@ -21,10 +21,10 @@
     name: utils
     tasks_from: install-pkg
   vars:
-    version: "{{ elkVersion }}"
+    version: "{{ elk_version }}"
     parentRole: logstash
   loop:
-    - pkgUrl: "https://artifacts.elastic.co/downloads/logstash/logstash-{{ version }}.tar.gz"
+    - pkgUrl: "https://artifacts.elastic.co/downloads/logstash/logstash-oss-{{ version }}.tar.gz"
       svcHome: "{{ ls_home }}"
   loop_control:
     loop_var: opts
@@ -32,12 +32,24 @@
 - name: Install plugins
   include_tasks: install-plugin.yml
   loop:
-    - name: logstash-input-qingstor
-      version: b4e6fd29ead81db27e06870573add00914b539b1
-      url: https://github.com/yunify/logstash-input-qingstor/archive/b4e6fd29ead81db27e06870573add00914b539b1.zip
-    - name: logstash-output-qingstor
-      version: 0.3.6
-      url: https://github.com/yunify/logstash-output-qingstor/archive/v0.3.6.zip
+    - name: logstash-filter-uuid
+      version: 3.0.5
+    - name: logstash-input-couchdb_changes
+      version: 3.1.6
+    - name: logstash-input-irc
+      version: 3.0.7
+    - name: logstash-input-log4j
+      version: 3.1.3
+    - name: logstash-input-lumberjack
+      version: 3.1.6
+    - name: logstash-input-xmpp
+      version: 3.1.7
+    - name: logstash-output-irc
+      version: 3.0.6
+    - name: logstash-output-statsd
+      version: 3.2.0
+    - name: logstash-output-xmpp
+      version: 3.0.8
   loop_control:
     loop_var: opts
 
@@ -49,7 +61,7 @@
     mode: 0664
   loop:
     - Gemfile
-    - Gemfile.jruby-1.9.lock
+    - Gemfile.lock
 
 - name: work around dir permissions for end user
   file:

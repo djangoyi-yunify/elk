@@ -11,6 +11,7 @@
 
 set -eo pipefail
 
+. /opt/app/bin/version.env
 . /opt/app/bin/.env
 
 # Error codes

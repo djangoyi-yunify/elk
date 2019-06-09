@@ -1,15 +1,15 @@
 ---
-- name: Set up variables for Caddy
+- name: set up variables for Caddy
   set_fact:
     go_path: "{{ playbook_dir }}/files/tmp/go"
     work_dir: files/tmp/go/src/github.com/mholt/caddy/caddy
 
-- name: Install golang
+- name: install golang
   shell: |
     snap install go --classic
   delegate_to: localhost
 
-- name: Build Caddy with upload plugin
+- name: build Caddy with upload plugin
   environment:
     GOPATH: "{{ playbook_dir }}/files/tmp/go"
   shell: |
@@ -34,7 +34,7 @@
     creates: files/tmp/caddy-latest.tgz
   delegate_to: localhost
 
-- name: Install Caddy
+- name: install Caddy
   include_role:
     name: utils
     tasks_from: install-pkg

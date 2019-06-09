@@ -24,10 +24,10 @@
     name: utils
     tasks_from: install-pkg
   vars:
-    version: "{{ elkVersion }}"
+    version: "{{ elk_version }}"
     parentRole: elasticsearch
   loop:
-    - pkgUrl: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ version }}.tar.gz"
+    - pkgUrl: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-{{ version }}.tar.gz"
   loop_control:
     loop_var: opts
 
@@ -36,18 +36,18 @@
   loop:
     - name: analysis-icu
     - name: analysis-ik
-      url: "https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v{{ elkVersion }}/elasticsearch-analysis-ik-{{ elkVersion }}.zip"
+      url: "https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v{{ elk_version }}/elasticsearch-analysis-ik-{{ elk_version }}.zip"
     - name: analysis-kuromoji
     - name: analysis-phonetic
     - name: analysis-pinyin
-      url: "https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v{{ elkVersion }}/elasticsearch-analysis-pinyin-{{ elkVersion }}.zip"
+      url: "https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v{{ elk_version }}/elasticsearch-analysis-pinyin-{{ elk_version }}.zip"
     - name: ingest-attachment
     - name: mapper-murmur3
     - name: mapper-size
     - name: repository-hdfs
     - name: repository-s3
     - name: sql
-      url: "https://github.com/NLPchina/elasticsearch-sql/releases/download/{{ elkVersion }}.0/elasticsearch-sql-{{ elkVersion }}.0.zip"
+      url: "https://github.com/NLPchina/elasticsearch-sql/releases/download/{{ elk_version }}.0/elasticsearch-sql-{{ elk_version }}.0.zip"
   loop_control:
     loop_var: opts
 
@@ -57,6 +57,13 @@
     tasks_from: copy-conf
   vars:
     parentRole: elasticsearch
+
+- name: fix directory permission for elasticsearch.keystore
+  file:
+    path: /opt/app/conf/elasticsearch
+    group: svc
+    mode: g+w
+    state: directory
 
 - name: prepare scripts directory
   file:
@@ -101,3 +108,9 @@
     dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/extra_stopword.dic"
     owner: root
     group: svc
+
+- name: sql plugin version workaround
+  replace:
+    path: /opt/elasticsearch/current/plugins/sql/plugin-descriptor.properties
+    regexp: '^elasticsearch.version=.+$'
+    replace: elasticsearch.version={{ elk_version }}

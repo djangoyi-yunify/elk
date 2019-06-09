@@ -30,14 +30,14 @@
 
 - name: Download LS plugin - {{ opts.name }}
   get_url:
-    url: "{{ opts.url | default('https://github.com/logstash-plugins/' + opts.name + '/archive/v' + opts.version + '.zip') }}"
-    dest: "{{ local_dir }}/{{ opts.name }}-{{ opts.version }}.zip"
+    url: "{{ opts.url | default('https://github.com/logstash-plugins/' + opts.name + '/archive/v' + opts.version + '.tar.gz') }}"
+    dest: "{{ local_dir }}/{{ opts.name }}-{{ opts.version }}.tgz"
   delegate_to: localhost
   when: installed is failed
 
 - name: Extract LS plugin - {{ opts.name }}
   unarchive:
-    src: "{{ local_dir }}/{{ opts.name }}-{{ opts.version }}.zip"
+    src: "{{ local_dir }}/{{ opts.name }}-{{ opts.version }}.tgz"
     dest: "{{ remote_dir }}"
     creates: "{{ remote_dir }}/{{ opts.name }}-{{ opts.version }}"
     owner: logstash

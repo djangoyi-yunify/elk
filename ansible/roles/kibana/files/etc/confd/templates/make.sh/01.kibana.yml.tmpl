@@ -7,9 +7,9 @@ server.rewriteBasePath: {{ getv "/env/server.rewriteBasePath" "false" }}
 {{- end }}
 server.maxPayloadBytes: 1048576
 server.name: Kibana
-elasticsearch.url: http://{{ $esVip }}:9200
+elasticsearch.hosts: [ http://{{ $esVip }}:9200 ]
 elasticsearch.preserveHost: true
-kibana.index: ".kibana"
+kibana.index: ".kibana-6"
 kibana.defaultAppId: "home"
 elasticsearch.username: "user"
 elasticsearch.password: "pass"
