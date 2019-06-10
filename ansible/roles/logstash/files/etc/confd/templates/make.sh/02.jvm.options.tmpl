@@ -15,6 +15,9 @@ cat > /usr/share/logstash/config/jvm.options << LS_JVM_EOF
 
 -Dfile.encoding=UTF-8
 
+-Djruby.compile.invokedynamic=true
+-Djruby.jit.threshold=0
+
 -XX:+HeapDumpOnOutOfMemoryError
 -XX:HeapDumpPath=/data/logstash/dump/dump.hprof
 

@@ -105,13 +105,13 @@
         "label": "Volume Class",
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
-        "default": 3,
         "range": [
           0,
           2,
           3,
           5
         ],
+        "default": 3,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -199,7 +199,9 @@
         "type": "integer",
         "range": [
           0,
-          3
+          2,
+          3,
+          5
         ],
         "default": 0,
         "required": "yes"
@@ -274,20 +276,20 @@
           0,
           1
         ],
-        "default": 0,
+        "default": 1,
         "required": "yes"
       }, {
         "key": "volume_class",
         "label": "Volume Class",
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
-        "default": 0,
         "range": [
           0,
           2,
           3,
           5
         ],
+        "default": 3,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -361,20 +363,20 @@
           0,
           1
         ],
-        "default": 1,
+        "default": 0,
         "required": "yes"
       }, {
         "key": "volume_class",
         "label": "Volume Class",
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
-        "default": 2,
         "range": [
           0,
           2,
           3,
           5
         ],
+        "default": 5,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -384,7 +386,7 @@
         "min": 30,
         "step": 30,
         "auto_scale_step": 30,
-        "default": 60,
+        "default": 300,
         "required": "yes"
       }]
     }, {
@@ -463,7 +465,7 @@
           201,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -533,7 +535,7 @@
           201,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }]
     }]
@@ -1027,8 +1029,8 @@
         "label": "config.reload.interval",
         "description": "How often to check if the pipeline configuration has changed (in seconds)",
         "type": "string",
-        "pattern": "[0-9]+",
-        "default": "3",
+        "pattern": "[0-9]+[smh]?",
+        "default": "3s",
         "changeable": true,
         "required": "no"
       }, {
@@ -1060,7 +1062,7 @@
         "label": "output_es_content",
         "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in output elasticsearch section",
         "type": "string",
-        "default": "",
+        "default": "document_type => '_doc'",
         "changeable": true,
         "required": "no"
       }, {

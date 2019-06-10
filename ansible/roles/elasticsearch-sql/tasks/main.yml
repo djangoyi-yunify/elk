@@ -4,7 +4,7 @@
     name: utils
     tasks_from: install-pkg
   vars:
-    version: "{{ elkVersion }}.0"
+    version: "{{ elk_version }}.0"
     parentRole: elasticsearch-sql
   loop:
     - pkgUrl: "https://github.com/NLPchina/elasticsearch-sql/archive/{{ version }}.tar.gz"

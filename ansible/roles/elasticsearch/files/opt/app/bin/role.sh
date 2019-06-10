@@ -287,6 +287,14 @@ upgrade() {
   execute start
   retry 60 1 0 checkNodeJoined
   retry 7200 2 0 checkNodeShardsLoaded || log "WARN: still loading data after 4 hours. Move to next node."
+  . /opt/app/bin/upgrade.env
+
+  prepareDryrun
+  systemctl start es-dryrun
+  retry 90 2 0 checkAllNodesUp
+  # Allow all nodes to capture the event.
+  sleep 10
+  systemctl stop es-dryrun
 }
 
 checkNodesCount() {

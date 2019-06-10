@@ -4,6 +4,13 @@
     es_home: /opt/elasticsearch/current
     local_dir: files/tmp/es-plugins
 
+- name: Prepare ES plugin directory - {{ opts.name }}
+  file:
+    dest: "{{ es_home }}/plugins/{{ opts.name }}"
+    owner: elasticsearch
+    group: svc
+    state: directory
+
 - name: Prepare local tmp dir for ES plugins
   file:
     dest: "{{ local_dir }}"
@@ -12,20 +19,15 @@
 
 - name: Download ES plugin - {{ opts.name }}
   get_url:
-    url: "{{ opts.url | default('https://artifacts.elastic.co/downloads/elasticsearch-plugins/%s/%s-%s.zip' | format(opts.name, opts.name, elkVersion)) }}"
-    dest: "{{ local_dir }}/{{ opts.name }}-{{ elkVersion }}.zip"
+    url: "{{ opts.url | default('https://artifacts.elastic.co/downloads/elasticsearch-plugins/%s/%s-%s.zip' | format(opts.name, opts.name, elk_version)) }}"
+    dest: "{{ local_dir }}/{{ opts.name }}-{{ elk_version }}.zip"
   delegate_to: localhost
 
 - name: Extract ES plugin - {{ opts.name }}
   unarchive:
-    src: "{{ local_dir }}/{{ opts.name }}-{{ elkVersion }}.zip"
-    dest: "{{ es_home }}/plugins/"
+    src: "{{ local_dir }}/{{ opts.name }}-{{ elk_version }}.zip"
+    dest: "{{ es_home }}/plugins/{{ opts.name }}"
     creates: "{{ es_home }}/plugins/{{ opts.name }}/plugin-descriptor.properties"
     owner: elasticsearch
     group: svc
 
-- name: Move plugin directory - {{ opts.name }}
-  shell: |
-    mv {{ es_home }}/plugins/elasticsearch {{ es_home }}/plugins/{{ opts.name }}
-  args:
-    creates: "{{ es_home }}/plugins/{{ opts.name }}/plugin-descriptor.properties"

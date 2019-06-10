@@ -11,10 +11,10 @@
     name: utils
     tasks_from: install-pkg
   vars:
-    version: "{{ elkVersion }}"
+    version: "{{ elk_version }}"
     parentRole: kibana
   loop:
-    - pkgUrl: "https://artifacts.elastic.co/downloads/kibana/kibana-{{ version }}-linux-x86_64.tar.gz"
+    - pkgUrl: "https://artifacts.elastic.co/downloads/kibana/kibana-oss-{{ version }}-linux-x86_64.tar.gz"
   loop_control:
     loop_var: opts
 
