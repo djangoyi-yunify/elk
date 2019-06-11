@@ -109,11 +109,6 @@ checkNodeShardsLoaded() {
 
 jsonHeader='Content-Type: application/json'
 
-checkExcluded() {
-  checkClusterScaled 10
-  checkShardsMovedAway
-}
-
 preScaleIn() {
   . /opt/app/bin/scaling.env
   [ -n "$LEAVING_DATA_NODES" ] && [ "$MY_IP" = "${STABLE_DATA_NODES%% *}" ] || return 0
@@ -127,6 +122,10 @@ preScaleIn() {
     setExcludeIp null
     return $retCode
   }
+}
+
+checkExcluded() {
+  checkClusterScaled 10 && checkShardsMovedAway
 }
 
 scale() {
