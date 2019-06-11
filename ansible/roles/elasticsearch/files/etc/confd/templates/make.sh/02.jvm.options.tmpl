@@ -11,6 +11,7 @@ cat > /opt/app/conf/elasticsearch/jvm.options << ES_JVM_EOF
 
 -Des.networkaddress.cache.ttl=60
 -Des.networkaddress.cache.negative.ttl=10
+-Des.allow_insecure_settings=true
 
 -Djava.security.policy=file:///opt/app/conf/elasticsearch/dicts.policy
 
