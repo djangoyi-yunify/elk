@@ -43,6 +43,10 @@ update() {
 }
 
 upgrade() {
-  testConf
+  testConf || {
+    log "WARN: detected configuration failures. Sleeping and waiting for manual correction."
+    sleep 28800
+  }
+
   execute init
 }
