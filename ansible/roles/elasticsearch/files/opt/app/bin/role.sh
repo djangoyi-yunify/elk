@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+EC_HTTP_ERROR=130
+EC_STATUS_ERROR=131
 EC_NO_ES_NODES=20
 EC_SCLIN_NO_HEALTH=21
 EC_SCLIN_UNHEALTHY=22
@@ -11,6 +13,7 @@ EC_SCLIN_HOLDING_DATA=123 # the leaving nodes are still holding data
 EC_UPG_UP_NODES=41        # wrong number of running nodes
 EC_UPG_NOT_JOINED=42      # upgraded node not joined the cluster
 EC_DATA_LOAD_TIMEOUT=43   # shards not fully loaded
+EC_UPG_ONE_NEW=44
 EC_UPDATE_FAILURE=50
 
 svcNames="elasticsearch caddy"
@@ -283,29 +286,42 @@ prepareDryrun() {
 
 upgrade() {
   execute init
-  execute start
-  retry 60 1 0 checkNodeJoined
-  retry 7200 2 0 checkNodeShardsLoaded || log "WARN: still loading data after 4 hours. Move to next node."
-  . /opt/app/bin/upgrade.env
-
-  prepareDryrun
-  systemctl start es-dryrun
-  retry 90 2 0 checkAllNodesUp
-  # Allow all nodes to capture the event.
-  sleep 10
-  systemctl stop es-dryrun
-}
-
-checkNodesCount() {
-  local expected=${1?expected nodes count is required} node=${2:-$MY_IP} actual
-  actual=$(curl -s -m 3 $node:9200/_cat/nodes | wc -l)
-  [ "$expected" = "$actual" ] || return $EC_UPG_UP_NODES
+  svcStartTimeout=600 execute start || log "WARN: still not fully started after 10 minutes."
+  retry 600 1 0 checkNodeJoined || log "WARN: still not joined the cluster after 10 minutes."
+  retry 10800 2 $EC_UPG_ONE_NEW checkNodeLoaded || {
+    [ "$?" = "$EC_UPG_ONE_NEW" ] && log "WARN: move to upgrade second node." || log "WARN: still loading data after more than 6 hours."
+  }
 }
 
 checkNodeJoined() {
   local result node=${1:-$MY_IP}
   result="$(curl -s -m 3 $node:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^m?di$/ {print $1}')"
   [ "$result" = "$MY_IP" ] || return $EC_UPG_NOT_JOINED
+}
+
+checkNodeLoaded() {
+  local url="$MY_IP:9200/_cluster/health"
+  local query=".status, .initializing_shards, .unassigned_shards"
+  local health status init unassign
+  health="$(curl -s -m 3 "$url" | jq -r "$query" | xargs)" || return $EC_HTTP_ERROR
+  status="$(echo $health | awk '{print $1}')"
+  init="$(echo $health | awk '{print $2}')"
+  unassign="$(echo $health | awk '{print $3}')"
+
+  [ -n "$status" -a -n "$init" -a -n "$unassign" ] || return $EC_STATUS_ERROR
+
+  # if this is the first upgraded node, it will fail to allocate shards for newly created indices to other old-version nodes. Need to move on then.
+  if [ "$init" -eq 0 -a "$unassign" -gt 0 ]; then
+    local nodes expectedCount="$(echo "$DATA_NODES" | tr -cd ' ' | wc -c)"
+    url="$MY_IP:9200/_cat/nodes?h=v"
+    nodes="$(curl -s -m 5 "$url" | awk 'BEGIN{n=0;o=0} {if($1=="'$ELK_VERSION'")n++;else if($1=="5.5.1")o++;} END{print n,o}')" || return $EC_HTTP_ERROR
+    if [ "$nodes" = "1 $expectedCount" ]; then
+      log "This is the first upgraded node: '$nodes'."
+      return $EC_UPG_ONE_NEW
+    fi
+  fi
+
+  [ "$status" = "green" ] || return $EC_DATA_LOAD_TIMEOUT
 }
 
 checkStatusNotRed() {
