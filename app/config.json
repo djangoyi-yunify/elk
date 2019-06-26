@@ -84,7 +84,7 @@
         "label": "Node Count",
         "description": "Number of ES nodes to create",
         "type": "integer",
-        "min": 2,
+        "min": 0,
         "max": 200,
         "default": 3,
         "resource_group": [2, 2, 3],

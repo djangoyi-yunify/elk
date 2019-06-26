@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 EC_HTTP_ERROR=130
 EC_STATUS_ERROR=131
 EC_NO_ES_NODES=20
@@ -10,6 +8,9 @@ EC_SCLIN_EXCIP_NOACK=120
 EC_SCLIN_LACK_NODES=121   # Be careful to avoid overlap with cURL
 EC_SCLIN_ERR_COUNTING=122 # the leaving nodes are still holding data
 EC_SCLIN_HOLDING_DATA=123 # the leaving nodes are still holding data
+EC_SCLIN_BELOW_MIN_COUNT=124
+EC_SCLIN_CLOSED_INDICES=125
+EC_SCLIN_NO_LEAVING_NODES=126
 EC_UPG_UP_NODES=41        # wrong number of running nodes
 EC_UPG_NOT_JOINED=42      # upgraded node not joined the cluster
 EC_DATA_LOAD_TIMEOUT=43   # shards not fully loaded
@@ -91,7 +92,7 @@ restartInOrder() {
   local node; for node in ${nodes//,/ }; do
     if [ "$node" = "$MY_IP" ]; then _restart; fi
 
-    retry 60 2 0 checkNodeRestarted $earliest $node || log "WARN: Node '$node' seems not restarted within 2 minutes."
+    retry 600 1 0 execute check && retry 60 2 0 checkNodeRestarted $earliest $node || log "WARN: Node '$node' seems not restarted."
     $isMaster || retry 21600 2 0 checkNodeShardsLoaded $node || log "WARN: Node '$node' seems not loaded within 12 hours."
 
     if [ "$node" = "$MY_IP" ]; then return 0; fi
@@ -114,49 +115,57 @@ jsonHeader='Content-Type: application/json'
 
 preScaleIn() {
   . /opt/app/bin/scaling.env
-  [ -n "$LEAVING_DATA_NODES" ] && [ "$MY_IP" = "${STABLE_DATA_NODES%% *}" ] || return 0
-  local excludingNodes="${LEAVING_DATA_NODES// /,}"
+
+  [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
+  [ "${NUM_LEAVING_NODES}" -gt 0 ] || return $EC_SCLIN_NO_LEAVING_NODES # in case confd fails
+  [ -n "${LEAVING_DATA_NODES}" -a "$MY_IP" = "${STABLE_DATA_NODES%% *}" ] || return 0
+
+  retry 10 1 0 checkClusterHealthy
+  retry 10 1 0 checkNoClosed
+
+  local excludingNodes="${LEAVING_DATA_NODES// /,}" excludedNodes
   setExcludeIp "\"$excludingNodes\""
-  local excludedNodes
   excludedNodes="$(getExcludeIp)"
-  [ "$excludingNodes" = "$excludedNodes" ] && retry 8640 1 $EC_SCLIN_LACK_NODES checkExcluded || {
+  [ "$excludingNodes" = "$excludedNodes" ] && retry 8640 1 $EC_SCLIN_LACK_NODES checkClusterScaled && retry 30 1 0 checkShardsMovedAway || {
     local retCode=$?
-    log "Failed to relocate shards with exit code '$retCode'. Revert cluster settings."
+    log "Failed to relocate shards with exit code '$retCode'. Reverting cluster settings."
     setExcludeIp null
     return $retCode
   }
 }
 
-checkExcluded() {
-  checkClusterScaled 10 && checkShardsMovedAway
+checkClusterHealthy() {
+  local status; status="$(curl -s -m 5 $MY_IP:9200/_cat/health?h=status)" || return $EC_SCLIN_NO_HEALTH
+  [ "${status}" = "green" ] || return $EC_SCLIN_UNHEALTHY
+}
+
+checkNoClosed() {
+  local numClosed
+  numClosed="$(curl -s -m 30 $MY_IP:9200/_cat/indices?h=status | awk '$1=="close"' | wc -l)" || return $EC_HTTP_ERROR
+  [ "$numClosed" -eq 0 ] || return $EC_SCLIN_CLOSED_INDICES
 }
 
 scale() {
   local inout=${1:?in/out should be specified}
   . /opt/app/bin/scaling.env
-  [ "$inout" = "in" -a -n "$LEAVING_DATA_NODES$LEAVING_MASTER_NODES" ] ||
-    [ "$inout" = "out" -a -n "$JOINING_MASTER_NODES" ] || return 0
 
-  if [ "$inout" = "in" -a -n "$LEAVING_MASTER_NODES" -a -z "$STABLE_MASTER_NODES" ]; then
-    _restart
-    return 0
+  if [ "$inout" = "in" -a -n "$LEAVING_MASTER_NODES" ]; then
+    execute restart
   fi
+}
 
-  local earliest="$(($(date +%s%3N) - 5000))"
-  restartInOrder "$STABLE_MASTER_NODES" $earliest true
-  if [ -n "$JOINING_MASTER_NODES" -a -n "$STABLE_MASTER_NODES" ] ||
-     [ -n "$JOINING_DATA_NODES" ]; then
-     return 0
-  fi
-  restartInOrder "$STABLE_DATA_NODES" $earliest
+checkNodesJoined() {
+  local node; for node in $@; do checkNodeJoined $node; done
 }
 
 destroy() {
   . /opt/app/bin/scaling.env
 
+  [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
+
   # This is the 2nd step to remove a data node (shards are assumed to be already moved away in the 1st step).
   # Assumed stopping this node will not bring the cluster unhealthy because it has no data now.
-  if [ -n "$LEAVING_DATA_NODES" ] && [[ "$LEAVING_DATA_NODES|$STABLE_DATA_NODES" =~ " " ]]; then
+  if [ -n "$LEAVING_DATA_NODES" ]; then
     execute stop
     retry 10 1 0 checkPortClosed
     checkClusterScaled 10 || {
@@ -175,30 +184,27 @@ setExcludeIp() {
 }
 
 getExcludeIp() {
-  curl -s -m 30 $MY_IP:9200/_cluster/settings | jq -r '.transient.cluster.routing.allocation.exclude._ip'
+  curl -s -m 30 $MY_IP:9200/_cluster/settings | jq -r '.transient.cluster.routing.allocation.exclude._ip' || return $EC_SCLIN_EXCIP_NOACK
 }
 
 checkClusterScaled() {
-  local timeout=${1:-10}
-  local fields="$(echo '
-    .status
-    .relocating_shards
-    .unassigned_shards
-  ' | xargs)"
-  local url="${STABLE_DATA_NODES%% *}:9200/_cluster/health?timeout=$(( $timeout - 1 ))s" \
-        health status relocating unassigned
-  health="$(curl -s -m $timeout -H "$jsonHeader" "$url" | jq -r "${fields// /,}" | xargs echo)"
+  local opTimeout=${1:-10}
+  local url="${STABLE_DATA_NODES%% *}:9200/_cat/health?h=status,relo,init,unassign" \
+        health status relocating initializing unassigned
+  health="$(curl -s -m $opTimeout -H "$jsonHeader" "$url")"
   [ -n "$health" ] || return $EC_SCLIN_NO_HEALTH
   status="$(echo $health | awk '{print $1}')"
   relocating="$(echo $health | awk '{print $2}')"
-  unassigned="$(echo $health | awk '{print $3}')"
+  initializing="$(echo $health | awk '{print $3}')"
+  unassigned="$(echo $health | awk '{print $4}')"
+  [ -n "$unassigned" ] || return $EC_SCLIN_NO_HEALTH
 
-  if [[ "$status" =~ ^(red|yellow)$ ]] && [ "$relocating" -eq 0 ] && [ "$unassigned" -gt 0 ]; then
+  if [[ "$status" =~ ^(red|yellow)$ ]] && [ "$relocating$initializing" = "00" ] && [ "$unassigned" -gt 0 ]; then
     log "Insufficient nodes to assign shards: '$health'."
     return $EC_SCLIN_LACK_NODES
   fi
 
-  [ "$status" = "green" ] && [ "$relocating" -eq 0 ] && [ "$unassigned" -eq 0 ] || {
+  [ "$status" = "green" -a "$relocating" = "0" ] || {
     log "Not fully scaled yet: '$health'."
     return $EC_SCLIN_UNHEALTHY
   }
@@ -285,18 +291,14 @@ prepareDryrun() {
 }
 
 upgrade() {
-  execute init
-  svcStartTimeout=600 execute start || log "WARN: still not fully started after 10 minutes."
-  retry 600 1 0 checkNodeJoined || log "WARN: still not joined the cluster after 10 minutes."
-  retry 10800 2 $EC_UPG_ONE_NEW checkNodeLoaded || {
-    [ "$?" = "$EC_UPG_ONE_NEW" ] && log "WARN: move to upgrade second node." || log "WARN: still loading data after more than 6 hours."
-  }
+  execute start && retry 600 1 0 execute check && retry 600 1 0 checkNodeJoined || log "WARN: still not joined the cluster."
+  retry 10800 2 $EC_UPG_ONE_NEW checkNodeLoaded || log "WARN: not fully loaded with exit code '$?'. Moving to next node."
 }
 
 checkNodeJoined() {
   local result node=${1:-$MY_IP}
-  result="$(curl -s -m 3 $node:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^m?di$/ {print $1}')"
-  [ "$result" = "$MY_IP" ] || return $EC_UPG_NOT_JOINED
+  result="$(curl -s -m 3 $node:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^(m|m?di)$/ {print $1}')"
+  [ "$result" = "$node" ] || return $EC_UPG_NOT_JOINED
 }
 
 checkNodeLoaded() {
@@ -335,12 +337,12 @@ checkStatusNotRed() {
 
 dump() {
   local node; node=$(parseJsonField node.ip $@)
-  local timeout; timeout=$(parseJsonField timeout $@)
+  local opTimeout; opTimeout=$(parseJsonField timeout $@)
   if [ "${node:=$MY_IP}" != "$MY_IP" ]; then return 0; fi
 
   local path="$HEAP_DUMP_PATH"
   if [ -d "$path" ]; then path="$path/dump.hprof"; fi
-  timeout ${timeout:-1800}s jmap -dump:file="$path" -F $(cat /var/run/elasticsearch/elasticsearch.pid) || return 0
+  timeout ${opTimeout:-1800}s jmap -dump:file="$path" -F $(cat /var/run/elasticsearch/elasticsearch.pid) || return 0
 }
 
 clearDump() {
