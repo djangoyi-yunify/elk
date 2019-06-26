@@ -3,7 +3,6 @@
   include_tasks: "{{ item }}.yml"
   with_items:
   - install-app-agent
-  - setup-apt
   - create-group
   - disable-motd
   - setup-conf
