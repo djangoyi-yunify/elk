@@ -6,12 +6,16 @@
   "advanced_actions": [
     "scale_horizontal"
   ],
+  "upgrade_policy": [
+    "appv-7z9cbi2f"
+  ],
+  "upgrading_policy": "sequential",
   "nodes": [{
     "role": "es_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rs8882wf"
+      "image": "img-t0zc3zh5"
     },
     "instance_class": {{cluster.es_node.instance_class}},
     "count": {{cluster.es_node.count}},
@@ -71,6 +75,11 @@
         "service_params": {
           "node.ip": {{service_params.clear.dump.node.ip}}
         }
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 1,
+        "timeout": 43200
       }
     },
     "env": {
@@ -221,7 +230,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rs8882wf"
+      "image": "img-t0zc3zh5"
     },
     "instance_class": {{cluster.es_master_node.instance_class}},
     "count": {{cluster.es_master_node.count}},
@@ -427,7 +436,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rs8882wf"
+      "image": "img-t0zc3zh5"
     },
     "instance_class": {{cluster.es_node_2.instance_class}},
     "count": {{cluster.es_node_2.count}},
@@ -642,7 +651,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rs8882wf"
+      "image": "img-t0zc3zh5"
     },
     "instance_class": {{cluster.es_node_3.instance_class}},
     "count": {{cluster.es_node_3.count}},
@@ -857,7 +866,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-uikthuwq"
+      "image": "img-3uhg5ffs"
     },
     "instance_class": {{cluster.lst_node.instance_class}},
     "count": {{cluster.lst_node.count}},
@@ -905,7 +914,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-3ph0c1pj"
+      "image": "img-gm0qap6i"
     },
     "instance_class": {{cluster.kbn_node.instance_class}},
     "count": {{cluster.kbn_node.count}},
