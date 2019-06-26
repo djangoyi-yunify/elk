@@ -6,5 +6,5 @@
 
 - name: set password
   user:
-    name: ubuntu
+    name: "{{ userName }}"
     password: "{{ userPassword | password_hash('sha512') }}"
