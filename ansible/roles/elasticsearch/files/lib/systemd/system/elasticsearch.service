@@ -18,6 +18,7 @@ ExecStart=/opt/elasticsearch/current/bin/elasticsearch \
                                                 -p ${PID_DIR}/elasticsearch.pid \
                                                 --quiet \
                                                 -Epath.conf=${CONF_DIR}
+Restart=always
 
 # StandardOutput is configured to redirect to journalctl since
 # some error messages may be logged in standard output before

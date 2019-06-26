@@ -1,7 +1,3 @@
-#!/usr/bin/env bash
-
-set -e
-
 svcNames="logstash caddy"
 svcPorts="9600 80"
 
@@ -33,20 +29,13 @@ check() {
 
 testConf() {
   . /opt/app/conf/logstash/.env
-  pushd /data/logstash
   $LS_HOME/bin/logstash --path.settings $LS_SETTINGS_DIR -t
-  popd
 }
 
 update() {
-  return 0
+  true
 }
 
 upgrade() {
-  testConf || {
-    log "WARN: detected configuration failures. Sleeping and waiting for manual correction."
-    sleep 28800
-  }
-
-  execute init
+  timeout 6h appctl retry 1000 30 0 testConf || log "WARN: detected configuration failures and no human involved."
 }

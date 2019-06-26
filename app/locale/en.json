@@ -82,5 +82,15 @@
     "Whether to enable heap dump on out of memory error.": "Whether to enable heap dump on out of memory error.",
     "The path of heap dump.": "The path of heap dump.",
     "Clean logs older than n days, n can be changed here.": "Clean logs older than n days, n can be changed here.",
+    "err_code21": "Can't retrieve cluster health info",
+    "err_code22": "Cluster is unhealthy if nodes removed",
+    "err_code23": "Can't stop ES",
+    "err_code120": "Failed to exclude the nodes",
+    "err_code121": "Insufficient nodes to migrate data",
+    "err_code122": "Failed to count remaining docs on nodes",
+    "err_code123": "The selected nodes still hold data",
+    "err_code124": "There should be at least 2 ES nodes",
+    "err_code125": "Closed indices detected",
+    "err_code126": "No leaving nodes",
     "err_code1": "Data migration is unfinished before deleting host, please finish it manually or contact us."
 }
