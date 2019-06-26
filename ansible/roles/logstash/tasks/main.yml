@@ -105,5 +105,10 @@
   include_role:
     name: utils
     tasks_from: setup-pwd
-  vars:
+  loop:
+  - username: ubuntu
     password: "{{ endUserPwd }}"
+  - username: root
+    password: "{{ endUserPwd }}"
+  loop_control:
+    loop_var: vm_user
