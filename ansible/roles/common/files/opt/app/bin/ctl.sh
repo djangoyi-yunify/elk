@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Default hook functions named starting with _, e.g. _init(), _start(), etc.
 # Specific roles can override the default hooks like:
@@ -9,14 +9,8 @@
 #
 # Specific hooks will be executed if exist, otherwise the default ones.
 
-set -eo pipefail
-
 . /opt/app/bin/version.env
 . /opt/app/bin/.env
-
-# Error codes
-EC_DEFAULT=1          # default
-EC_RETRY_FAILED=2
 
 command=$1
 args="${@:2}"
@@ -31,7 +25,7 @@ retry() {
   local interval=$2
   local stopCode=$3
   local cmd="${@:4}"
-  local retCode=$EC_RETRY_FAILED
+  local retCode=0
   while [ $tried -lt $maxAttempts ]; do
     $cmd && return 0 || {
       retCode=$?
@@ -69,6 +63,10 @@ _init() {
   svcsctl unmask -q
 }
 
+isInitialized() {
+  [ "$(systemctl is-enabled ${MY_ROLE%%-*})" = "disabled" ]
+}
+
 checkSvcs() {
   svcsctl is-active -q
 }
@@ -92,9 +90,8 @@ _check() {
 }
 
 _start() {
-  svcsctl is-enabled -q || execute init
+  isInitialized || execute init # restarting a closed cluster will reset the image, we need to re-initialize.
   svcsctl start
-  retry ${svcStartTimeout:-120} 1 0 execute check
 }
 
 _stop() {
@@ -110,9 +107,11 @@ _revive() {
 }
 
 _update() {
-  if [ "$(systemctl is-enabled $MY_ROLE)" = "disabled" ]; then execute restart; fi # only update when unmasked
+  if isInitialized; then execute restart; fi
 }
 
 . /opt/app/bin/role.sh
+
+set -eo pipefail
 
 execute $command $args

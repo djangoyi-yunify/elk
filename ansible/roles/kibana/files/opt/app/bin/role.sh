@@ -1,7 +1,3 @@
-#!/usr/bin/env bash
-
-set -e
-
 coreSvcs="
 haproxy:9200
 keepalived
@@ -16,8 +12,6 @@ elasticsearch-head:9100
 elasticsearch-hq:5000
 elasticsearch-sql:8080
 "
-
-svcStartTimeout=90
 
 isSvcDisabledByUser() {
   local varName=$(echo enable_${1//-/_} | tr [a-z] [A-Z])
@@ -68,6 +62,10 @@ update() {
   local svc
   for svc in $(echo $coreSvcs | sed -r 's/:[0-9]+//g'); do systemctl restart $svc; done
   for svc in $(echo $extraSvcs | sed -r 's/:[0-9]+//g'); do toggleServiceStatus $svc; done
+}
+
+upgrade() {
+  true
 }
 
 request() {

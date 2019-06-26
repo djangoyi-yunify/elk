@@ -24,9 +24,6 @@
     },
     "vertical_scaling_policy": "sequential",
     "services": {
-      "init": {
-        "cmd": "appctl init"
-      },
       "start": {
         "cmd": "appctl start"
       },
@@ -236,9 +233,6 @@
     },
     "vertical_scaling_policy": "sequential",
     "services": {
-      "init": {
-        "cmd": "appctl init"
-      },
       "start": {
         "cmd": "appctl start"
       },
@@ -280,6 +274,11 @@
         "service_params": {
           "node.ip": {{service_params.clear.dump.node.ip}}
         }
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 4,
+        "timeout": 300
       }
     },
     "env": {
@@ -441,9 +440,6 @@
     },
     "vertical_scaling_policy": "sequential",
     "services": {
-      "init": {
-        "cmd": "appctl init"
-      },
       "start": {
         "cmd": "appctl start"
       },
@@ -454,6 +450,7 @@
         "cmd": "appctl restart"
       },
       "scale_in": {
+        "pre_check": "appctl preScaleIn",
         "cmd": "appctl scale in",
         "timeout": 24000
       },
@@ -490,6 +487,11 @@
         "service_params": {
           "node.ip": {{service_params.clear.dump.node.ip}}
         }
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 2,
+        "timeout": 43200
       }
     },
     "env": {
@@ -539,6 +541,101 @@
       "unhealthy_threshold": 2,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
+    },
+    "monitor": {
+      "enable": true,
+      "cmd": "appctl measure",
+      "items": {
+        "cluster_status": {
+          "unit": "",
+          "value_type": "str",
+          "statistics_type": "latest",
+          "enums": ["green", "yellow", "red"]
+        },
+        "cluster_jvm_heap_used_in_percent": {
+          "unit": "%",
+          "value_type": "int",
+          "statistics_type": "avg",
+          "scale_factor_when_display": 0.01
+        },
+        "cluster_jvm_threads_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_indices_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_shards_primaries_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_shards_replication_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_docs_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_docs_deleted_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_nodes": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "relocating_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "initializing_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "unassigned_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_pending_tasks": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_in_flight_fetch": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "task_max_waiting_in_queue_millis": {
+          "unit": "ms",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "active_shards_percent_as_number": {
+          "unit": "%",
+          "value_type": "int",
+          "statistics_type": "latest",
+          "scale_factor_when_display": 0.01
+        }
+      },
+      "groups": {
+        "cluster_docs_group": ["cluster_docs_count", "cluster_docs_deleted_count"],
+        "cluster_shards_group": ["cluster_shards_primaries_count", "cluster_shards_replication_count", "relocating_shards", "initializing_shards", "unassigned_shards"]
+      },
+      "display": ["cluster_status", "number_of_nodes", "cluster_indices_count", "cluster_jvm_heap_used_in_percent", "cluster_jvm_threads_count", "cluster_docs_group", "cluster_shards_group", "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"],
+      "alarm": ["cluster_status", "number_of_nodes", "cluster_jvm_heap_used_in_percent", "cluster_jvm_threads_count", "relocating_shards", "unassigned_shards", "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"]
     }
   }, {
     "role": "es_node_3",
@@ -558,9 +655,6 @@
     },
     "vertical_scaling_policy": "sequential",
     "services": {
-      "init": {
-        "cmd": "appctl init"
-      },
       "start": {
         "cmd": "appctl start"
       },
@@ -571,6 +665,7 @@
         "cmd": "appctl restart"
       },
       "scale_in": {
+        "pre_check": "appctl preScaleIn",
         "cmd": "appctl scale in",
         "timeout": 24000
       },
@@ -607,6 +702,11 @@
         "service_params": {
           "node.ip": {{service_params.clear.dump.node.ip}}
         }
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 3,
+        "timeout": 43200
       }
     },
     "env": {
@@ -656,6 +756,101 @@
       "unhealthy_threshold": 2,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
+    },
+    "monitor": {
+      "enable": true,
+      "cmd": "appctl measure",
+      "items": {
+        "cluster_status": {
+          "unit": "",
+          "value_type": "str",
+          "statistics_type": "latest",
+          "enums": ["green", "yellow", "red"]
+        },
+        "cluster_jvm_heap_used_in_percent": {
+          "unit": "%",
+          "value_type": "int",
+          "statistics_type": "avg",
+          "scale_factor_when_display": 0.01
+        },
+        "cluster_jvm_threads_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_indices_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_shards_primaries_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_shards_replication_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_docs_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "cluster_docs_deleted_count": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_nodes": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "relocating_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "initializing_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "unassigned_shards": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_pending_tasks": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "number_of_in_flight_fetch": {
+          "unit": "",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "task_max_waiting_in_queue_millis": {
+          "unit": "ms",
+          "value_type": "int",
+          "statistics_type": "latest"
+        },
+        "active_shards_percent_as_number": {
+          "unit": "%",
+          "value_type": "int",
+          "statistics_type": "latest",
+          "scale_factor_when_display": 0.01
+        }
+      },
+      "groups": {
+        "cluster_docs_group": ["cluster_docs_count", "cluster_docs_deleted_count"],
+        "cluster_shards_group": ["cluster_shards_primaries_count", "cluster_shards_replication_count", "relocating_shards", "initializing_shards", "unassigned_shards"]
+      },
+      "display": ["cluster_status", "number_of_nodes", "cluster_indices_count", "cluster_jvm_heap_used_in_percent", "cluster_jvm_threads_count", "cluster_docs_group", "cluster_shards_group", "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"],
+      "alarm": ["cluster_status", "number_of_nodes", "cluster_jvm_heap_used_in_percent", "cluster_jvm_threads_count", "relocating_shards", "unassigned_shards", "number_of_pending_tasks", "number_of_in_flight_fetch", "task_max_waiting_in_queue_millis", "active_shards_percent_as_number"]
     }
   }, {
     "role": "lst_node",
@@ -673,9 +868,6 @@
     },
     "user_access": true,
     "services": {
-      "init": {
-        "cmd": "appctl init"
-      },
       "start": {
         "cmd": "appctl start"
       },
@@ -684,6 +876,11 @@
       },
       "restart": {
         "cmd": "appctl restart"
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 6,
+        "timeout": 43200
       }
     },
     "env": {
@@ -715,9 +912,6 @@
     "cpu": {{cluster.kbn_node.cpu}},
     "memory": {{cluster.kbn_node.memory}},
     "services": {
-      "init": {
-        "cmd": "appctl init"
-      },
       "start": {
         "cmd": "appctl start"
       },
@@ -726,6 +920,11 @@
       },
       "restart": {
         "cmd": "appctl restart"
+      },
+      "upgrade": {
+        "cmd": "appctl upgrade",
+        "order": 5,
+        "timeout": 60
       }
     },
     "env": {

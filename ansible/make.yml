@@ -46,9 +46,3 @@
     - keepalived
     loop_control:
       loop_var: svc_name
-
-- name: Cleanup
-  hosts: all
-  strategy: free
-  roles:
-    - cleanup
