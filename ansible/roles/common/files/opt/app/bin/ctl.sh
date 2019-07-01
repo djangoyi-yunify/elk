@@ -141,7 +141,11 @@ _check() {
 }
 
 _start() {
-  isInitialized || execute init
+  isInitialized || {
+    execute init
+    systemctl restart rsyslog # output to log files under /data
+  }
+
   local svc; for svc in $(getServices); do startSvc $svc; done
 }
 
