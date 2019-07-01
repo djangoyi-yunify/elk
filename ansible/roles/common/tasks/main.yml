@@ -2,7 +2,6 @@
 - name: common setup
   include_tasks: "{{ item }}.yml"
   with_items:
-  - install-app-agent
   - create-group
   - disable-motd
   - setup-conf
