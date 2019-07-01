@@ -1,0 +1,8 @@
+[template]
+src = "make-haproxy.sh.tmpl"
+dest = "/opt/app/bin/make-haproxy.sh"
+mode = "0700"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/app/bin/make-haproxy.sh; appctl update haproxy"
