@@ -18,6 +18,7 @@
   systemd:
     name: haproxy
     state: stopped
+    enabled: no # !!!
     masked: yes
 
 - name: copy logging conf files
