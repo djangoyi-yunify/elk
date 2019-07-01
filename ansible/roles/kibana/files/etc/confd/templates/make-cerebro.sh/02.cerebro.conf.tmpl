@@ -1,3 +1,7 @@
+generatePassword() {
+  < /dev/urandom tr -dc 'A-Za-z0-9!#$%&()*+,-./:;<=>?@[\]^_`{|}~' | head -c ${1:-24}
+}
+
 cat > /opt/app/conf/cerebro/cerebro.conf << CEREBRO_CONF_EOF
 secret = "$(generatePassword)"
 basePath = "/"
@@ -13,7 +17,7 @@ auth = {
 }
 
 hosts = [{
-  host = "http://{{ $esVip }}:9200"
+  host = "http://{{ getv "/cluster/endpoints/reserved_ips/esvip/value" }}:9200"
   name = "{{ getv "/cluster/cluster_id" }}"
   # auth = {
   #   username = "username"

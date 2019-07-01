@@ -1,11 +1,13 @@
 firstKibanaSid="$(echo {{ join (getvs "/hosts/kbn_node/*/sid") " " }} | xargs -n1 | sort -n | head -1)"
-if [ "$firstKibanaSid" = "{{ $mySid }}" ]; then
+if [ "$firstKibanaSid" = "{{ getv "/host/sid" }}" ]; then
   keepalivedRole=MASTER
   keepalivedPriority=100
 else
   keepalivedRole=BACKUP
   keepalivedPriority=1
 fi
+
+{{- $esVip := getv "/cluster/endpoints/reserved_ips/esvip/value" }}
 
 cat > /opt/app/conf/keepalived/keepalived.conf << KEEPALIVED_EOF
 global_defs {
