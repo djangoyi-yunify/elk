@@ -1,0 +1,8 @@
+[template]
+src = "make-elasticsearch-hq.sh.tmpl"
+dest = "/opt/app/bin/make-elasticsearch-hq.sh"
+mode = "0700"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/app/bin/make-elasticsearch-hq.sh; appctl update elasticsearch-hq"

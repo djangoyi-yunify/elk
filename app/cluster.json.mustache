@@ -6,12 +6,17 @@
   "advanced_actions": [
     "scale_horizontal"
   ],
+  "upgrade_policy": [
+    "appv-wdtrs13h",
+    "appv-7z9cbi2f"
+  ],
+  "upgrading_policy": "sequential",
   "nodes": [{
     "role": "es_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-3j5bqdnm"
+      "image": "img-a2ntf2gf"
     },
     "instance_class": {{cluster.es_node.instance_class}},
     "count": {{cluster.es_node.count}},
@@ -221,7 +226,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-3j5bqdnm"
+      "image": "img-a2ntf2gf"
     },
     "instance_class": {{cluster.es_master_node.instance_class}},
     "count": {{cluster.es_master_node.count}},
@@ -427,7 +432,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-3j5bqdnm"
+      "image": "img-a2ntf2gf"
     },
     "instance_class": {{cluster.es_node_2.instance_class}},
     "count": {{cluster.es_node_2.count}},
@@ -642,7 +647,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-3j5bqdnm"
+      "image": "img-a2ntf2gf"
     },
     "instance_class": {{cluster.es_node_3.instance_class}},
     "count": {{cluster.es_node_3.count}},
@@ -857,7 +862,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-uikthuwq"
+      "image": "img-aba5ixin"
     },
     "instance_class": {{cluster.lst_node.instance_class}},
     "count": {{cluster.lst_node.count}},
@@ -905,7 +910,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-3ph0c1pj"
+      "image": "img-wwi78igc"
     },
     "instance_class": {{cluster.kbn_node.instance_class}},
     "count": {{cluster.kbn_node.count}},
@@ -947,7 +952,7 @@
       "timeout_sec": 10,
       "action_timeout_sec": 150,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 3,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     }

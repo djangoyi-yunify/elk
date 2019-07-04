@@ -1,0 +1,1 @@
+sed -i "s#http://localhost:9200#http://{{ getv "/cluster/endpoints/reserved_ips/esvip/value" }}:9200#" /opt/elasticsearch-hq/current/application.py
