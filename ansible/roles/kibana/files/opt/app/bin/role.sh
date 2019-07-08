@@ -58,12 +58,6 @@ toggleServiceStatus() {
   fi
 }
 
-update() {
-  local svc
-  for svc in $(echo $coreSvcs | sed -r 's/:[0-9]+//g'); do systemctl restart $svc; done
-  for svc in $(echo $extraSvcs | sed -r 's/:[0-9]+//g'); do toggleServiceStatus $svc; done
-}
-
 upgrade() {
   true
 }

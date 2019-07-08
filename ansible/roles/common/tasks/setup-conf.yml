@@ -5,3 +5,8 @@
     tasks_from: copy-conf
   vars:
     parentRole: common
+
+- name: set version env
+  copy:
+    dest: /opt/app/bin/version.env
+    content: ELK_VERSION={{ elkVersion }}
