@@ -44,22 +44,6 @@ discoveryHosts="${masterNodes:-$genericNodes}"
 dataDirs="$(ls -d /data* | xargs echo)"
 dataDirs="$(echo "${dataDirs:-/data /data2 /data3} " | sed 's# #/elasticsearch/data, #g')"
 
-scriptTypes="
-{{- range ls "/env" | filter "(inline|stored|file)" }}
-{{ if eq (getv (printf "/env/%s" .)) "true" }}{{ replace . "script." "" -1 }}{{ end }}
-{{- end }}
-"
-scriptTypes="$(echo $scriptTypes)"
-scriptTypes="${scriptTypes// /,}"
-
-scriptContexts="
-{{- range ls "/env" | filter "(aggs|search|update)" }}
-{{ if eq (getv (printf "/env/%s" .)) "true" }}{{ replace . "script." "" -1 }}{{ end }}
-{{- end }}
-"
-scriptContexts="$(echo $scriptContexts)"
-scriptContexts="${scriptContexts// /,}"
-
 cat > /opt/app/conf/elasticsearch/elasticsearch.yml << ES_YML_EOF
 action.destructive_requires_name: {{ getv "/env/action.destructive_requires_name" "true" }}
 bootstrap.memory_lock: true
@@ -116,8 +100,9 @@ reindex.remote.whitelist: "{{ getv "/env/reindex.remote.whitelist" "" }}"
 {{- end }}
 repositories.url.allowed_urls: {{ getv "/env/repositories.url.allowed_urls" "[]" }}
 
-script.allowed_contexts: ${scriptContexts:-none}
-script.allowed_types: ${scriptTypes:-none}
+{{- range gets "/env/script.*" }}
+{{ base .Key }}: {{ .Value }}
+{{- end }}
 
 {{- range getvs "/env/es_additional_line*" }}
 {{ . }}
