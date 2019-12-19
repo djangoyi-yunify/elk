@@ -42,15 +42,34 @@ init() {
   [ -e $htmlPath ] || ln -s /opt/app/conf/caddy/index.html $htmlPath
 }
 
+start() {
+  _start
+
+  if [[ " $JOINING_MASTER_NODES " == *" $MY_IP "* ]] && [ -z "$STABLE_MASTER_NODES" ]; then
+    retry 120 1 0 checkNodeJoined $MY_IP ${STABLE_DATA_NODES%% *}
+  fi
+}
+
 restart() {
   if [ -z "$1" ]; then _restart && return 0; fi
 
   if [ "$1" = "role" ]; then
     local earliest="$(($(date +%s%3N) - 5000))"
     local node; node=$(parseJsonField node.ip ${@:2})
-    if [ "${node:=$MY_IP}" != "$MY_IP" ]; then return 0; fi
-    local opTimeout; opTimeout=$(parseJsonField timeout "${@:2}")s
-    timeout $opTimeout appctl restartInOrder ${ROLE_NODES// /,} $earliest $IS_MASTER || return 0
+
+    if [ "$node" == "$MY_IP" ]; then
+      _restart
+      return 0
+    fi
+
+    if [ -z "$node" -o "$node" == "null" ]; then
+      local opTimeout; opTimeout=$(parseJsonField timeout "${@:2}")
+      if [ -z "$opTimeout" -o "$opTimeout" == "null" ]; then opTimeout=600; fi
+      timeout --preserve-status ${opTimeout}s appctl restartInOrder ${ROLE_NODES// /,} $earliest $IS_MASTER || {
+        log "WARN: failed to restart nodes in order ($?)."
+        return 0
+      }
+    fi
   fi
 }
 
@@ -297,7 +316,8 @@ upgrade() {
 
 checkNodeJoined() {
   local result node=${1:-$MY_IP}
-  result="$(curl -s -m 3 $node:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^(m|m?di)$/ {print $1}')"
+  local knownNode=${2:-$node}
+  result="$(curl -s -m 3 $knownNode:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^(m|m?di)$/ {print $1}')"
   [ "$result" = "$node" ] || return $EC_UPG_NOT_JOINED
 }
 
