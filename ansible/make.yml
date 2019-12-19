@@ -1,9 +1,12 @@
 ---
 - name: common setup
   hosts: all
-  strategy: free
+  # strategy: free
   roles:
   - common
+  - role: caddy-1.0.6
+    vars:
+      caddy_plugins: upload
 
 - name: setup
   hosts: all
@@ -17,7 +20,6 @@
       name: "{{ svc_name }}"
     when: "'elasticsearch' in group_names"
     loop:
-    - caddy
     - elasticsearch
     loop_control:
       loop_var: svc_name
@@ -27,7 +29,6 @@
     when: "'logstash' in group_names"
     loop:
     - logstash
-    - caddy
     loop_control:
       loop_var: svc_name
 
@@ -36,7 +37,6 @@
     when: "'kibana' in group_names"
     loop:
     - kibana
-    - caddy
     - cerebro
     - elastichd
     - elasticsearch-head
