@@ -88,23 +88,43 @@
     group: svc
     state: directory
 
+- name: check if jieba dic exists
+  stat:
+    path: "{{ role_path }}/files/tmp/jieba.dic"
+  register: jieba_dic
+  delegate_to: localhost
+
 - name: download jieba dict
   get_url:
     url: "https://github.com/QingCloudAppcenter/elk-archived/raw/master/docker-image/standard/elasticsearch/dicts/jieba.dic"
-    dest: "files/tmp/jieba.dic"
+    dest: "{{ role_path }}/files/tmp/jieba.dic"
   delegate_to: localhost
+  when: jieba_dic.stat.exists == False
 
 - name: copy jieba dict
   copy:
-    src: files/tmp/jieba.dic
+    src: "{{ role_path }}/files/tmp/jieba.dic"
     dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/jieba.dic"
     owner: root
     group: svc
     mode: u=rw,go=r
 
+- name: check if package file exists
+  stat:
+    path: "{{ role_path }}/files/tmp/extra_stopword.dic"
+  register: stopword_dic
+  delegate_to: localhost
+
 - name: download dict for IKAnalyzer
   get_url:
     url: "https://github.com/QingCloudAppcenter/elk-archived/raw/master/docker-image/standard/elasticsearch/dicts/stop_words.dic"
+    dest: "{{ role_path }}/files/tmp/extra_stopword.dic"
+  delegate_to: localhost
+  when: stopword_dic.stat.exists == False
+
+- name: copy extra stopword dict
+  copy:
+    src: "{{ role_path }}/files/tmp/extra_stopword.dic"
     dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/extra_stopword.dic"
     owner: root
     group: svc
