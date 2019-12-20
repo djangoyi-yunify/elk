@@ -1,7 +1,7 @@
 ---
 - name: set var
   set_fact:
-    systemd_path: roles/{{ parentRole }}/files/lib/systemd/system/
+    systemd_path: "{{ playbook_dir }}/roles/{{ parentRole }}/files/lib/systemd/system/"
 
 - name: copy SystemD files
   copy:
@@ -21,7 +21,7 @@
 
 - name: copy logging config files
   copy:
-    src: roles/{{ parentRole }}/files/{{ path }}/
+    src: "{{ playbook_dir }}/roles/{{ parentRole }}/files/{{ path }}/"
     dest: /{{ path }}
     owner: root
     group: root
@@ -31,7 +31,7 @@
     - etc/rsyslog.d
   loop_control:
     loop_var: path
-  when: ('roles/' + parentRole + '/files/' + path + '/') is directory
+  when: (playbook_dir + '/roles/' + parentRole + '/files/' + path + '/') is directory
 
 - name: copy app files
   copy:
@@ -43,7 +43,7 @@
     directory_mode: u=rwx,g=rx,o=
   when: path is directory
   loop:
-    - "roles/{{ parentRole }}/files/opt/"
+    - "{{ playbook_dir }}/roles/{{ parentRole }}/files/opt/"
   loop_control:
     loop_var: path
 
