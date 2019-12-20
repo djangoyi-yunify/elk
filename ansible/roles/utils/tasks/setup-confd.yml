@@ -8,16 +8,16 @@
       done
     }
 
-    srcDir="roles/{{ role_name }}/files/etc/confd/templates/make.sh"
+    srcDir="{{ playbook_dir }}/roles/{{ role_name }}/files/etc/confd/templates/make.sh"
     srcFiles="$(ls $srcDir/*.tmpl)"
 
-    destDir="roles/{{ parentRole }}/files/tmp/confd/templates"
+    destDir="{{ playbook_dir }}/roles/{{ parentRole }}/files/tmp/confd/templates"
     rm -rf $destDir && mkdir -p $destDir
 
     compileTmpls $destDir/make.sh.tmpl $srcFiles
 
-    extraSrcDir="roles/{{ parentRole }}/files/etc/confd/templates"
-    [ -d "$extraSrcDir" ] && for srcDir in $(ls -d roles/{{ parentRole }}/files/etc/confd/templates/*); do
+    extraSrcDir="{{ playbook_dir }}/roles/{{ parentRole }}/files/etc/confd/templates"
+    [ -d "$extraSrcDir" ] && for srcDir in $(ls -d {{ playbook_dir }}/roles/{{ parentRole }}/files/etc/confd/templates/*); do
       compileTmpls $destDir/$(basename $srcDir).tmpl $(ls $srcDir/*)
     done
   args:
@@ -31,11 +31,11 @@
     owner: root
     group: root
   loop:
-  - src: roles/{{ role_name }}/files/etc/confd/conf.d
+  - src: "{{ playbook_dir }}/roles/{{ role_name }}/files/etc/confd/conf.d"
     dest: conf.d
-  - src: roles/{{ parentRole }}/files/etc/confd/conf.d
+  - src: "{{ playbook_dir }}/roles/{{ parentRole }}/files/etc/confd/conf.d"
     dest: conf.d
-  - src: roles/{{ parentRole }}/files/tmp/confd/templates
+  - src: "{{ playbook_dir }}/roles/{{ parentRole }}/files/tmp/confd/templates"
     dest: templates
   loop_control:
     loop_var: path
