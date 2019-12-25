@@ -5,7 +5,7 @@
   "The description of the ELK service": "ELK 服务描述",
   "VxNet": "私有网络",
   "Choose a vxnet to join": "选择要加入的私有网络",
-  "notice_when_upgrade": "升级前请手动备份 Logstash 节点 /data 目录以外的数据！",
+  "notice_when_upgrade": "升级前请手动备份所有 Logstash 节点 /data 目录以外的数据；升级过程中请避免创建新索引或分片以加快升级速度",
   "Express Configuration": "快速配置",
   "Test": "测试环境",
   "Pre-prod": "预生产环境",
