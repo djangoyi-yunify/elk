@@ -96,7 +96,11 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          101,
+          201,
+          202,
+          301
         ],
         "default": 1,
         "required": "yes"
@@ -105,14 +109,16 @@
         "label": "Volume Class",
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
-        "default": 3,
         "range": [
           0,
           2,
           3,
           5,
-          6
+          6,
+          100,
+          200
         ],
+        "default": 3,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -189,7 +195,11 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          101,
+          201,
+          202,
+          301
         ],
         "default": 0,
         "required": "yes"
@@ -200,7 +210,12 @@
         "type": "integer",
         "range": [
           0,
-          3
+          2,
+          3,
+          5,
+          6,
+          100,
+          200
         ],
         "default": 0,
         "required": "yes"
@@ -273,7 +288,11 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          101,
+          201,
+          202,
+          301
         ],
         "default": 0,
         "required": "yes"
@@ -282,14 +301,16 @@
         "label": "Volume Class",
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
-        "default": 0,
         "range": [
           0,
           2,
           3,
           5,
-          6
+          6,
+          100,
+          200
         ],
+        "default": 0,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -361,7 +382,11 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          101,
+          201,
+          202,
+          301
         ],
         "default": 1,
         "required": "yes"
@@ -370,14 +395,16 @@
         "label": "Volume Class",
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
-        "default": 2,
         "range": [
           0,
           2,
           3,
           5,
-          6
+          6,
+          100,
+          200
         ],
+        "default": 2,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -464,6 +491,7 @@
           1,
           101,
           201,
+          202,
           301
         ],
         "default": 0,
@@ -534,6 +562,7 @@
           1,
           101,
           201,
+          202,
           301
         ],
         "default": 0,
