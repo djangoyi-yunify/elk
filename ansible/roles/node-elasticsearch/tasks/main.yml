@@ -1,0 +1,48 @@
+---
+- name: compile and install confd files
+  include_role:
+    name: confd-files-1.0.1
+
+- name: copy binaries
+  copy:
+    src: "{{ role_path }}/files/opt/app/"
+    dest: /opt/app/
+    owner: root
+    group: svc
+    mode: preserve
+    directory_mode: u=rwx,g=rx,o=
+
+- name: fix caddy service permission issue
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - lib/systemd/system/caddy.service.d/
+  loop_control:
+    loop_var: file_path
+
+- name: fix directory permission for elasticsearch.keystore
+  file:
+    path: /opt/app/conf/elasticsearch
+    group: svc
+    mode: g+w
+    state: directory
+
+- name: prepare scripts directory
+  file:
+    path: /opt/app/conf/elasticsearch/scripts
+    owner: elasticsearch
+    group: svc
+    state: directory
+
+- name: prepare analysis directory
+  file:
+    src: /data/elasticsearch/analysis
+    dest: /opt/app/conf/elasticsearch/analysis
+    force: yes
+    owner: elasticsearch
+    group: svc
+    state: link

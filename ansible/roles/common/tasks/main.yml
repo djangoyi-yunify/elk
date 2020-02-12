@@ -1,7 +1,7 @@
 ---
-- name: common setup
-  include_tasks: "{{ item }}.yml"
-  with_items:
-  - create-group
-  - disable-motd
-  - setup-conf
+- name: set common env
+  copy:
+    content: |
+      ELK_VERSION={{ elkVersion }}
+
+    dest: /opt/app/bin/envs/all.env

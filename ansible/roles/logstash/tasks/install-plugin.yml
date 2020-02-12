@@ -1,7 +1,7 @@
 ---
 - name: setting facts - LS plugins
   set_fact:
-    local_dir: files/tmp/ls-plugins
+    local_dir: "{{ role_path }}/files/tmp/ls-plugins"
     remote_dir: "{{ ls_home }}/plugins"
 
 - name: Check if the plugin was installed - {{ opts.name }}
@@ -28,12 +28,19 @@
     state: directory
   delegate_to: localhost
 
+- name: check if plugin file exists
+  stat:
+    path: "{{ local_dir }}/{{ opts.name }}-{{ opts.version }}.zip"
+  register: pkg_file
+  run_once: True
+  delegate_to: localhost
+
 - name: Download LS plugin - {{ opts.name }}
   get_url:
     url: "{{ opts.url | default('https://github.com/logstash-plugins/' + opts.name + '/archive/v' + opts.version + '.zip') }}"
     dest: "{{ local_dir }}/{{ opts.name }}-{{ opts.version }}.zip"
   delegate_to: localhost
-  when: installed is failed
+  when: pkg_file.stat.exists == False
 
 - name: Extract LS plugin - {{ opts.name }}
   unarchive:
@@ -53,8 +60,7 @@
 
 - name: Install LS plugin - {{ opts.name }}
   shell: |
-    {{ ls_home }}/bin/logstash-plugin install --no-verify
-    chown -R {{ role_name }}.svc {{ ls_home }}
+    sudo -u logstash {{ ls_home }}/bin/logstash-plugin install --no-verify
   args:
     chdir: "{{ ls_home }}"
   when: installed is failed

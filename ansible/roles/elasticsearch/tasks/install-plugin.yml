@@ -2,7 +2,7 @@
 - name: setting facts - ES plugins
   set_fact:
     es_home: /opt/elasticsearch/current
-    local_dir: files/tmp/es-plugins
+    local_dir: "{{ role_path }}/files/tmp/es-plugins"
 
 - name: Prepare local tmp dir for ES plugins
   file:
@@ -10,11 +10,19 @@
     state: directory
   delegate_to: localhost
 
+- name: check if plugin exists
+  stat:
+    path: "{{ local_dir }}/{{ opts.name }}-{{ elkVersion }}.zip"
+  register: plugin_file
+  delegate_to: localhost
+
 - name: Download ES plugin - {{ opts.name }}
   get_url:
     url: "{{ opts.url | default('https://artifacts.elastic.co/downloads/elasticsearch-plugins/%s/%s-%s.zip' | format(opts.name, opts.name, elkVersion)) }}"
     dest: "{{ local_dir }}/{{ opts.name }}-{{ elkVersion }}.zip"
   delegate_to: localhost
+  run_once: True
+  when: plugin_file.stat.exists == False
 
 - name: Extract ES plugin - {{ opts.name }}
   unarchive:
