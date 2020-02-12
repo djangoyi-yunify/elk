@@ -1,25 +1,11 @@
 ---
-- name: set up confd templates
-  include_role:
-    name: utils
-    tasks_from: setup-confd
-  vars:
-    parentRole: elasticsearch
-
 - name: install tools
   apt:
-    name: ['openjdk-8-jdk', 'openjdk-8-dbg', 'unzip']
+    name: ['unzip']
     state: present
     update_cache: no
 
-- name: install jq
-  include_role:
-    name: utils
-    tasks_from: install-jq
-  vars:
-    jqVersion: "1.6"
-
-- name: install service
+- name: install binary
   include_role:
     name: utils
     tasks_from: install-pkg
@@ -30,6 +16,37 @@
     - pkgUrl: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-{{ version }}.tar.gz"
   loop_control:
     loop_var: opts
+
+- name: copy configuration files
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+  - opt/app/conf/elasticsearch/
+  loop_control:
+    loop_var: file_path
+
+- name: install service
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - lib/systemd/system/
+  loop_control:
+    loop_var: file_path
+
+- name: mask elasticsearch service
+  systemd:
+    name: elasticsearch
+    enabled: no
+    masked: yes
+    state: stopped
 
 - name: install plugins
   include_tasks: install-plugin.yml
@@ -50,36 +67,6 @@
       url: "https://github.com/NLPchina/elasticsearch-sql/releases/download/{{ elk_version }}.0/elasticsearch-sql-{{ elk_version }}.0.zip"
   loop_control:
     loop_var: opts
-
-- name: copy configuration files
-  include_role:
-    name: utils
-    tasks_from: copy-conf
-  vars:
-    parentRole: elasticsearch
-
-- name: fix directory permission for elasticsearch.keystore
-  file:
-    path: /opt/app/conf/elasticsearch
-    group: svc
-    mode: g+w
-    state: directory
-
-- name: prepare scripts directory
-  file:
-    path: /opt/app/conf/elasticsearch/scripts
-    owner: "{{ role_name }}"
-    group: svc
-    state: directory
-
-- name: prepare analysis directory
-  file:
-    src: /data/elasticsearch/analysis
-    dest: /opt/app/conf/elasticsearch/analysis
-    force: yes
-    owner: "{{ role_name }}"
-    group: svc
-    state: link
 
 - name: prepare dict directory
   file:
@@ -128,9 +115,3 @@
     dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/extra_stopword.dic"
     owner: root
     group: svc
-
-- name: sql plugin version workaround
-  replace:
-    path: /opt/elasticsearch/current/plugins/sql/plugin-descriptor.properties
-    regexp: '^elasticsearch.version=.+$'
-    replace: elasticsearch.version={{ elk_version }}
