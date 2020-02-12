@@ -1,0 +1,77 @@
+---
+- name: install confd files
+  include_role:
+    name: confd-files-1.0.1
+
+- name: set variables
+  set_fact:
+    ls_home: /usr/share/logstash
+
+- name: copy binaries
+  copy:
+    src: "{{ role_path }}/files/opt/app/"
+    dest: /opt/app/
+    owner: root
+    group: svc
+    mode: preserve
+    directory_mode: u=rwx,g=rx,o=
+
+- name: fix caddy service permission issue
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - lib/systemd/system/caddy.service.d/
+  loop_control:
+    loop_var: file_path
+
+- name: work around file permissions for end user
+  file:
+    path: "{{ ls_home }}/{{ item }}"
+    owner: logstash
+    group: ubuntu
+    mode: 0664
+  loop:
+    - Gemfile
+    - Gemfile.lock
+
+- name: work around dir permissions for end user
+  file:
+    path: "{{ ls_home }}/{{ item }}"
+    owner: logstash
+    group: ubuntu
+    recurse: yes
+  loop:
+    - vendor
+
+- name: create sbin under LS home
+  file:
+    path: "{{ ls_home }}/sbin"
+    owner: logstash
+    group: ubuntu
+    state: directory
+
+- name: add logstash sbin scripts
+  copy:
+    dest: "{{ ls_home }}/sbin/restart.sh"
+    mode: 0755
+    owner: logstash
+    group: ubuntu
+    content: |
+      #!/usr/bin/env bash
+      systemctl restart logstash
+
+- name: set up password
+  include_role:
+    name: utils
+    tasks_from: setup-pwd
+  loop:
+  - username: ubuntu
+    password: "{{ endUserPwd }}"
+  - username: root
+    password: "{{ endUserPwd }}"
+  loop_control:
+    loop_var: vm_user

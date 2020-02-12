@@ -1,0 +1,8 @@
+[template]
+src = "kibana.sh.tmpl"
+dest = "/opt/app/bin/tmpl/kibana.sh"
+mode = "0700"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/app/bin/tmpl/kibana.sh; appctl reload kibana"

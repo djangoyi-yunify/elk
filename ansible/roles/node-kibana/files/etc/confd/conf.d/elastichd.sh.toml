@@ -1,0 +1,8 @@
+[template]
+src = "elastichd.sh.tmpl"
+dest = "/opt/app/bin/tmpl/elastichd.sh"
+mode = "0700"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/app/bin/tmpl/elastichd.sh; appctl reload elastichd"
