@@ -4,7 +4,7 @@
     name: utils
     tasks_from: install-pkg
   vars:
-    version: f1b28e84151abddd178ce21b859ce33621cf5620
+    version: f13d4be014d48498dd2aead12863a4e20fe6b2e9
     parentRole: elasticsearch-head
   loop:
     - pkgUrl: "https://github.com/mobz/elasticsearch-head/archive/{{ version }}.tar.gz"
