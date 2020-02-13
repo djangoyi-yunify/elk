@@ -1,8 +1,0 @@
-[template]
-src = "upgrade.sh.tmpl"
-dest = "/opt/app/bin/tmpl/upgrade.sh"
-mode = "0700"
-keys = [
-  "/hosts/",
-]
-reload_cmd = "/opt/app/bin/tmpl/upgrade.sh"

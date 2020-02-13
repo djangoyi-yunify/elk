@@ -78,23 +78,6 @@ SETTINGS_EOF
   }
 }
 
-flushSynced() {
-  curl -s -m 10 -XPOST -o /dev/null $MY_IP:9200/_flush/synced
-}
-
-restartFast() {
-  set +eo pipefail
-  updateSettings "cluster.routing.allocation.node_initial_primaries_recoveries" 50
-  updateSettings "cluster.routing.allocation.node_concurrent_recoveries" 20
-  flushSynced
-  local retCode=0
-  _restart || retCode=$?
-  updateSettings "cluster.routing.allocation.node_concurrent_recoveries" null
-  updateSettings "cluster.routing.allocation.node_initial_primaries_recoveries" null
-  set -eo pipefail
-  return $retCode
-}
-
 restartInOrder() {
   local nodes="$1" earliest=$2 isMaster=${3:-false}
   local node; for node in ${nodes//,/ }; do
@@ -157,10 +140,6 @@ scale() {
   if [ "$inout" = "in" -a -n "$LEAVING_MASTER_NODES" ]; then
     execute restart
   fi
-}
-
-checkNodesJoined() {
-  local node; for node in $@; do checkNodeJoined $node; done
 }
 
 destroy() {
@@ -269,25 +248,6 @@ measure() {
   [ -n "$stats" -a -n "$health" ] && echo $stats $health | jq -s add
 }
 
-prepareDryrun() {
-  prepareEsDir es-dryrun
-  sudo -u elasticsearch rsync -a \
-    --exclude='analysis/' \
-    --exclude='data/nodes/0/indices/*/*/index' \
-    --exclude='data/nodes/0/indices/*/*/translog' \
-    --exclude='dump/' \
-    --exclude='logs/' \
-    /data/elasticsearch/ /data/es-dryrun/
-
-  rm -rf /opt/app/conf/es-dryrun
-  cp -r /opt/app/conf/elasticsearch /opt/app/conf/es-dryrun
-  chown -R root.svc /opt/app/conf/es-dryrun
-  sed -i "s#/data/elasticsearch#/data/es-dryrun#g; s#/opt/app/conf/elasticsearch#/opt/app/conf/es-dryrun#g" \
-    /opt/app/conf/es-dryrun/.env /opt/app/conf/es-dryrun/elasticsearch.yml /opt/app/conf/es-dryrun/jvm.options
-
-  sed -ri "s/^(path.repo:).*$/\1 []/g" /opt/app/conf/es-dryrun/elasticsearch.yml
-}
-
 upgrade() {
   execute start && retry 600 1 0 execute check && retry 600 1 0 checkNodeJoined || log "WARN: still not joined the cluster."
   retry 10800 2 $EC_UPG_ONE_NEW checkNodeLoaded || log "WARN: not fully loaded with exit code '$?'. Moving to next node."
@@ -323,15 +283,6 @@ checkNodeLoaded() {
   fi
 
   [ "$status" = "green" ] || return $EC_DATA_LOAD_TIMEOUT
-}
-
-checkStatusNotRed() {
-  local health stat init relo
-  health="$(curl -s -m 3 $MY_IP:9200/_cluster/health | jq ".status, .initializing_shards, relocating_shards" | xagrs)"
-  stat="$(echo $health | awk '{print $1}')"
-  init="$(echo $health | awk '{print $2}')"
-  relo="$(echo $health | awk '{print $3}')"
-  [[ "$stat" =~ ^yellow|green$ ]] && [ "$init" -eq 0 ] && [ "$relo" -eq 0 ]
 }
 
 dump() {
