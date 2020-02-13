@@ -1,6 +1,8 @@
 prepareDirs() {
   mkdir -p /data/elasticsearch/dicts /data/logstash/{config,data,dump,logs,plugins,queue}
   local lsTmplFile=/data/elasticsearch/dicts/logstash.json
+
+  # https://github.com/logstash-plugins/logstash-output-elasticsearch/blob/v10.3.1/lib/logstash/outputs/elasticsearch
   [ -e "$lsTmplFile" ] || cp /opt/app/conf/logstash/template.json $lsTmplFile
 
   chown -R logstash.svc /data/{elasticsearch,logstash}
