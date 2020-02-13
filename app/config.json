@@ -96,7 +96,8 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          301
         ],
         "default": 1,
         "required": "yes"
@@ -108,9 +109,7 @@
         "range": [
           0,
           2,
-          3,
-          5,
-          6
+          3
         ],
         "default": 3,
         "required": "yes"
@@ -189,7 +188,8 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          301
         ],
         "default": 0,
         "required": "yes"
@@ -201,8 +201,7 @@
         "range": [
           0,
           2,
-          3,
-          5
+          3
         ],
         "default": 0,
         "required": "yes"
@@ -275,7 +274,8 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          301
         ],
         "default": 1,
         "required": "yes"
@@ -287,9 +287,7 @@
         "range": [
           0,
           2,
-          3,
-          5,
-          6
+          3
         ],
         "default": 3,
         "required": "yes"
@@ -363,7 +361,8 @@
         "type": "integer",
         "range": [
           0,
-          1
+          1,
+          301
         ],
         "default": 0,
         "required": "yes"
@@ -375,11 +374,9 @@
         "range": [
           0,
           2,
-          3,
-          5,
-          6
+          3
         ],
-        "default": 5,
+        "default": 2,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -464,8 +461,6 @@
         "range": [
           0,
           1,
-          101,
-          201,
           301
         ],
         "default": 0,
@@ -534,8 +529,6 @@
         "range": [
           0,
           1,
-          101,
-          201,
           301
         ],
         "default": 0,
