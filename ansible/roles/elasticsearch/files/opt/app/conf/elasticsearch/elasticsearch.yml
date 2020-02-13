@@ -1,3 +1,1 @@
-# Avoid performance degradation caused by page switch
-bootstrap.memory_lock: true
-
+Should be overwritten by generated configs
