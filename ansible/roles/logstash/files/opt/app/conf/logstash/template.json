@@ -1,62 +1,62 @@
-
 {
-    "template": "logstash-*",
-    "version": 60801,
-    "settings": {
-        "index.refresh_interval": "5s",
-        "index": {
-            "analysis": {
-                "analyzer": {
-                    "by_smart": {
-                        "type": "custom",
-                        "tokenizer": "ik_smart"
-                    },
-                    "by_max_word": {
-                        "type": "custom",
-                        "tokenizer": "ik_max_word"
-                    }
-                }
-            }
+  "index_patterns": "logstash-*",
+  "version": 60801,
+  "settings": {
+    "index": {
+      "refresh_interval": "5s",
+      "analysis": {
+        "analyzer": {
+          "by_smart": {
+            "type": "custom",
+            "tokenizer": "ik_smart"
+          },
+          "by_max_word": {
+            "type": "custom",
+            "tokenizer": "ik_max_word"
+          }
         }
-    },
-    "mappings": {
-        "_doc": {
-            "dynamic_templates": [{
-                "message_field": {
-                    "path_match": "message",
-                    "match_mapping_type": "string",
-                    "mapping": {
-                        "type": "text",
-                        "norms": false,
-                        "analyzer": "by_max_word",
-                        "search_analyzer": "by_smart"
-                    }
-                }
-            }, {
-                "string_fields": {
-                    "match": "*",
-                    "match_mapping_type": "string",
-                    "mapping": {
-                        "type": "text",
-                        "norms": false,
-                        "analyzer": "by_max_word",
-                        "search_analyzer": "by_smart",
-                        "fields": {
-                            "keyword": {
-                                "type": "keyword"
-                            }
-                        }
-                    }
-                }
-            }],
-            "properties": {
-                "@timestamp": {
-                    "type": "date"
-                },
-                "@version": {
-                    "type": "keyword"
-                }
-            }
-        }
+      }
     }
+  },
+  "mappings": {
+    "dynamic_templates": [{
+      "message_field": {
+        "path_match": "message",
+        "match_mapping_type": "string",
+        "mapping": {
+          "type": "text",
+          "norms": false,
+          "analyzer": "by_max_word",
+          "search_analyzer": "by_smart"
+        }
+      }
+    }, {
+      "string_fields": {
+        "match": "*",
+        "match_mapping_type": "string",
+        "mapping": {
+          "type": "text",
+          "norms": false,
+          "analyzer": "by_max_word",
+          "search_analyzer": "by_smart",
+          "fields": {
+            "keyword": { "type": "keyword", "ignore_above": 256 }
+          }
+        }
+      }
+    }],
+    "properties": {
+      "@timestamp": { "type": "date" },
+      "@version": { "type": "keyword" },
+      "geoip"  : {
+        "dynamic": true,
+        "properties" : {
+          "ip": { "type": "ip" },
+          "location" : { "type" : "geo_point" },
+          "latitude" : { "type" : "half_float" },
+          "longitude" : { "type" : "half_float" }
+        }
+      }
+    }
+  }
 }
