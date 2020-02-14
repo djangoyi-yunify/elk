@@ -47,6 +47,12 @@
   run_once: True
   delegate_to: localhost
 
+- name: prepare local dir
+  file:
+    dest: "{{ playbook_dir }}/roles/{{ parentRole }}/files/tmp"
+    state: directory
+  delegate_to: localhost
+
 - name: Download service package - {{ parentRole }}
   get_url:
     url: "{{ opts.pkgUrl }}"
