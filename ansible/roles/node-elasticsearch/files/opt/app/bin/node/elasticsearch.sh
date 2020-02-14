@@ -107,9 +107,10 @@ checkNodeShardsLoaded() {
 jsonHeader='Content-Type: application/json'
 
 preScaleIn() {
+  # only process this check on the first stable data node and only when there are ES nodes leaving
+  [ "$MY_IP" = "${STABLE_DATA_NODES%% *}" -a -n "$LEAVING_DATA_NODES" ] || return 0
+
   [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
-  [ "${NUM_LEAVING_NODES}" -gt 0 ] || return $EC_SCLIN_NO_LEAVING_NODES # in case confd fails
-  [ -n "${LEAVING_DATA_NODES}" -a "$MY_IP" = "${STABLE_DATA_NODES%% *}" ] || return 0
 
   retry 10 1 0 checkClusterHealthy
   retry 10 1 0 checkNoClosed
@@ -145,11 +146,14 @@ scale() {
 }
 
 destroy() {
-  [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
+  # In case the user is trying to remove all ES nodes, when preScaleIn will never be called.
+  if [ -n "$LEAVING_DATA_NODES" ]; then
+    [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
+  fi
 
   # This is the 2nd step to remove a data node (shards are assumed to be already moved away in the 1st step).
   # Assumed stopping this node will not bring the cluster unhealthy because it has no data now.
-  if [ -n "$LEAVING_DATA_NODES" ]; then
+  if [[ " $LEAVING_DATA_NODES " == *" $MY_IP "* ]]; then
     execute stop
     retry 10 1 0 checkPortClosed
     checkClusterScaled 10 || {
@@ -210,7 +214,7 @@ checkShardsMovedAway() {
 }
 
 checkPortClosed() {
-  nc -z -w1 $MY_IP ${1:-9200} && return $EC_SCLIN_PORT_OPEN || return 0
+  checkEndpoint tcp:${2:-9200} ${1:-$MY_IP} && return $EC_SCLIN_PORT_OPEN || return 0
 }
 
 checkEsOutput() {
@@ -247,7 +251,7 @@ measure() {
     unassigned_shards
   }")
 
-  [ -n "$stats" -a -n "$health" ] && echo $stats $health | jq -s add
+  [ -n "$stats" -a -n "$health" ] && echo $stats $health | jq -cs add
 }
 
 upgrade() {
@@ -275,7 +279,7 @@ checkNodeLoaded() {
 
   # if this is the first upgraded node, it will fail to allocate shards for newly created indices to other old-version nodes. Need to move on then.
   if [ "$init" -eq 0 -a "$unassign" -gt 0 ]; then
-    local nodes expectedCount="$(echo "$DATA_NODES" | tr -cd ' ' | wc -c)"
+    local nodes expectedCount="$(echo "$STABLE_DATA_NODES" | tr -cd ' ' | wc -c)"
     url="$MY_IP:9200/_cat/nodes?h=v"
     nodes="$(curl -s -m 5 "$url" | awk 'BEGIN{n=0;o=0} {if($1=="'$ELK_VERSION'")n++;else if($1=="5.5.1")o++;} END{print n,o}')" || return $EC_HTTP_ERROR
     if [ "$nodes" = "1 $expectedCount" ]; then
