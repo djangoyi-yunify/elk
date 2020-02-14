@@ -1,21 +1,20 @@
 EC_HTTP_ERROR=130
 EC_STATUS_ERROR=131
-EC_NO_ES_NODES=20
-EC_SCLIN_NO_HEALTH=21
-EC_SCLIN_UNHEALTHY=22
-EC_SCLIN_PORT_OPEN=23
-EC_SCLIN_EXCIP_NOACK=120
-EC_SCLIN_LACK_NODES=121   # Be careful to avoid overlap with cURL
-EC_SCLIN_ERR_COUNTING=122 # the leaving nodes are still holding data
-EC_SCLIN_HOLDING_DATA=123 # the leaving nodes are still holding data
-EC_SCLIN_BELOW_MIN_COUNT=124
-EC_SCLIN_CLOSED_INDICES=125
-EC_SCLIN_NO_LEAVING_NODES=126
-EC_UPG_UP_NODES=41        # wrong number of running nodes
-EC_UPG_NOT_JOINED=42      # upgraded node not joined the cluster
-EC_DATA_LOAD_TIMEOUT=43   # shards not fully loaded
-EC_UPG_ONE_NEW=44
-EC_UPDATE_FAILURE=50
+EC_SCLIN_NO_HEALTH=132
+EC_SCLIN_UNHEALTHY=133
+EC_SCLIN_PORT_OPEN=134
+EC_UPG_UP_NODES=135       # wrong number of running nodes
+EC_UPG_NOT_JOINED=136     # upgraded node not joined the cluster
+EC_DATA_LOAD_TIMEOUT=137   # shards not fully loaded
+EC_UPG_ONE_NEW=138
+EC_UPDATE_FAILURE=139
+EC_SCLIN_EXCIP_NOACK=140
+EC_SCLIN_LACK_NODES=141   # Be careful to avoid overlap with cURL
+EC_SCLIN_ERR_COUNTING=142 # the leaving nodes are still holding data
+EC_SCLIN_HOLDING_DATA=143 # the leaving nodes are still holding data
+EC_SCLIN_BELOW_MIN_COUNT=144
+EC_SCLIN_CLOSED_INDICES=145
+EC_SCLIN_NO_LEAVING_NODES=146
 
 parseJsonField() {
   local field=$1 json=${@:2}
