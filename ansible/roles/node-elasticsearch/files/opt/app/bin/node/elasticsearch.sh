@@ -22,19 +22,22 @@ parseJsonField() {
   echo $json | jq -r '."'$field'"'
 }
 
-prepareEsDir() {
+prepareEsDirs() {
+  local dataDirs; dataDirs="$(egrep -o " /data[23]? " /proc/mounts)"
+
   local esDir=${1:-elasticsearch}
   mkdir -p /data/$esDir/{analysis,dump,logs,repo}
-  for dir in $(ls -d /data*); do
-    rm -rf $dir/lost+found
-    mkdir -p $dir/$esDir/data
-    chown -R elasticsearch.svc /$dir/$esDir
+
+  for dataDir in $dataDirs; do
+    rm -rf $dataDir/lost+found
+    mkdir -p $dataDir/$esDir/data
+    chown -R elasticsearch.svc /$dataDir/$esDir
   done
 }
 
 initNode() {
   _initNode
-  prepareEsDir
+  prepareEsDirs
   local htmlPath=/data/elasticsearch/index.html
   [ -e $htmlPath ] || ln -s /opt/app/conf/caddy/index.html $htmlPath
 }
