@@ -465,19 +465,8 @@
         "label": "Node Count",
         "description": "Number of nodes for the cluster to create",
         "type": "integer",
-        "range": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10
-        ],
+        "min": 0,
+        "max": 50,
         "default": 1,
         "resource_group": [1, 1, 1],
         "required": "yes"
