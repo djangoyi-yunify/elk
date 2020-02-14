@@ -8,7 +8,7 @@
   strategy: free
   roles:
   - app-agent-1.0.1
-  - appctl-1.0.7
+  - appctl-1.0.9
   - arping-1.0.0
   - common
   - role: caddy-1.0.6

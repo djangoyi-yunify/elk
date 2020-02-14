@@ -38,8 +38,7 @@ recoverAfterMastersCount=$(( $expectedMasterQuorum > $expectedMastersCount - 2 ?
 {{- $isDedicatedMaster := eq $myRole "elasticsearch-master" }}
 discoveryHosts="${stableMasterNodes:-$stableGenericNodes}"
 
-dataDirs="$(ls -d /data* | xargs echo)"
-dataDirs="$(echo "${dataDirs:-/data /data2 /data3} " | sed 's# #/elasticsearch/data, #g')"
+dataDirs="$(egrep -o " /data[23]? " /proc/mounts | sed 's#^#-#g; s# $#/elasticsearch/data#g')"
 
 flush > /opt/app/conf/elasticsearch/elasticsearch.yml << ES_YML_EOF
 action.destructive_requires_name: {{ getv "/env/action.destructive_requires_name" "true" }}
@@ -82,8 +81,11 @@ node.ingest: {{ not $isDedicatedMaster }}
 node.master: {{ or $isDedicatedMaster (not (ls "/hosts/es_master_node")) }}
 node.name: {{ getv "/cluster/cluster_id" }}-{{ range split $myRole "-" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}{{ getv "/host/sid" }}
 
-path.data: [ $dataDirs ]
+path.data:
+$dataDirs
+
 path.logs: /data/elasticsearch/logs
+
 {{- with getv "/env/path.repo" "[]" }}
 path.repo: {{ . }}
 {{- end }}
