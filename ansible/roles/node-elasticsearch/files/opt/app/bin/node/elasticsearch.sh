@@ -44,7 +44,7 @@ initNode() {
 start() {
   _start
 
-  if [[ " $JOINING_MASTER_NODES " == *" $MY_IP "* ]] && [ -z "$STABLE_MASTER_NODES" ]; then
+  if [[ " $JOINING_MASTER_NODES$JOINING_DATA_NODES " == *" $MY_IP "* ]]; then
     retry 120 1 0 checkNodeJoined $MY_IP ${STABLE_DATA_NODES%% *}
   fi
 }
