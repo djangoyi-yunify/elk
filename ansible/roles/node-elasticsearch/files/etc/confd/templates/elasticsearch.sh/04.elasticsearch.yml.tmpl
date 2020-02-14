@@ -1,45 +1,42 @@
+allNodes="$(echo "
+{{- $groupsMap := map "2" "n2" "3" "n3" "master" "m" }}
+{{- range $nodeRole := lsdir "/hosts" | filter "es_*" }}
+{{- $joiningNodes := lsdir (printf "/adding-hosts/%s" $nodeRole) }}
+{{- $leavingNodes := lsdir (printf "/deleting-hosts/%s" $nodeRole) }}
+{{- range $instanceId := lsdir (printf "/hosts/%s" $nodeRole) }}
+{{- if $joiningNodes | filter $instanceId }}
+joining/
+{{- else if $leavingNodes | filter $instanceId }}
+leaving/
+{{- else }}
+stable/
+{{- end }}
+{{- $nodeRole }}/
+{{- $instanceId }}/
+{{- getv "/cluster/cluster_id" }}-
+{{- range split $nodeRole "_" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}
+{{- getv (printf "/hosts/%s/%s/sid" $nodeRole $instanceId) }}
+{{- end }}
+{{- end }}
+" | sort -V)"
+
+joiningMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_master/ {print $4}' | xargs)"
+joiningGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_node/ {print $4}' | xargs)"
+stableMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_master/ {print $4}' | xargs)"
+stableGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_node/ {print $4}' | xargs)"
+
+expectedGenericNodes="$joiningGenericNodes $stableGenericNodes"
+expectedGenNodesCount=$(echo $expectedGenericNodes | wc -w)
+expectedGenericQuorum=$(( $expectedGenNodesCount / 2 + 1 ))
+recoverAfterGenCount=$(( $expectedGenericQuorum > $expectedGenNodesCount - 2 ? $expectedGenericQuorum : $expectedGenNodesCount - 2 ))
+
+expectedMasterNodes="$joiningMasterNodes $stableMasterNodes"
+expectedMastersCount=$(echo ${expectedMasterNodes:=$expectedGenericNodes} | wc -w)
+expectedMasterQuorum=$(( $expectedMastersCount / 2 + 1 ))
+recoverAfterMastersCount=$(( $expectedMasterQuorum > $expectedMastersCount - 2 ? $expectedMasterQuorum : $expectedMastersCount - 2 ))
+
 {{- $isDedicatedMaster := eq $myRole "elasticsearch-master" }}
-
-{{- $leavingMasters := getvs "/deleting-hosts/es_master_node/*/ip" }}
-{{- $dedicatedMasters := getvs "/hosts/es_master_node/*/ip" }}
-masterNodes="$(echo "
-{{- range $dedicatedMasters }}
-{{- if not ($leavingMasters | filter .) }}
-{{ . }}
-{{- end }}
-{{- end }}
-" | xargs | tr ' ' ,)"
-{{- $mastersCount := sub (len $dedicatedMasters) (len $leavingMasters) }}
-{{- $masterQuorum := add (div $mastersCount 2) 1 }}
-
-{{- $leavingGenericNodes := getvs "/deleting-hosts/es_node*/*/ip" }}
-{{- $genericNodes := getvs "/hosts/es_node*/*/ip" }}
-genericNodes="$(echo "
-{{- range $genericNodes }}
-{{- if not ($leavingGenericNodes | filter .) }}
-{{ . }}
-{{- end }}
-{{- end }}
-" | xargs | tr ' ' ,)"
-{{- $genNodesCount := sub (len $genericNodes) (len $leavingGenericNodes) }}
-{{- $genericQuorum := add (div $genNodesCount 2) 1 }}
-
-discoveryHosts="${masterNodes:-$genericNodes}"
-
-{{- $joiningMasters := getvs "/adding-hosts/es_master_node/*/ip" }}
-{{- if $joiningMasters | filter $myIp }}
-  {{- if gt $mastersCount (len $joiningMasters) }}
-    discoveryHosts="$(echo "
-      {{- range $dedicatedMasters }}
-        {{- if (not ($joiningMasters | filter .)) }}
-          {{ . }}
-        {{- end }}
-      {{- end }}
-    " | xargs | tr ' ' ,)"
-  {{- else }}
-    discoveryHosts="$genericNodes"
-  {{- end }}
-{{- end }}
+discoveryHosts="${stableMasterNodes:-$stableGenericNodes}"
 
 dataDirs="$(ls -d /data* | xargs echo)"
 dataDirs="$(echo "${dataDirs:-/data /data2 /data3} " | sed 's# #/elasticsearch/data, #g')"
@@ -53,20 +50,15 @@ cluster.name: {{ getv "/cluster/cluster_id" }}
 discovery.zen.fd.ping_interval: 1s
 discovery.zen.fd.ping_retries: 3
 discovery.zen.fd.ping_timeout: 30s
-discovery.zen.minimum_master_nodes: {{ if $mastersCount }}{{ $masterQuorum }}{{ else }}{{ $genericQuorum }}{{ end }}
+discovery.zen.minimum_master_nodes: $expectedMasterQuorum
 discovery.zen.no_master_block: {{ getv "/env/discovery.zen.no_master_block" "write" }}
 discovery.zen.ping_timeout: 3s
-discovery.zen.ping.unicast.hosts: [ ${discoveryHosts/{{ $myIp }},/} ]
+discovery.zen.ping.unicast.hosts: [ ${discoveryHosts// /,} ]
 
-{{ if $mastersCount -}}
-gateway.expected_data_nodes: {{ $genNodesCount }}
-gateway.expected_master_nodes: {{ $mastersCount }}
-gateway.recover_after_data_nodes: {{ max $genericQuorum (sub $genNodesCount 2) }}
-gateway.recover_after_master_nodes: {{ max $masterQuorum (sub $mastersCount 2) }}
-{{ else -}}
-gateway.expected_nodes: {{ $genNodesCount }}
-gateway.recover_after_nodes: {{ max $genericQuorum (sub $genNodesCount 2) }}
-{{ end -}}
+gateway.expected_data_nodes: $expectedGenNodesCount
+gateway.expected_master_nodes: $expectedMastersCount
+gateway.recover_after_data_nodes: $recoverAfterGenCount
+gateway.recover_after_master_nodes: $recoverAfterMastersCount
 gateway.recover_after_time: {{ getv "/env/gateway.recover_after_time" "5m" }}
 
 http.cors.allow-origin: "{{ getv "/env/http.cors.allow-origin" "" }}"
@@ -87,18 +79,21 @@ node.attr.data: "{{ getv "/env/node.attr.data" "hot" }}"
 {{- end }}
 node.data: {{ not $isDedicatedMaster }}
 node.ingest: {{ not $isDedicatedMaster }}
-node.master: {{ or $isDedicatedMaster (not $mastersCount) }}
-{{- $groupsMap := map "2" "n2" "3" "n3" "master" "m" }}
-node.name: {{ getv "/cluster/cluster_id" }}{{ range split $myRole "-" | filter "2|3|master" }}-{{ index $groupsMap . }}{{ end }}-{{ getv "/host/sid" }}
+node.master: {{ or $isDedicatedMaster (not (ls "/hosts/es_master_node")) }}
+node.name: {{ getv "/cluster/cluster_id" }}-{{ range split $myRole "-" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}{{ getv "/host/sid" }}
 
 path.data: [ $dataDirs ]
 path.logs: /data/elasticsearch/logs
-path.repo: {{ getv "/env/path.repo" "[]" }}
+{{- with getv "/env/path.repo" "[]" }}
+path.repo: {{ . }}
+{{- end }}
 
 {{- if not (getvs "/env/es_additional_line*" | filter "reindex.remote.whitelist:.*") }}
 reindex.remote.whitelist: "{{ getv "/env/reindex.remote.whitelist" "" }}"
 {{- end }}
-repositories.url.allowed_urls: {{ getv "/env/repositories.url.allowed_urls" "[]" }}
+{{- with getv "/env/repositories.url.allowed_urls" "[]" }}
+repositories.url.allowed_urls: {{ . }}
+{{- end }}
 
 {{- range gets "/env/script.*" }}
 {{ base .Key }}: {{ .Value }}
