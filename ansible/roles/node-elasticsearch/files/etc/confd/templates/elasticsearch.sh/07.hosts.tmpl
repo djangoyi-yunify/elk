@@ -1,0 +1,14 @@
+hostsFile=/etc/hosts
+sed "/^# >> ES nodes./,/^# << ES nodes./d" $hostsFile > $hostsFile.swap
+flush >> $hostsFile.swap << HOSTS_FILE
+# >> ES nodes. WARNING: this is managed by script and please don't touch manually.
+{{- range $nodeRole := lsdir "/hosts" | filter "es_*" }}
+{{- range $instanceId := lsdir (printf "/hosts/%s" $nodeRole) }}
+{{ getv (printf "/hosts/%s/%s/ip" $nodeRole $instanceId) }}     {{ getv "/cluster/cluster_id" }}-
+{{- range split $nodeRole "_" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}
+{{- getv (printf "/hosts/%s/%s/sid" $nodeRole $instanceId) }}
+{{- end }}
+{{- end }}
+# << ES nodes. WARNING: this is managed by script and please don't touch manually.
+HOSTS_FILE
+mv $hostsFile.swap $hostsFile
