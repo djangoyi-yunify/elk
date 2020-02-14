@@ -51,10 +51,3 @@
     regexp: '^gem "{{ opts.name }}"'
     line: 'gem "{{ opts.name }}", :path => "./plugins/{{ opts.name }}-{{ opts.version }}"'
     insertafter: EOF
-
-- name: Install LS plugin - {{ opts.name }}
-  shell: |
-    sudo -u logstash {{ ls_home }}/bin/logstash-plugin install --no-verify
-  args:
-    chdir: "{{ ls_home }}"
-  when: installed is failed
