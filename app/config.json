@@ -629,51 +629,19 @@
         "changeable": true,
         "required": "no"
       }, {
-        "key": "script.inline",
-        "label": "script.inline",
-        "description": "Specify whether scripts with inline type are allowed.",
-        "type": "boolean",
-        "default": true,
+        "key": "script.allowed_types",
+        "label": "script.allowed_types",
+        "description": "Specify script.allowed_types in elasticsearch.yml",
+        "type": "string",
+        "default": "",
         "changeable": true,
         "required": "no"
       }, {
-        "key": "script.stored",
-        "label": "script.stored",
-        "description": "Specify whether scripts with stored type are allowed.",
-        "type": "boolean",
-        "default": true,
-        "changeable": true,
-        "required": "no"
-      }, {
-        "key": "script.file",
-        "label": "script.file",
-        "description": "Specify whether scripts with file type are allowed.",
-        "type": "boolean",
-        "default": false,
-        "changeable": true,
-        "required": "no"
-      }, {
-        "key": "script.aggs",
-        "label": "script.aggs",
-        "description": "Specify whether scripts can be executed in aggregations context.",
-        "type": "boolean",
-        "default": true,
-        "changeable": true,
-        "required": "no"
-      }, {
-        "key": "script.search",
-        "label": "script.search",
-        "description": "Specify whether scripts can be executed in search context.",
-        "type": "boolean",
-        "default": true,
-        "changeable": true,
-        "required": "no"
-      }, {
-        "key": "script.update",
-        "label": "script.update",
-        "description": "Specify whether scripts can be executed in update context.",
-        "type": "boolean",
-        "default": true,
+        "key": "script.allowed_contexts",
+        "label": "script.allowed_contexts",
+        "description": "Specify script.allowed_contexts in elasticsearch.yml",
+        "type": "string",
+        "default": "",
         "changeable": true,
         "required": "no"
       }, {
