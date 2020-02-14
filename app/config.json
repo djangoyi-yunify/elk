@@ -594,7 +594,7 @@
         "pattern": "[0-9]+[smh]",
         "default": "5m",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "http.cors.enabled",
         "label": "http.cors.enabled",
@@ -618,7 +618,7 @@
         "type": "string",
         "default": "90%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "indices.memory.index_buffer_size",
         "label": "indices.memory.index_buffer_size",
@@ -626,7 +626,7 @@
         "type": "string",
         "default": "10%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "indices.queries.cache.size",
         "label": "indices.queries.cache.size",
@@ -634,7 +634,7 @@
         "type": "string",
         "default": "10%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "indices.requests.cache.size",
         "label": "indices.requests.cache.size",
@@ -642,7 +642,7 @@
         "type": "string",
         "default": "1%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "node.attr.data",
         "label": "node.attr.data",
@@ -1059,7 +1059,7 @@
         "type": "string",
         "default": "http { port => 9700 }",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "filter_conf_content",
         "label": "filter_conf_content",
