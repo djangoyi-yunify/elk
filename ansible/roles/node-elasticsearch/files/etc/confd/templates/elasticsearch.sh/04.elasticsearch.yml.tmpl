@@ -1,36 +1,14 @@
-allNodes="$(echo "
-{{- $groupsMap := map "2" "n2" "3" "n3" "master" "m" }}
-{{- range $nodeRole := lsdir "/hosts" | filter "es_*" }}
-{{- $joiningNodes := lsdir (printf "/adding-hosts/%s" $nodeRole) }}
-{{- $leavingNodes := lsdir (printf "/deleting-hosts/%s" $nodeRole) }}
-{{- range $instanceId := lsdir (printf "/hosts/%s" $nodeRole) }}
-{{- if $joiningNodes | filter $instanceId }}
-joining/
-{{- else if $leavingNodes | filter $instanceId }}
-leaving/
-{{- else }}
-stable/
-{{- end }}
-{{- $nodeRole }}/
-{{- $instanceId }}/
-{{- getv "/cluster/cluster_id" }}-
-{{- range split $nodeRole "_" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}
-{{- getv (printf "/hosts/%s/%s/sid" $nodeRole $instanceId) }}
-{{- end }}
-{{- end }}
-" | sort -V)"
-
-joiningMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_master/ {print $4}' | xargs)"
 joiningGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_node/ {print $4}' | xargs)"
-stableMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_master/ {print $4}' | xargs)"
 stableGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_node/ {print $4}' | xargs)"
+joiningMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_master/ {print $4}' | xargs)"
+stableMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_master/ {print $4}' | xargs)"
 
-expectedGenericNodes="$joiningGenericNodes $stableGenericNodes"
+expectedGenericNodes="$(echo $joiningGenericNodes $stableGenericNodes)"
 expectedGenNodesCount=$(echo $expectedGenericNodes | wc -w)
 expectedGenericQuorum=$(( $expectedGenNodesCount / 2 + 1 ))
 recoverAfterGenCount=$(( $expectedGenericQuorum > $expectedGenNodesCount - 2 ? $expectedGenericQuorum : $expectedGenNodesCount - 2 ))
 
-expectedMasterNodes="$joiningMasterNodes $stableMasterNodes"
+expectedMasterNodes="$(echo $joiningMasterNodes $stableMasterNodes)"
 expectedMastersCount=$(echo ${expectedMasterNodes:=$expectedGenericNodes} | wc -w)
 expectedMasterQuorum=$(( $expectedMastersCount / 2 + 1 ))
 recoverAfterMastersCount=$(( $expectedMasterQuorum > $expectedMastersCount - 2 ? $expectedMasterQuorum : $expectedMastersCount - 2 ))

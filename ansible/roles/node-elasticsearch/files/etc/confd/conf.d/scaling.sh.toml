@@ -1,8 +1,0 @@
-[template]
-src = "scaling.sh.tmpl"
-dest = "/opt/app/bin/tmpl/scaling.sh"
-mode = "0700"
-keys = [
-  "/",
-]
-reload_cmd = "/opt/app/bin/tmpl/scaling.sh"
