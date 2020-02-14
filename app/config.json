@@ -452,7 +452,7 @@
           1,
           301
         ],
-        "default": 101,
+        "default": 0,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -520,7 +520,7 @@
           1,
           301
         ],
-        "default": 101,
+        "default": 0,
         "required": "yes"
       }]
     }]
