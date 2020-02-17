@@ -10,6 +10,7 @@
     svcHome: "{{ opts.svcHome | default(defaultSvcHome) }}"
     svcVersion: "{{ opts.version | default(version) }}"
     creates: "{{ opts.creates | default('bin') }}"
+    softLink: "{{ opts.softLink | default(true) }}"
 
 - name: install tools
   apt:
@@ -86,4 +87,5 @@
     owner: "{{ parentRole }}"
     group: svc
     state: link
-  when: svcHome == defaultSvcHome
+  when:
+  - svcHome == defaultSvcHome and softLink

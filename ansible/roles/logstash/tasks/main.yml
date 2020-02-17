@@ -10,21 +10,22 @@
   vars:
     version: "{{ elkVersion }}"
     parentRole: logstash
+    softLink: false
   loop:
     - pkgUrl: "https://artifacts.elastic.co/downloads/logstash/logstash-{{ version }}.tar.gz"
-      svcHome: "{{ ls_home }}"
   loop_control:
     loop_var: opts
 
-- name: Install plugins
-  include_tasks: install-plugin.yml
+- name: install 5.4.3 binaries
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: 5.4.3
+    parentRole: logstash
+    softLink: false
   loop:
-    - name: logstash-input-qingstor
-      version: b4e6fd29ead81db27e06870573add00914b539b1
-      url: https://github.com/yunify/logstash-input-qingstor/archive/b4e6fd29ead81db27e06870573add00914b539b1.zip
-    - name: logstash-output-qingstor
-      version: 0.3.6
-      url: https://github.com/yunify/logstash-output-qingstor/archive/v0.3.6.zip
+    - pkgUrl: https://github.com/QingCloudAppcenter/elk/releases/download/1.2.8/logstash-5.4.3.tgz
   loop_control:
     loop_var: opts
 
@@ -58,6 +59,14 @@
     enabled: no
     masked: yes
     state: stopped
+
+- name: create symbolic link
+  file:
+    src: /opt/logstash/{{ elkVersion }}
+    dest: "{{ ls_home }}"
+    owner: logstash
+    group: logstash
+    state: link
 
 - name: add logstash bin dir to system-wide path
   copy:

@@ -109,6 +109,8 @@
   "Specify the location of shared file system repository.": "指定共享文件系统仓库的位置",
   "Specify the location of read-only URL repository.": "指定只读URL仓库的位置",
   "The additional configuration in elasticsearch.yml.": "elasticsearch.yml中的附加配置",
+  "Use Logstash 5.4.3": "使用 Logstash 5.4.3",
+  "Use Logstash 5.4.3 with QingStor input/output plugins": "QingStor 插件已经不再维护，并且只能工作在 5.4.3 版本，建议不要再使用，相应功能可以用 S3 插件代替；如果必须使用 QingStor 插件，需要在此处选择 true 降级到 Logstash 5.4.3 版本，并且仔细检查 logstash.conf 的配置能否正确工作在 5.4.3 版本",
   "Periodically check if the configuration has changed and reload the pipeline. This can also be triggered manually through the SIGHUP signal": "定期检查配置文件并自动加载更改过的 pipeline 配置",
   "How often to check if the pipeline configuration has changed (in seconds)": "定期检查配置文件的频率，以秒为单位",
   "Mapping type": "映射类型（mapping types）",

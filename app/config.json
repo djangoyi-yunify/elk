@@ -1085,6 +1085,14 @@
         "changeable": true,
         "required": "no"
       }, {
+        "key": "qs.plugin.enabled",
+        "label": "Use Logstash 5.4.3",
+        "description": "Use Logstash 5.4.3 with QingStor input/output plugins",
+        "type": "boolean",
+        "default": false,
+        "changeable": true,
+        "required": "no"
+      }, {
         "key": "gemfile_append_content",
         "label": "gemfile_append_content",
         "description": "This config is used to adding content into Gemfile for logstash",

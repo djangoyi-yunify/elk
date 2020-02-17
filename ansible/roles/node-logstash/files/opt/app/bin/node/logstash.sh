@@ -17,6 +17,14 @@ initNode() {
   [ -e $htmlPath ] || ln -s /opt/app/conf/caddy/index.html $htmlPath
 }
 
+reload() {
+  if [ "$1" == "logstash" ]; then
+    ln -snf /opt/logstash/${LS_VERSION:-$ELK_VERSION} /usr/share/logstash
+  else
+    _reload $@
+  fi
+}
+
 testConf() {
   . /opt/app/conf/logstash/.env
   $LS_HOME/bin/logstash --path.settings $LS_SETTINGS_DIR -t
