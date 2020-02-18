@@ -29,11 +29,6 @@ frontend elasticsearch
   {{- end }}
   default_backend elasticsearch
 
-frontend elasticsearch-tcp
-  bind :9300
-  mode tcp
-  default_backend elasticsearch-tcp
-
 backend elasticsearch
   mode http
   option forwardfor
@@ -41,14 +36,6 @@ backend elasticsearch
   option httpclose
   {{- range getvs "/hosts/es_node*/*/ip" }}
   server {{ . }}:9200 {{ . }}:9200 check
-  {{- end }}
-
-backend elasticsearch-tcp
-  mode tcp
-  balance roundrobin
-  option tcplog
-  {{- range getvs "/hosts/es_node*/*/ip" }}
-  server {{ . }}:9300 {{ . }}:9300 check
   {{- end }}
 
 backend error413

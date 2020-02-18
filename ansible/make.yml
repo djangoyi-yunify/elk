@@ -14,9 +14,6 @@
   - role: caddy-1.0.6
     vars:
       caddy_plugins: upload
-  - role: java-1.0.1
-    vars:
-      java_version: 8
   - update-apt-sources-1.0.0
   - disable-apt-jobs-1.0.0
   - disable-motd-1.0.0
@@ -26,11 +23,18 @@
       name: "{{ svc_name }}"
     when: "'elasticsearch' in group_names"
     loop:
+    - java-1.0.1
     - elasticsearch
     - jq-1.0.3
     - node-elasticsearch
     loop_control:
       loop_var: svc_name
+
+  - include_role:
+      name: java-1.0.1
+    vars:
+      java_version: 8
+    when: ('logstash' in group_names) or ('kibana' in group_names)
 
   - include_role:
       name: "{{ svc_name }}"

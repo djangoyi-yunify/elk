@@ -13,7 +13,7 @@
     version: "{{ elk_version }}"
     parentRole: elasticsearch
   loop:
-    - pkgUrl: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-{{ version }}.tar.gz"
+    - pkgUrl: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-{{ version }}-linux-x86_64.tar.gz"
   loop_control:
     loop_var: opts
 

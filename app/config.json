@@ -1015,7 +1015,7 @@
         "label": "output_es_content",
         "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in output elasticsearch section",
         "type": "string",
-        "default": "document_type => '_doc'",
+        "default": "",
         "changeable": true,
         "required": "no"
       }, {

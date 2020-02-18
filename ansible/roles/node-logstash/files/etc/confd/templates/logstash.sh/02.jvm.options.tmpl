@@ -3,7 +3,6 @@ flush > /usr/share/logstash/config/jvm.options << LS_JVM_EOF
 -Xms{{ $halfMemory }}m
 -Xmx{{ $halfMemory }}m
 
--XX:+UseParNewGC
 -XX:+UseConcMarkSweepGC
 -XX:CMSInitiatingOccupancyFraction=75
 -XX:+UseCMSInitiatingOccupancyOnly
@@ -17,21 +16,13 @@ flush > /usr/share/logstash/config/jvm.options << LS_JVM_EOF
 
 -Djruby.compile.invokedynamic=true
 -Djruby.jit.threshold=0
+-Djruby.regexp.interruptible=true
 
 -XX:+HeapDumpOnOutOfMemoryError
 -XX:HeapDumpPath=/data/logstash/dump/dump.hprof
 
--XX:+PrintGCDetails
--XX:+PrintGCTimeStamps
--XX:+PrintGCDateStamps
--XX:+PrintClassHistogram
--XX:+PrintTenuringDistribution
--XX:+PrintGCApplicationStoppedTime
-
--Xloggc:/data/logstash/logs/gc.log
--XX:+UseGCLogFileRotation
--XX:NumberOfGCLogFiles=5
--XX:GCLogFileSize=2m
+9-:-Xlog:gc*,gc+age=trace,safepoint:file=/data/logstash/logs/gc.log:utctime,pid,tags:filecount=32,filesize=1m
+9-:-Djava.locale.providers=COMPAT
 
 -Djava.security.egd=file:/dev/urandom
 LS_JVM_EOF

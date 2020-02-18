@@ -1,6 +1,6 @@
 {
   "index_patterns": "logstash-*",
-  "version": 60801,
+  "version": 70501,
   "settings": {
     "index": {
       "refresh_interval": "5s",

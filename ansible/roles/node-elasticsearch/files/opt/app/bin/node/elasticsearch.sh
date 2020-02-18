@@ -15,6 +15,13 @@ EC_SCLIN_HOLDING_DATA=143 # the leaving nodes are still holding data
 EC_SCLIN_BELOW_MIN_COUNT=144
 EC_SCLIN_CLOSED_INDICES=145
 EC_SCLIN_NO_LEAVING_NODES=146
+EC_SCLIN_UNHEALTHY_NODES=147
+EC_EXC_VOTING_NODE_ERR=148
+EC_SCL_GET_EXC_NODES_ERR=149
+EC_SCL_ROLE_NOT_MATCHED=150
+EC_SCL_NOT_DATA_ROLE=151
+EC_SCLIN_NO_MASTER_LEFT=152
+EC_SCLIN_TOO_MANY_MASTERS=153
 
 parseJsonField() {
   local field=$1 json=${@:2}
@@ -108,22 +115,40 @@ jsonHeader='Content-Type: application/json'
 
 preScaleIn() {
   # only process this check on the first stable data node and only when there are ES nodes leaving
-  [ "$MY_IP" = "${STABLE_DATA_NODES%% *}" -a -n "$LEAVING_DATA_NODES" ] || return 0
+  [ "$MY_IP" = "${STABLE_DATA_NODES%% *}" -a -n "$LEAVING_MASTER_NODES$LEAVING_DATA_NODES" ] || return 0
 
-  [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
+  [ -z "$LEAVING_DATA_NODES" ] || [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
+
+  # disallow remove all master nodes if there are any
+  [ -z "$LEAVING_MASTER_NODES" -o -n "$STABLE_MASTER_NODES" ] || return $EC_SCLIN_NO_MASTER_LEFT
 
   retry 10 1 0 checkClusterHealthy
-  retry 10 1 0 checkNoClosed
+  if [ -n "$LEAVING_DATA_NODES" ]; then retry 10 1 0 checkNoClosed; fi
+  checkNodeRolesMatched
+  checkDataNodeRoles $(getExcludedVotingNodes)
+  resetExcludedVotingNodes
+  local nodes; nodes="$(curl -s -m 5 "$MY_IP:9200/_cat/nodes?h=ip,role" | awk '{print $1"/"$2}')"
 
-  local excludingNodes="${LEAVING_DATA_NODES// /,}" excludedNodes
-  setExcludeIp "\"$excludingNodes\""
-  excludedNodes="$(getExcludeIp)"
-  [ "$excludingNodes" = "$excludedNodes" ] && retry 8640 1 $EC_SCLIN_LACK_NODES checkClusterScaled && retry 30 1 0 checkShardsMovedAway || {
-    local retCode=$?
-    log "Failed to relocate shards with exit code '$retCode'. Reverting cluster settings."
-    setExcludeIp null
-    return $retCode
-  }
+  local masterNodesToExclude; masterNodesToExclude="$(getMasterNodesToExclude)"
+  if [ -n "$masterNodesToExclude" ]; then
+    excludeVotingNodes $masterNodesToExclude || {
+      resetExcludedVotingNodes
+      return $EC_EXC_VOTING_NODE_ERR
+    }
+  fi
+
+  local dataNodesToExclude="${LEAVING_DATA_NODES// /,}"
+  if [ -n "$dataNodesToExclude" ]; then
+    setExcludeIp "\"$dataNodesToExclude\""
+    local excludedNodes; excludedNodes="$(getExcludeIp)"
+    [ "$dataNodesToExclude" = "$excludedNodes" ] && retry 8640 1 $EC_SCLIN_LACK_NODES checkClusterScaled && retry 30 1 0 checkShardsMovedAway || {
+      local retCode=$?
+      log "Failed to relocate shards with exit code '$retCode'. Reverting cluster settings."
+      setExcludeIp null
+      resetExcludedVotingNodes
+      return $retCode
+    }
+  fi
 }
 
 checkClusterHealthy() {
@@ -137,11 +162,36 @@ checkNoClosed() {
   [ "$numClosed" -eq 0 ] || return $EC_SCLIN_CLOSED_INDICES
 }
 
+checkNodeRolesMatched() {
+  local expectedNodes
+  if [ -z "$STABLE_MASTER_NODES$LEAVING_MASTER_NODES" ]; then
+    expectedNodes="$(echo $STABLE_DATA_NODES $LEAVING_DATA_NODES | xargs -n1 | sed 's#$#/dim#g' | sort)"
+  else
+    local masterNodes="$(echo $STABLE_MASTER_NODES $LEAVING_MASTER_NODES | xargs -n1 | sed 's#$#/m#g')"
+    local dataNodes="$(echo $STABLE_DATA_NODES $LEAVING_DATA_NODES | xargs -n1 | sed 's#$#/di#g')"
+    expectedNodes="$(echo $masterNodes $dataNodes | xargs -n1 | sort)"
+  fi
+
+  local runtimeNodes
+  runtimeNodes="$(curl -s -m5 "$MY_IP:9200/_cat/nodes?h=ip,role" | awk '{print $1"/"$2}' | sort)" || return $EC_HTTP_ERROR
+  [ "$expectedNodes" = "$runtimeNodes" ] || {
+    log "Runtime role not matched: expected='$expectedNodes' actual='$runtimeNodes'."
+    return $EC_SCL_ROLE_NOT_MATCHED
+  }
+}
+
 scale() {
   local inout=${1:?in/out should be specified}
 
-  if [ "$inout" = "in" -a -n "$LEAVING_MASTER_NODES" ]; then
-    execute restart
+  if [ "$inout" == "in" ]; then
+    if [ -n "$(getMasterNodesToExclude)" ]; then
+      if [ "$MY_IP" = "${STABLE_DATA_NODES%% *}" ]; then resetExcludedVotingNodes; fi
+    fi
+    if [ -n "$LEAVING_DATA_NODES" ]; then setExcludeIp null; fi
+  elif [ "$inout" == "out" ]; then
+    if [ -n "$JOINING_MASTER_NODES" -a -z "$STABLE_MASTER_NODES" ]; then
+      if [ "$MY_IP" = "${STABLE_DATA_NODES%% *}" ]; then excludeVotingNodes $STABLE_DATA_NODES; fi
+    fi
   fi
 }
 
@@ -149,6 +199,22 @@ destroy() {
   # In case the user is trying to remove all ES nodes, when preScaleIn will never be called.
   if [ -n "$LEAVING_DATA_NODES" ]; then
     [[ "$STABLE_DATA_NODES" = *\ * ]] || return $EC_SCLIN_BELOW_MIN_COUNT
+  fi
+
+  # Remove master-eligible nodes one by one:
+  # https://www.elastic.co/guide/en/elasticsearch/reference/7.5/modules-discovery-adding-removing-nodes.html#modules-discovery-removing-nodes
+  local masterNodesToLeave; masterNodesToLeave="$(getMasterNodesToExclude)"
+  if [[ " $masterNodesToLeave " == *" $MY_IP "* ]]; then
+    local runningNodes
+    runningNodes="$(curl -s -m5 "$MY_IP:9200/_cat/nodes?h=i,id&full_id=true" | awk '{print $1"/"$2}')"
+    local node; for node in $masterNodesToLeave; do
+      if [ "$node" = "$MY_IP" ]; then break; fi
+      retry 120 1 0 checkPortClosed $node
+      local nodeId; nodeId=$(echo "$runningNodes" | awk -F/ '$1=="'$node'" {print $2}')
+      test -n "$nodeId"
+      retry 60 1 0 checkMasterRemoved $nodeId
+    done
+    execute stop
   fi
 
   # This is the 2nd step to remove a data node (shards are assumed to be already moved away in the 1st step).
@@ -161,8 +227,17 @@ destroy() {
       log "Reverting scale-in as the cluster is not healthy or my shards were not relocated/assigned ..."
       execute start
       setExcludeIp null
+      resetExcludedVotingNodes
       return $retCode
     }
+  fi
+}
+
+getMasterNodesToExclude() {
+  if [ -n "$STABLE_MASTER_NODES$LEAVING_MASTER_NODES" ]; then
+    echo $LEAVING_MASTER_NODES
+  else
+    echo $LEAVING_DATA_NODES
   fi
 }
 
@@ -173,6 +248,60 @@ setExcludeIp() {
 
 getExcludeIp() {
   curl -s -m 30 $MY_IP:9200/_cluster/settings | jq -r '.transient.cluster.routing.allocation.exclude._ip' || return $EC_SCLIN_EXCIP_NOACK
+}
+
+excludeVotingNodes() {
+  local -r nodes="$@" maxVotingConfigExclusions=200
+  if [ "$(echo $nodes | wc -w)" -gt $maxVotingConfigExclusions ]; then return $EC_SCLIN_TOO_MANY_MASTERS; fi
+  updateSettings "cluster.max_voting_config_exclusions" $maxVotingConfigExclusions
+  local rc; rc="$(curl -s -m 30 -XPOST -o /dev/null -w "%{http_code}" $MY_IP:9200/_cluster/voting_config_exclusions/${nodes// /,})"
+  test "$rc" -eq 200 || {
+    log "ERROR: failed to exclude '$nodes' as voting node (HTTP $rc)."
+    return 1
+  }
+}
+
+getExcludedVotingNodes() {
+  local jsonPath="metadata.cluster_coordination.voting_config_exclusions" result
+  result="$(curl -s -m 5 "$MY_IP:9200/_cluster/state?filter_path=$jsonPath" | jq -r ".$jsonPath[] | .node_name" | xargs)" || {
+    log "ERROR: Failed to get excluded voting nodes ($?): '$result'."
+    return $EC_SCL_GET_EXC_NODES_ERR
+  }
+  echo "$result"
+}
+
+resetExcludedVotingNodes() {
+  local rc
+  rc=$(curl -s -XDELETE -m 30 -o /dev/null -w "%{http_code}" $MY_IP:9200/_cluster/voting_config_exclusions?wait_for_removal=false)
+  test "$rc" -eq 200 || {
+    log "ERROR: failed to reset excluded voting nodes ($rc)."
+    return 1
+  }
+}
+
+checkMasterRemoved() {
+  local jsonPath="metadata.cluster_coordination.last_committed_config"
+  local result; result="$(curl -s -m3 "$MY_IP:9200/_cluster/state?filter_path=$jsonPath")" || {
+    log "ERROR: failed to retrieve committed master nodes ($?): $result."
+    return 1
+  }
+  local masters; masters="$(echo "$result" | jq -r ".$jsonPath[]" | xargs)" || {
+    log "ERROR: failed to parse master nodes($?): $masters."
+    return 1
+  }
+  test -n "$masters"
+  [[ " $masters " != *" $@ "* ]]
+}
+
+checkDataNodeRoles() {
+  if [ -z "$@" ]; then return 0; fi
+  local runtimeNodes
+  runtimeNodes="$(curl -s -m5 "$MY_IP:9200/_cat/nodes?h=name,role" | awk '{print $1"/"$2}' | sort | xargs)" || return $EC_HTTP_ERROR
+  local expectedNodes="$(echo $@ | xargs -n1 | sed 's#$#/di#g' | sort | xargs)"
+  echo $runtimeNodes | grep -qF "$expectedNodes" || {
+    log "Found non-data nodes: runtime='$runtimeNodes' expected='$expectedNodes'."
+    return $EC_SCL_NOT_DATA_ROLE
+  }
 }
 
 checkClusterScaled() {
@@ -262,7 +391,7 @@ upgrade() {
 checkNodeJoined() {
   local result node=${1:-$MY_IP}
   local knownNode=${2:-$node}
-  result="$(curl -s -m 3 $knownNode:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^(m|m?di)$/ {print $1}')"
+  result="$(curl -s -m 3 $knownNode:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^(m|dim?)$/ {print $1}')"
   [ "$result" = "$node" ] || return $EC_UPG_NOT_JOINED
 }
 

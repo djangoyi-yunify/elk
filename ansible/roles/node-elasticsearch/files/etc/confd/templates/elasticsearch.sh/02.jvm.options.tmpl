@@ -42,16 +42,20 @@ flush > /opt/app/conf/elasticsearch/jvm.options << ES_JVM_EOF
 
 -XX:+ExitOnOutOfMemoryError
 
--XX:ErrorFile=/data/elasticsearch/logs/hs_err_pid%p.log
+-XX:ErrorFile=/data/elasticsearch/logs/hs_err.log
 
--XX:+PrintGCDetails
--XX:+PrintGCTimeStamps
--XX:+PrintGCDateStamps
--XX:+PrintClassHistogram
--XX:+PrintTenuringDistribution
--XX:+PrintGCApplicationStoppedTime
--Xloggc:/data/elasticsearch/logs/gc.log
--XX:+UseGCLogFileRotation
--XX:NumberOfGCLogFiles=5
--XX:GCLogFileSize=2m
+8:-XX:+PrintGCDetails
+8:-XX:+PrintGCTimeStamps
+8:-XX:+PrintGCDateStamps
+8:-XX:+PrintClassHistogram
+8:-XX:+PrintTenuringDistribution
+8:-XX:+PrintGCApplicationStoppedTime
+8:-Xloggc:/data/elasticsearch/logs/gc.log
+8:-XX:+UseGCLogFileRotation
+8:-XX:NumberOfGCLogFiles=5
+8:-XX:GCLogFileSize=2m
+
+9-:-Xlog:gc*,gc+age=trace,safepoint:file=/data/elasticsearch/logs/gc.log:utctime,pid,tags:filecount=32,filesize=1m
+9-:-Djava.locale.providers=COMPAT
+
 ES_JVM_EOF

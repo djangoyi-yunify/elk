@@ -6,11 +6,6 @@
   "advanced_actions": [
     "scale_horizontal"
   ],
-  "upgrade_policy": [
-    "appv-awfpglqn",
-    "appv-wdtrs13h",
-    "appv-7z9cbi2f"
-  ],
   "upgrading_policy": "sequential",
   "nodes": [{
     "role": "es_node",
@@ -256,6 +251,11 @@
       "scale_out": {
         "cmd": "appctl scale out",
         "timeout": 43200
+      },
+      "destroy": {
+        "allow_force": false,
+        "post_stop_service": false,
+        "cmd": "appctl destroy"
       },
       "restart_rolling": {
         "type": "custom",
