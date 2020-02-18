@@ -256,7 +256,7 @@ measure() {
 
 upgrade() {
   execute start && retry 600 1 0 execute check && retry 600 1 0 checkNodeJoined || log "WARN: still not joined the cluster."
-  retry 10800 2 $EC_UPG_ONE_NEW checkNodeLoaded || log "WARN: not fully loaded with exit code '$?'. Moving to next node."
+  [ "$IS_MASTER" == "true" ] || retry 10800 2 $EC_UPG_ONE_NEW checkNodeLoaded || log "WARN: not fully loaded with exit code '$?'. Moving to next node."
 }
 
 checkNodeJoined() {
