@@ -49,6 +49,7 @@ initNode() {
 }
 
 start() {
+  swapoff -a
   _start
 
   if [[ " $JOINING_MASTER_NODES$JOINING_DATA_NODES " == *" $MY_IP "* ]]; then
