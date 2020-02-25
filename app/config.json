@@ -390,7 +390,7 @@
         "min": 30,
         "step": 30,
         "auto_scale_step": 30,
-        "default": 60,
+        "default": 300,
         "required": "yes"
       }]
     }, {
