@@ -95,11 +95,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
+          101,
+          202,
           301
         ],
-        "default": 1,
+        "default": 202,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -107,11 +107,12 @@
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3
+          100,
+          5,
+          6,
+          200
         ],
-        "default": 3,
+        "default": 200,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -187,11 +188,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
+          101,
+          202,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -199,11 +200,12 @@
         "description": "The volume type for each instance, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3
+          100,
+          5,
+          6,
+          200
         ],
-        "default": 0,
+        "default": 100,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -273,11 +275,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
+          101,
+          202,
           301
         ],
-        "default": 1,
+        "default": 202,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -285,11 +287,12 @@
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3
+          100,
+          5,
+          6,
+          200
         ],
-        "default": 3,
+        "default": 200,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -360,11 +363,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
+          101,
+          202,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -372,11 +375,12 @@
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3
+          100,
+          5,
+          6,
+          200
         ],
-        "default": 2,
+        "default": 6,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -448,11 +452,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
+          101,
+          202,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -516,11 +520,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
+          101,
+          202,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }]
     }]
