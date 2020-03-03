@@ -1,33 +1,47 @@
 ---
 - name: common setup
   hosts: all
+  vars:
+    target_env: "{{ lookup('env', 'target') }}"
+  vars_files:
+  - /root/.qcacode
   strategy: free
   roles:
+  - app-agent-1.0.1
+  - appctl-1.0.9
+  - arping-1.0.0
   - common
-
-- name: setup
-  hosts: all
-  strategy: free
-  vars_files:
-    - /root/.qcacode
+  - role: caddy-1.0.6
+    vars:
+      caddy_plugins: upload
+  - update-apt-sources-1.0.0
+  - disable-apt-jobs-1.0.0
+  - disable-motd-1.0.0
 
   tasks:
-
   - include_role:
       name: "{{ svc_name }}"
     when: "'elasticsearch' in group_names"
     loop:
-    - caddy
+    - java-1.0.1
     - elasticsearch
+    - jq-1.0.3
+    - node-elasticsearch
     loop_control:
       loop_var: svc_name
+
+  - include_role:
+      name: java-1.0.1
+    vars:
+      java_version: 8
+    when: ('logstash' in group_names) or ('kibana' in group_names)
 
   - include_role:
       name: "{{ svc_name }}"
     when: "'logstash' in group_names"
     loop:
     - logstash
-    - caddy
+    - node-logstash
     loop_control:
       loop_var: svc_name
 
@@ -36,13 +50,14 @@
     when: "'kibana' in group_names"
     loop:
     - kibana
-    - caddy
+    - nodejs-1.0.0
     - cerebro
     - elastichd
     - elasticsearch-head
     - elasticsearch-hq
     - elasticsearch-sql
-    - haproxy
-    - keepalived
+    - haproxy-1.0.3
+    - keepalived-1.0.1
+    - node-kibana
     loop_control:
       loop_var: svc_name

@@ -1,0 +1,28 @@
+{{- $halfMemory := div (getv "/host/memory") 2 }}
+flush > /usr/share/logstash/config/jvm.options << LS_JVM_EOF
+-Xms{{ $halfMemory }}m
+-Xmx{{ $halfMemory }}m
+
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+
+-Duser.language=zh
+-Duser.country=CN
+
+-Djava.awt.headless=true
+
+-Dfile.encoding=UTF-8
+
+-Djruby.compile.invokedynamic=true
+-Djruby.jit.threshold=0
+-Djruby.regexp.interruptible=true
+
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=/data/logstash/dump/dump.hprof
+
+9-:-Xlog:gc*,gc+age=trace,safepoint:file=/data/logstash/logs/gc.log:utctime,pid,tags:filecount=32,filesize=1m
+9-:-Djava.locale.providers=COMPAT
+
+-Djava.security.egd=file:/dev/urandom
+LS_JVM_EOF

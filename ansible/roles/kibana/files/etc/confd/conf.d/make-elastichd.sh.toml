@@ -1,8 +1,0 @@
-[template]
-src = "make-elastichd.sh.tmpl"
-dest = "/opt/app/bin/make-elastichd.sh"
-mode = "0700"
-keys = [
-  "/",
-]
-reload_cmd = "/opt/app/bin/make-elastichd.sh; appctl update elastichd"

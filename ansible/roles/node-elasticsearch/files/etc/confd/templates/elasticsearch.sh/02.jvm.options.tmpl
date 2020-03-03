@@ -1,0 +1,61 @@
+{{- $maxHeapSize := mul 31 1024 }}
+{{- $halfMemory := div (getv "/host/memory") 2 }}
+{{- $heapSize := min $halfMemory $maxHeapSize }}
+flush > /opt/app/conf/elasticsearch/jvm.options << ES_JVM_EOF
+-Xms{{ $heapSize }}m
+-Xmx{{ $heapSize }}m
+
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+
+-Des.networkaddress.cache.ttl=60
+-Des.networkaddress.cache.negative.ttl=10
+-Des.allow_insecure_settings=true
+
+-Djava.security.policy=file:///opt/app/conf/elasticsearch/dicts.policy
+
+-XX:+AlwaysPreTouch
+
+-Xss1m
+
+-Djava.awt.headless=true
+
+-Dfile.encoding=UTF-8
+
+-Djna.nosys=true
+
+-XX:-OmitStackTraceInFastThrow
+
+-Dio.netty.noUnsafe=true
+-Dio.netty.noKeySetOptimization=true
+-Dio.netty.recycler.maxCapacityPerThread=0
+
+-Dlog4j.shutdownHookEnabled=false
+-Dlog4j2.disable.jmx=true
+-Dlog4j.skipJansi=true
+
+{{- if eq (getv "/env/enable_heap_dump" "") "true" }}
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath={{ getv "/env/heap_dump_path" "/data/elasticsearch/dump" }}
+{{- end }}
+
+-XX:+ExitOnOutOfMemoryError
+
+-XX:ErrorFile=/data/elasticsearch/logs/hs_err.log
+
+8:-XX:+PrintGCDetails
+8:-XX:+PrintGCTimeStamps
+8:-XX:+PrintGCDateStamps
+8:-XX:+PrintClassHistogram
+8:-XX:+PrintTenuringDistribution
+8:-XX:+PrintGCApplicationStoppedTime
+8:-Xloggc:/data/elasticsearch/logs/gc.log
+8:-XX:+UseGCLogFileRotation
+8:-XX:NumberOfGCLogFiles=5
+8:-XX:GCLogFileSize=2m
+
+9-:-Xlog:gc*,gc+age=trace,safepoint:file=/data/elasticsearch/logs/gc.log:utctime,pid,tags:filecount=32,filesize=1m
+9-:-Djava.locale.providers=COMPAT
+
+ES_JVM_EOF

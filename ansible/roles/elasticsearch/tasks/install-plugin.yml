@@ -2,7 +2,7 @@
 - name: setting facts - ES plugins
   set_fact:
     es_home: /opt/elasticsearch/current
-    local_dir: files/tmp/es-plugins
+    local_dir: "{{ role_path }}/files/tmp/es-plugins"
 
 - name: Prepare ES plugin directory - {{ opts.name }}
   file:
@@ -17,11 +17,19 @@
     state: directory
   delegate_to: localhost
 
+- name: check if plugin exists
+  stat:
+    path: "{{ local_dir }}/{{ opts.name }}-{{ elk_version }}.zip"
+  register: plugin_file
+  delegate_to: localhost
+
 - name: Download ES plugin - {{ opts.name }}
   get_url:
     url: "{{ opts.url | default('https://artifacts.elastic.co/downloads/elasticsearch-plugins/%s/%s-%s.zip' | format(opts.name, opts.name, elk_version)) }}"
     dest: "{{ local_dir }}/{{ opts.name }}-{{ elk_version }}.zip"
   delegate_to: localhost
+  run_once: True
+  when: plugin_file.stat.exists == False
 
 - name: Extract ES plugin - {{ opts.name }}
   unarchive:
@@ -30,4 +38,3 @@
     creates: "{{ es_home }}/plugins/{{ opts.name }}/plugin-descriptor.properties"
     owner: elasticsearch
     group: svc
-
