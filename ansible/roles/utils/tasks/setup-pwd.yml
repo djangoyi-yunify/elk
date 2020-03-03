@@ -1,9 +1,10 @@
 ---
 - name: set up var
   set_fact:
-    userPassword: "{{ password | default(adminPwd) }}"
+    userName: "{{ vm_user.username | d('ubuntu') }}"
+    userPassword: "{{ vm_user.password | d(adminPwd) }}"
 
 - name: set password
   user:
-    name: ubuntu
+    name: "{{ userName }}"
     password: "{{ userPassword | password_hash('sha512') }}"

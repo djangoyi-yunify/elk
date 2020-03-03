@@ -1,0 +1,9 @@
+for gemfilePath in $(find /opt/logstash -maxdepth 2 -type f -name Gemfile); do
+  sed "/^# >> Custom plugins./,/^# << Custom plugins./d" $gemfilePath > $gemfilePath.swap
+  flush >> $gemfilePath.swap << GEMFILE_EOF
+# >> Custom plugins. WARNING: this is managed by script and please don't touch manually.
+{{ getv "/env/gemfile_append_content" }}
+# << Custom plugins. WARNING: this is managed by script and please don't touch manually.
+GEMFILE_EOF
+  mv $gemfilePath.swap $gemfilePath
+done

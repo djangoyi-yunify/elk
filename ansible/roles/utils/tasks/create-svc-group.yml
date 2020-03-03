@@ -1,6 +1,0 @@
----
-- name: Add the Service Group
-  group:
-    name: svc
-    state: present
-

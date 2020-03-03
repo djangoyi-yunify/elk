@@ -13,11 +13,6 @@
   loop_control:
     loop_var: opts
 
-- name: install nodejs
-  include_role:
-    name: utils
-    tasks_from: install-nodejs
-
 - name: install express lib
   npm:
     name: express
@@ -30,10 +25,21 @@
     marker: "    <!-- {mark} ANSIBLE MANAGED BLOCK -->"
     block: '    <script src="init.js"></script>'
 
-- name: copy configuration files
-  include_role:
-    name: utils
-    tasks_from: copy-conf
-  vars:
-    parentRole: elasticsearch-sql
+- name: install service
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - lib/systemd/system/
+  loop_control:
+    loop_var: file_path
 
+- name: mask service
+  systemd:
+    name: "{{ role_name }}"
+    enabled: no
+    masked: yes
+    state: stopped

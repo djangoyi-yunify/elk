@@ -95,14 +95,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
           101,
-          201,
           202,
           301
         ],
-        "default": 1,
+        "default": 202,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -110,15 +107,12 @@
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3,
+          100,
           5,
           6,
-          100,
           200
         ],
-        "default": 3,
+        "default": 200,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -194,14 +188,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
           101,
-          201,
           202,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -209,15 +200,12 @@
         "description": "The volume type for each instance, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3,
+          100,
           5,
           6,
-          100,
           200
         ],
-        "default": 0,
+        "default": 100,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -287,14 +275,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
           101,
-          201,
           202,
           301
         ],
-        "default": 0,
+        "default": 202,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -302,15 +287,12 @@
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3,
+          100,
           5,
           6,
-          100,
           200
         ],
-        "default": 0,
+        "default": 200,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -381,14 +363,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
           101,
-          201,
           202,
           301
         ],
-        "default": 1,
+        "default": 101,
         "required": "yes"
       }, {
         "key": "volume_class",
@@ -396,15 +375,12 @@
         "description": "The volume type for each node, such as high performance, high performance plus, NeonSAN",
         "type": "integer",
         "range": [
-          0,
-          2,
-          3,
+          100,
           5,
           6,
-          100,
           200
         ],
-        "default": 2,
+        "default": 6,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -414,7 +390,7 @@
         "min": 30,
         "step": 30,
         "auto_scale_step": 30,
-        "default": 60,
+        "default": 300,
         "required": "yes"
       }]
     }, {
@@ -465,19 +441,8 @@
         "label": "Node Count",
         "description": "Number of nodes for the cluster to create",
         "type": "integer",
-        "range": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10
-        ],
+        "min": 0,
+        "max": 50,
         "default": 1,
         "resource_group": [1, 1, 1],
         "required": "yes"
@@ -487,14 +452,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
           101,
-          201,
           202,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }, {
         "key": "volume_size",
@@ -558,14 +520,11 @@
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
         "range": [
-          0,
-          1,
           101,
-          201,
           202,
           301
         ],
-        "default": 0,
+        "default": 101,
         "required": "yes"
       }]
     }]
@@ -605,7 +564,7 @@
         "pattern": "[0-9]+[smh]",
         "default": "5m",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "http.cors.enabled",
         "label": "http.cors.enabled",
@@ -629,7 +588,7 @@
         "type": "string",
         "default": "90%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "indices.memory.index_buffer_size",
         "label": "indices.memory.index_buffer_size",
@@ -637,7 +596,7 @@
         "type": "string",
         "default": "10%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "indices.queries.cache.size",
         "label": "indices.queries.cache.size",
@@ -645,7 +604,7 @@
         "type": "string",
         "default": "10%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "indices.requests.cache.size",
         "label": "indices.requests.cache.size",
@@ -653,7 +612,7 @@
         "type": "string",
         "default": "1%",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "node.attr.data",
         "label": "node.attr.data",
@@ -1070,7 +1029,7 @@
         "type": "string",
         "default": "http { port => 9700 }",
         "changeable": true,
-        "required": "yes"
+        "required": "no"
       }, {
         "key": "filter_conf_content",
         "label": "filter_conf_content",
@@ -1093,6 +1052,14 @@
         "description": "When you run logstash, you use the -f to specify your config file, and this config is what your config file contained in output elasticsearch section",
         "type": "string",
         "default": "",
+        "changeable": true,
+        "required": "no"
+      }, {
+        "key": "qs.plugin.enabled",
+        "label": "Use Logstash 5.4.3",
+        "description": "Use Logstash 5.4.3 with QingStor input/output plugins",
+        "type": "boolean",
+        "default": false,
         "changeable": true,
         "required": "no"
       }, {

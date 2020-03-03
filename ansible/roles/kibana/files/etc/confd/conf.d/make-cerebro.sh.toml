@@ -1,8 +1,0 @@
-[template]
-src = "make-cerebro.sh.tmpl"
-dest = "/opt/app/bin/make-cerebro.sh"
-mode = "0700"
-keys = [
-  "/",
-]
-reload_cmd = "/opt/app/bin/make-cerebro.sh; appctl update cerebro"

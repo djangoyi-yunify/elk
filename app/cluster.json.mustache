@@ -21,7 +21,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-ytybh6ij"
+      "image": "img-9ipg3ukq"
     },
     "instance_class": {{cluster.es_node.instance_class}},
     "count": {{cluster.es_node.count}},
@@ -132,7 +132,7 @@
       "timeout_sec": 10,
       "action_timeout_sec": 150,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     },
@@ -236,7 +236,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-ytybh6ij"
+      "image": "img-9ipg3ukq"
     },
     "instance_class": {{cluster.es_master_node.instance_class}},
     "count": {{cluster.es_master_node.count}},
@@ -337,7 +337,7 @@
       "interval_sec": 60,
       "timeout_sec": 10,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive",
       "action_timeout_sec": 150
@@ -442,7 +442,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-ytybh6ij"
+      "image": "img-9ipg3ukq"
     },
     "instance_class": {{cluster.es_node_2.instance_class}},
     "count": {{cluster.es_node_2.count}},
@@ -553,7 +553,7 @@
       "timeout_sec": 10,
       "action_timeout_sec": 150,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     },
@@ -657,7 +657,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-ytybh6ij"
+      "image": "img-9ipg3ukq"
     },
     "instance_class": {{cluster.es_node_3.instance_class}},
     "count": {{cluster.es_node_3.count}},
@@ -768,7 +768,7 @@
       "timeout_sec": 10,
       "action_timeout_sec": 150,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     },
@@ -872,7 +872,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mfrh2xld"
+      "image": "img-3che5jsj"
     },
     "instance_class": {{cluster.lst_node.instance_class}},
     "count": {{cluster.lst_node.count}},
@@ -905,6 +905,7 @@
       "filter_conf_content": {{env.lst_node.filter_conf_content}},
       "output_conf_content": {{env.lst_node.output_conf_content}},
       "output_es_content": {{env.lst_node.output_es_content}},
+      "qs.plugin.enabled": {{env.lst_node.qs.plugin.enabled}},
       "gemfile_append_content": {{env.lst_node.gemfile_append_content}}
     },
     "health_check": {
@@ -912,7 +913,7 @@
       "interval_sec": 60,
       "timeout_sec": 10,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 5,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     }
@@ -921,7 +922,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mw8x87w6"
+      "image": "img-pme6ph1a"
     },
     "instance_class": {{cluster.kbn_node.instance_class}},
     "count": {{cluster.kbn_node.count}},
@@ -936,11 +937,6 @@
       },
       "restart": {
         "cmd": "appctl restart"
-      },
-      "upgrade": {
-        "cmd": "appctl upgrade",
-        "order": 5,
-        "timeout": 60
       }
     },
     "env": {

@@ -1,0 +1,8 @@
+[template]
+src = "logstash.sh.tmpl"
+dest = "/opt/app/bin/tmpl/logstash.sh"
+mode = "0700"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/app/bin/tmpl/logstash.sh; appctl reload logstash"

@@ -3,95 +3,72 @@
   set_fact:
     ls_home: /usr/share/logstash
 
-- name: set up confd templates
-  include_role:
-    name: utils
-    tasks_from: setup-confd
-  vars:
-    parentRole: logstash
-
-- name: install tools
-  apt:
-    name: ['openjdk-8-jre']
-    state: present
-    update_cache: no
-
-- name: install service
+- name: install binaries
   include_role:
     name: utils
     tasks_from: install-pkg
   vars:
     version: "{{ elkVersion }}"
     parentRole: logstash
+    softLink: false
   loop:
     - pkgUrl: "https://artifacts.elastic.co/downloads/logstash/logstash-{{ version }}.tar.gz"
-      svcHome: "{{ ls_home }}"
   loop_control:
     loop_var: opts
 
-- name: Install plugins
-  include_tasks: install-plugin.yml
-  loop:
-    - name: logstash-input-qingstor
-      version: b4e6fd29ead81db27e06870573add00914b539b1
-      url: https://github.com/yunify/logstash-input-qingstor/archive/b4e6fd29ead81db27e06870573add00914b539b1.zip
-    - name: logstash-output-qingstor
-      version: 0.3.6
-      url: https://github.com/yunify/logstash-output-qingstor/archive/v0.3.6.zip
-  loop_control:
-    loop_var: opts
-
-- name: work around file permissions for end user
-  file:
-    path: "{{ ls_home }}/{{ item }}"
-    owner: logstash
-    group: ubuntu
-    mode: 0664
-  loop:
-    - Gemfile
-    - Gemfile.jruby-1.9.lock
-
-- name: work around dir permissions for end user
-  file:
-    path: "{{ ls_home }}/{{ item }}"
-    owner: logstash
-    group: ubuntu
-    recurse: yes
-  loop:
-    - vendor
-
-- name: copy configuration files
+- name: install 5.4.3 binaries
   include_role:
     name: utils
-    tasks_from: copy-conf
+    tasks_from: install-pkg
   vars:
+    version: 5.4.3
     parentRole: logstash
+    softLink: false
+  loop:
+    - pkgUrl: https://github.com/QingCloudAppcenter/elk/releases/download/1.2.8/logstash-5.4.3.tgz
+  loop_control:
+    loop_var: opts
+
+- name: copy configuration files
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+  - opt/app/conf/logstash/
+  loop_control:
+    loop_var: file_path
+
+- name: install service
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+  - lib/systemd/system/
+  loop_control:
+    loop_var: file_path
+
+- name: mask logstash service
+  systemd:
+    name: logstash
+    enabled: no
+    masked: yes
+    state: stopped
+
+- name: create symbolic link
+  file:
+    src: /opt/logstash/{{ elkVersion }}
+    dest: "{{ ls_home }}"
+    owner: logstash
+    group: logstash
+    state: link
 
 - name: add logstash bin dir to system-wide path
   copy:
     dest: /etc/profile.d/logstash-path.sh
     content: 'PATH=$PATH:{{ ls_home }}/bin'
-
-- name: create sbin under LS home
-  file:
-    path: "{{ ls_home }}/sbin"
-    owner: logstash
-    group: ubuntu
-    state: directory
-
-- name: add logstash sbin scripts
-  copy:
-    dest: "{{ ls_home }}/sbin/restart.sh"
-    mode: 0755
-    owner: logstash
-    group: ubuntu
-    content: |
-      #!/usr/bin/env bash
-      systemctl restart logstash
-
-- name: set up password
-  include_role:
-    name: utils
-    tasks_from: setup-pwd
-  vars:
-    password: "{{ endUserPwd }}"

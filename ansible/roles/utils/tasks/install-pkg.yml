@@ -10,6 +10,7 @@
     svcHome: "{{ opts.svcHome | default(defaultSvcHome) }}"
     svcVersion: "{{ opts.version | default(version) }}"
     creates: "{{ opts.creates | default('bin') }}"
+    softLink: "{{ opts.softLink | default(true) }}"
 
 - name: install tools
   apt:
@@ -18,36 +19,54 @@
     update_cache: no
   when: pkgType == 'zip'
 
+- name: prepare service group
+  group:
+    name: svc
+    state: present
+
 - name: Add the Service User - {{ parentRole }}
   user:
     name: "{{ parentRole }}"
     groups: svc
     shell: /sbin/nologin
     create_home: no
-    home: "{{ svcHome }}"
     append: yes
     comment: "Service User"
     state: present
 
 - name: Prepare service directories - {{ parentRole }}
   file:
-    path: "{{ item }}"
+    path: "{{ svcHome }}"
     owner: "{{ parentRole }}"
     group: svc
     state: directory
-  with_items:
-    - "{{ svcHome }}"
+
+- name: check if package file exists
+  stat:
+    path: "{{ playbook_dir }}/roles/{{ parentRole }}/files/tmp/{{ parentRole }}-{{ svcVersion }}.{{ pkgType }}"
+  register: pkg_file
+  run_once: True
+  delegate_to: localhost
+
+- name: prepare local dir
+  file:
+    dest: "{{ playbook_dir }}/roles/{{ parentRole }}/files/tmp"
+    state: directory
+  delegate_to: localhost
 
 - name: Download service package - {{ parentRole }}
   get_url:
     url: "{{ opts.pkgUrl }}"
-    dest: "files/tmp/{{ parentRole }}-{{ svcVersion }}.{{ pkgType }}"
-  when: opts.pkgUrl is defined
+    dest: "{{ playbook_dir }}/roles/{{ parentRole }}/files/tmp/{{ parentRole }}-{{ svcVersion }}.{{ pkgType }}"
   delegate_to: localhost
+  run_once: True
+  when:
+  - opts.pkgUrl is defined
+  - pkg_file.stat.exists == False
 
 - name: Extract binary - {{ parentRole }}
   unarchive:
-    src: "files/tmp/{{ parentRole }}-{{ svcVersion }}.{{ pkgType }}"
+    src: "{{ playbook_dir }}/roles/{{ parentRole }}/files/tmp/{{ parentRole }}-{{ svcVersion }}.{{ pkgType }}"
     dest: "{{ svcHome }}"
     creates: "{{ svcHome }}/{{ creates }}"
     extra_opts: "{{ extraOpts }}"
@@ -68,4 +87,5 @@
     owner: "{{ parentRole }}"
     group: svc
     state: link
-  when: svcHome == defaultSvcHome
+  when:
+  - svcHome == defaultSvcHome and softLink
