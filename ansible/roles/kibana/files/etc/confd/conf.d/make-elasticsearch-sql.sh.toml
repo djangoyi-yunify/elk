@@ -1,8 +1,0 @@
-[template]
-src = "make-elasticsearch-sql.sh.tmpl"
-dest = "/opt/app/bin/make-elasticsearch-sql.sh"
-mode = "0700"
-keys = [
-  "/",
-]
-reload_cmd = "/opt/app/bin/make-elasticsearch-sql.sh; appctl update elasticsearch-sql"

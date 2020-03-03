@@ -1,25 +1,11 @@
 ---
-- name: set up confd templates
-  include_role:
-    name: utils
-    tasks_from: setup-confd
-  vars:
-    parentRole: elasticsearch
-
 - name: install tools
   apt:
-    name: ['openjdk-8-jdk', 'openjdk-8-dbg', 'unzip']
+    name: ['unzip']
     state: present
     update_cache: no
 
-- name: install jq
-  include_role:
-    name: utils
-    tasks_from: install-jq
-  vars:
-    jqVersion: "1.6"
-
-- name: install service
+- name: install binary
   include_role:
     name: utils
     tasks_from: install-pkg
@@ -30,6 +16,37 @@
     - pkgUrl: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-{{ version }}.tar.gz"
   loop_control:
     loop_var: opts
+
+- name: copy configuration files
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+  - opt/app/conf/elasticsearch/
+  loop_control:
+    loop_var: file_path
+
+- name: install service
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - lib/systemd/system/
+  loop_control:
+    loop_var: file_path
+
+- name: mask elasticsearch service
+  systemd:
+    name: elasticsearch
+    enabled: no
+    masked: yes
+    state: stopped
 
 - name: install plugins
   include_tasks: install-plugin.yml
@@ -51,36 +68,6 @@
   loop_control:
     loop_var: opts
 
-- name: copy configuration files
-  include_role:
-    name: utils
-    tasks_from: copy-conf
-  vars:
-    parentRole: elasticsearch
-
-- name: fix directory permission for elasticsearch.keystore
-  file:
-    path: /opt/app/conf/elasticsearch
-    group: svc
-    mode: g+w
-    state: directory
-
-- name: prepare scripts directory
-  file:
-    path: /opt/app/conf/elasticsearch/scripts
-    owner: "{{ role_name }}"
-    group: svc
-    state: directory
-
-- name: prepare analysis directory
-  file:
-    src: /data/elasticsearch/analysis
-    dest: /opt/app/conf/elasticsearch/analysis
-    force: yes
-    owner: "{{ role_name }}"
-    group: svc
-    state: link
-
 - name: prepare dict directory
   file:
     path: /opt/elasticsearch/current/plugins/analysis-ik/config/custom
@@ -88,29 +75,43 @@
     group: svc
     state: directory
 
+- name: check if jieba dic exists
+  stat:
+    path: "{{ role_path }}/files/tmp/jieba.dic"
+  register: jieba_dic
+  delegate_to: localhost
+
 - name: download jieba dict
   get_url:
     url: "https://github.com/QingCloudAppcenter/elk-archived/raw/master/docker-image/standard/elasticsearch/dicts/jieba.dic"
-    dest: "files/tmp/jieba.dic"
+    dest: "{{ role_path }}/files/tmp/jieba.dic"
   delegate_to: localhost
+  when: jieba_dic.stat.exists == False
 
 - name: copy jieba dict
   copy:
-    src: files/tmp/jieba.dic
+    src: "{{ role_path }}/files/tmp/jieba.dic"
     dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/jieba.dic"
     owner: root
     group: svc
     mode: u=rw,go=r
 
+- name: check if package file exists
+  stat:
+    path: "{{ role_path }}/files/tmp/extra_stopword.dic"
+  register: stopword_dic
+  delegate_to: localhost
+
 - name: download dict for IKAnalyzer
   get_url:
     url: "https://github.com/QingCloudAppcenter/elk-archived/raw/master/docker-image/standard/elasticsearch/dicts/stop_words.dic"
+    dest: "{{ role_path }}/files/tmp/extra_stopword.dic"
+  delegate_to: localhost
+  when: stopword_dic.stat.exists == False
+
+- name: copy extra stopword dict
+  copy:
+    src: "{{ role_path }}/files/tmp/extra_stopword.dic"
     dest: "/opt/elasticsearch/current/plugins/analysis-ik/config/custom/extra_stopword.dic"
     owner: root
     group: svc
-
-- name: sql plugin version workaround
-  replace:
-    path: /opt/elasticsearch/current/plugins/sql/plugin-descriptor.properties
-    regexp: '^elasticsearch.version=.+$'
-    replace: elasticsearch.version={{ elk_version }}

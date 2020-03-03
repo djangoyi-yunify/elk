@@ -7,6 +7,7 @@
     "scale_horizontal"
   ],
   "upgrade_policy": [
+    "appv-2dshiq38",
     "appv-awfpglqn",
     "appv-wdtrs13h",
     "appv-7z9cbi2f"
@@ -17,7 +18,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-x1bs2irf"
     },
     "instance_class": {{cluster.es_node.instance_class}},
     "count": {{cluster.es_node.count}},
@@ -80,7 +81,7 @@
       },
       "upgrade": {
         "cmd": "appctl upgrade",
-        "order": 1,
+        "order": 2,
         "timeout": 43200
       }
     },
@@ -115,12 +116,8 @@
       "remote_ext_dict": {{env.es_node.remote_ext_dict}},
       "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
       "rootLogger.level": {{env.es_node.rootLogger.level}},
-      "script.aggs": {{env.es_node.script.aggs}},
-      "script.inline": {{env.es_node.script.inline}},
-      "script.file": {{env.es_node.script.file}},
-      "script.search": {{env.es_node.script.search}},
-      "script.stored": {{env.es_node.script.stored}},
-      "script.update": {{env.es_node.script.update}}
+      "script.allowed_types": {{env.es_node.script.allowed_types}},
+      "script.allowed_contexts": {{env.es_node.script.allowed_contexts}}
     },
     "health_check": {
       "enable": true,
@@ -128,7 +125,7 @@
       "timeout_sec": 10,
       "action_timeout_sec": 150,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     },
@@ -232,7 +229,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-x1bs2irf"
     },
     "instance_class": {{cluster.es_master_node.instance_class}},
     "count": {{cluster.es_master_node.count}},
@@ -288,7 +285,7 @@
       },
       "upgrade": {
         "cmd": "appctl upgrade",
-        "order": 4,
+        "order": 1,
         "timeout": 300
       }
     },
@@ -321,19 +318,15 @@
       "remote_ext_dict": {{env.es_node.remote_ext_dict}},
       "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
       "rootLogger.level": {{env.es_node.rootLogger.level}},
-      "script.aggs": {{env.es_node.script.aggs}},
-      "script.inline": {{env.es_node.script.inline}},
-      "script.file": {{env.es_node.script.file}},
-      "script.search": {{env.es_node.script.search}},
-      "script.stored": {{env.es_node.script.stored}},
-      "script.update": {{env.es_node.script.update}}
+      "script.allowed_types": {{env.es_node.script.allowed_types}},
+      "script.allowed_contexts": {{env.es_node.script.allowed_contexts}}
     },
     "health_check": {
       "enable": true,
       "interval_sec": 60,
       "timeout_sec": 10,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive",
       "action_timeout_sec": 150
@@ -438,7 +431,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-x1bs2irf"
     },
     "instance_class": {{cluster.es_node_2.instance_class}},
     "count": {{cluster.es_node_2.count}},
@@ -501,7 +494,7 @@
       },
       "upgrade": {
         "cmd": "appctl upgrade",
-        "order": 2,
+        "order": 3,
         "timeout": 43200
       }
     },
@@ -536,12 +529,8 @@
       "remote_ext_dict": {{env.es_node.remote_ext_dict}},
       "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
       "rootLogger.level": {{env.es_node.rootLogger.level}},
-      "script.aggs": {{env.es_node.script.aggs}},
-      "script.inline": {{env.es_node.script.inline}},
-      "script.file": {{env.es_node.script.file}},
-      "script.search": {{env.es_node.script.search}},
-      "script.stored": {{env.es_node.script.stored}},
-      "script.update": {{env.es_node.script.update}}
+      "script.allowed_types": {{env.es_node.script.allowed_types}},
+      "script.allowed_contexts": {{env.es_node.script.allowed_contexts}}
     },
     "health_check": {
       "enable": true,
@@ -549,7 +538,7 @@
       "timeout_sec": 10,
       "action_timeout_sec": 150,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     },
@@ -653,7 +642,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-x1bs2irf"
     },
     "instance_class": {{cluster.es_node_3.instance_class}},
     "count": {{cluster.es_node_3.count}},
@@ -716,7 +705,7 @@
       },
       "upgrade": {
         "cmd": "appctl upgrade",
-        "order": 3,
+        "order": 4,
         "timeout": 43200
       }
     },
@@ -751,12 +740,8 @@
       "remote_ext_dict": {{env.es_node.remote_ext_dict}},
       "remote_ext_stopwords": {{env.es_node.remote_ext_stopwords}},
       "rootLogger.level": {{env.es_node.rootLogger.level}},
-      "script.aggs": {{env.es_node.script.aggs}},
-      "script.inline": {{env.es_node.script.inline}},
-      "script.file": {{env.es_node.script.file}},
-      "script.search": {{env.es_node.script.search}},
-      "script.stored": {{env.es_node.script.stored}},
-      "script.update": {{env.es_node.script.update}}
+      "script.allowed_types": {{env.es_node.script.allowed_types}},
+      "script.allowed_contexts": {{env.es_node.script.allowed_contexts}}
     },
     "health_check": {
       "enable": true,
@@ -764,7 +749,7 @@
       "timeout_sec": 10,
       "action_timeout_sec": 150,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 4,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     },
@@ -868,7 +853,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-aba5ixin"
+      "image": "img-7663jcjz"
     },
     "instance_class": {{cluster.lst_node.instance_class}},
     "count": {{cluster.lst_node.count}},
@@ -908,7 +893,7 @@
       "interval_sec": 60,
       "timeout_sec": 10,
       "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
+      "unhealthy_threshold": 5,
       "check_cmd": "appctl check",
       "action_cmd": "appctl revive"
     }
@@ -917,7 +902,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-wwi78igc"
+      "image": "img-138wwn23"
     },
     "instance_class": {{cluster.kbn_node.instance_class}},
     "count": {{cluster.kbn_node.count}},

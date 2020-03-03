@@ -1,0 +1,98 @@
+joiningGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_node/ {print $4}' | xargs)"
+stableGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_node/ {print $4}' | xargs)"
+joiningMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_master/ {print $4}' | xargs)"
+stableMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_master/ {print $4}' | xargs)"
+
+expectedGenericNodes="$(echo $joiningGenericNodes $stableGenericNodes)"
+expectedGenNodesCount=$(echo $expectedGenericNodes | wc -w)
+expectedGenericQuorum=$(( $expectedGenNodesCount / 2 + 1 ))
+recoverAfterGenCount=$(( $expectedGenericQuorum > $expectedGenNodesCount - 2 ? $expectedGenericQuorum : $expectedGenNodesCount - 2 ))
+
+expectedMasterNodes="$(echo $joiningMasterNodes $stableMasterNodes)"
+expectedMastersCount=$(echo ${expectedMasterNodes:=$expectedGenericNodes} | wc -w)
+expectedMasterQuorum=$(( $expectedMastersCount / 2 + 1 ))
+recoverAfterMastersCount=$(( $expectedMasterQuorum > $expectedMastersCount - 2 ? $expectedMasterQuorum : $expectedMastersCount - 2 ))
+
+{{- $isDedicatedMaster := eq $myRole "elasticsearch-master" }}
+discoveryHosts="${stableMasterNodes:-$stableGenericNodes}"
+
+dataDirs="$(egrep -o " /data[23]? " /proc/mounts | sed 's#^#-#g; s# $#/elasticsearch/data#g')"
+
+flush > /opt/app/conf/elasticsearch/elasticsearch.yml << ES_YML_EOF
+action.destructive_requires_name: {{ getv "/env/action.destructive_requires_name" "true" }}
+bootstrap.memory_lock: true
+
+cluster.name: {{ getv "/cluster/cluster_id" }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "cluster.routing.allocation.awareness.attributes:.*") }}
+cluster.routing.allocation.awareness.attributes: zone
+{{- end }}
+
+discovery.zen.fd.ping_interval: 1s
+discovery.zen.fd.ping_retries: 3
+discovery.zen.fd.ping_timeout: 30s
+discovery.zen.minimum_master_nodes: $expectedMasterQuorum
+discovery.zen.no_master_block: {{ getv "/env/discovery.zen.no_master_block" "write" }}
+discovery.zen.ping_timeout: 3s
+discovery.zen.ping.unicast.hosts: [ ${discoveryHosts// /,} ]
+
+gateway.expected_data_nodes: $expectedGenNodesCount
+gateway.expected_master_nodes: $expectedMastersCount
+gateway.recover_after_data_nodes: $recoverAfterGenCount
+gateway.recover_after_master_nodes: $recoverAfterMastersCount
+gateway.recover_after_time: {{ getv "/env/gateway.recover_after_time" "5m" }}
+
+http.cors.allow-origin: "{{ getv "/env/http.cors.allow-origin" "" }}"
+http.cors.enabled: {{ getv "/env/http.cors.enabled" "false" }}
+http.port: 9200
+
+indices.fielddata.cache.size: {{ getv "/env/indices.fielddata.cache.size" "90%" }}
+indices.memory.index_buffer_size: {{ getv "/env/indices.memory.index_buffer_size" "10%" }}
+indices.queries.cache.size: {{ getv "/env/indices.queries.cache.size" "10%" }}
+indices.requests.cache.size: {{ getv "/env/indices.requests.cache.size" "1%" }}
+
+network.host: {{ $myIp }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "node.attr.data:.*") }}
+{{- if not $isDedicatedMaster }}
+node.attr.data: "{{ getv "/env/node.attr.data" "hot" }}"
+{{- end }}
+{{- end }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "node.attr.zone:.*") }}
+node.attr.zone: {{ getv "/host/zone" (getv "/cluster/zone") }}
+{{- end }}
+
+node.data: {{ not $isDedicatedMaster }}
+node.ingest: {{ not $isDedicatedMaster }}
+node.master: {{ or $isDedicatedMaster (not (ls "/hosts/es_master_node")) }}
+node.name: {{ getv "/cluster/cluster_id" }}-{{ range split $myRole "-" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}{{ getv "/host/sid" }}
+
+path.data:
+$dataDirs
+
+path.logs: /data/elasticsearch/logs
+
+{{- with getv "/env/path.repo" "[]" }}
+path.repo: {{ . }}
+{{- end }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "reindex.remote.whitelist:.*") }}
+reindex.remote.whitelist: "{{ getv "/env/reindex.remote.whitelist" "" }}"
+{{- end }}
+{{- with getv "/env/repositories.url.allowed_urls" "[]" }}
+repositories.url.allowed_urls: {{ . }}
+{{- end }}
+
+{{- with getv "/env/script.allowed_types" }}
+script.allowed_types: {{ . }}
+{{- end }}
+
+{{- with getv "/env/script.allowed_contexts" }}
+script.allowed_contexts: {{ . }}
+{{- end }}
+
+{{- range getvs "/env/es_additional_line*" }}
+{{ . }}
+{{- end }}
+ES_YML_EOF

@@ -1,8 +1,0 @@
-[template]
-src = "make-keepalived.sh.tmpl"
-dest = "/opt/app/bin/make-keepalived.sh"
-mode = "0700"
-keys = [
-  "/",
-]
-reload_cmd = "/opt/app/bin/make-keepalived.sh; appctl update keepalived"

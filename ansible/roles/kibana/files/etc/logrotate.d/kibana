@@ -1,7 +1,7 @@
 /data/kibana/logs/kibana.log {
   daily
-  maxsize 2M
-  rotate 10
+  maxsize 1M
+  rotate 20
   missingok
   notifempty
   postrotate

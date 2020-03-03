@@ -1,0 +1,22 @@
+flush > /opt/app/conf/caddy/caddyfile << LS_CADDYFILE_EOF
+:80 {
+  root /data/elasticsearch
+  gzip
+  browse /dicts
+  browse /logs
+  tls off
+
+  upload / {
+    yes_without_tls
+    to /data/elasticsearch/dicts
+  }
+}
+
+:80/logstash {
+  root /data/logstash
+  gzip
+  browse /logs
+  browse /dump
+  tls off
+}
+LS_CADDYFILE_EOF

@@ -3,20 +3,7 @@
   set_fact:
     ls_home: /usr/share/logstash
 
-- name: set up confd templates
-  include_role:
-    name: utils
-    tasks_from: setup-confd
-  vars:
-    parentRole: logstash
-
-- name: install tools
-  apt:
-    name: ['openjdk-8-jre']
-    state: present
-    update_cache: no
-
-- name: install service
+- name: install binaries
   include_role:
     name: utils
     tasks_from: install-pkg
@@ -29,86 +16,69 @@
   loop_control:
     loop_var: opts
 
-- name: Install plugins
-  include_tasks: install-plugin.yml
+- name: prepare plugins
+  include_tasks: prepare-plugin.yml
   loop:
-    - name: logstash-filter-uuid
-      version: 3.0.5
-    - name: logstash-input-couchdb_changes
-      version: 3.1.6
-    - name: logstash-input-irc
-      version: 3.0.7
-    - name: logstash-input-log4j
-      version: 3.1.3
-    - name: logstash-input-lumberjack
-      version: 3.1.6
-    - name: logstash-input-xmpp
-      version: 3.1.7
-    - name: logstash-output-irc
-      version: 3.0.6
-    - name: logstash-output-statsd
-      version: 3.2.0
-    - name: logstash-output-xmpp
-      version: 3.0.8
+  - name: logstash-filter-uuid
+    version: 3.0.5
+  - name: logstash-input-couchdb_changes
+    version: 3.1.6
+  - name: logstash-input-irc
+    version: 3.0.7
+  - name: logstash-input-log4j
+    version: 3.1.3
+  - name: logstash-input-lumberjack
+    version: 3.1.6
+  - name: logstash-input-xmpp
+    version: 3.1.7
+  - name: logstash-output-irc
+    version: 3.0.6
+  - name: logstash-output-statsd
+    version: 3.2.0
+  - name: logstash-output-xmpp
+    version: 3.0.8
   loop_control:
     loop_var: opts
 
-- name: work around file permissions for end user
-  file:
-    path: "{{ ls_home }}/{{ item }}"
-    owner: logstash
-    group: ubuntu
-    mode: 0664
-  loop:
-    - Gemfile
-    - Gemfile.lock
-
-- name: work around dir permissions for end user
-  file:
-    path: "{{ ls_home }}/{{ item }}"
-    owner: logstash
-    group: ubuntu
-    recurse: yes
-  loop:
-    - vendor
+- name: install LS plugins
+  shell: |
+    sudo -u logstash bin/logstash-plugin install --no-verify
+  args:
+    chdir: "{{ ls_home }}"
+  when: installed is failed
 
 - name: copy configuration files
-  include_role:
-    name: utils
-    tasks_from: copy-conf
-  vars:
-    parentRole: logstash
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+  - opt/app/conf/logstash/
+  loop_control:
+    loop_var: file_path
+
+- name: install service
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+  - lib/systemd/system/
+  loop_control:
+    loop_var: file_path
+
+- name: mask logstash service
+  systemd:
+    name: logstash
+    enabled: no
+    masked: yes
+    state: stopped
 
 - name: add logstash bin dir to system-wide path
   copy:
     dest: /etc/profile.d/logstash-path.sh
     content: 'PATH=$PATH:{{ ls_home }}/bin'
-
-- name: create sbin under LS home
-  file:
-    path: "{{ ls_home }}/sbin"
-    owner: logstash
-    group: ubuntu
-    state: directory
-
-- name: add logstash sbin scripts
-  copy:
-    dest: "{{ ls_home }}/sbin/restart.sh"
-    mode: 0755
-    owner: logstash
-    group: ubuntu
-    content: |
-      #!/usr/bin/env bash
-      systemctl restart logstash
-
-- name: set up password
-  include_role:
-    name: utils
-    tasks_from: setup-pwd
-  loop:
-  - username: ubuntu
-    password: "{{ endUserPwd }}"
-  - username: root
-    password: "{{ endUserPwd }}"
-  loop_control:
-    loop_var: vm_user
