@@ -22,7 +22,6 @@
     "esnode_count": "esnode_count",
     "Number of nodes for the cluster to create": "Number of nodes for the cluster to create",
     "Instance class": "instance class",
-    "The instance type for the cluster to run, such as high performance, high performance plus": "The instance type for the cluster to run, such as high performance, high performance plus",
     "es_node": "es_node",
     "The discovery.zen.no_master_block settings controls what operations should be rejected when there is no active master.": "The discovery.zen.no_master_block settings controls what operations should be rejected when there is no active master.",
     "If the expected number of nodes is not achieved, the recovery process waits for the configured amount of time before trying to recover regardless. Defaults to 5m if one of the expected_nodes settings is configured.": "If the expected number of nodes is not achieved, the recovery process waits for the configured amount of time before trying to recover regardless. Defaults to 5m if one of the expected_nodes settings is configured.",

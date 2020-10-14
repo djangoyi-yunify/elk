@@ -46,7 +46,6 @@
   "The volume type for each instance, such as high performance, high performance plus":"磁盘类型，比如性能型与超高性能型",
   "The volume type for each node, such as high performance, high performance plus": "每个节点的数据盘类型，性能型或超高性能型最大支持 2T 容量",
   "The volume type for each node, such as high performance, high performance plus, NeonSAN": "每个节点的数据盘类型，性能型或超高性能型最大支持 2T 容量，有大容量需要的用户可以选企业型 NeonSAN 大容量盘（NeonSAN 只有 北京3区-B、上海1区-A、广东2区-A 等部分区域支持，如上面没列出 NeonSAN 的选项，则说明该区域不支持）",
-  "The instance type for the cluster to run, such as high performance, high performance plus": "节点主机的类型",
   "instance class": "实例类型",
   "Elasticsearch Master Node": "Elasticsearch 专有主节点",
   "Number of ES master nodes to create": "要创建的 ES 专有主节点数量，单节点仅供测试使用，生产环境请选择至少三节点；大规模集群（ES 节点数 ≥ 10）建议使用专有主节点来保证集群的高可用；如选择创建专有主节点，上面的 ES 节点将只承担数据功能（Data Node）；如选择不创建专有主节点，上面的 ES 节点将同时承担主节点的任务，可参阅官方文档查看详情：https://www.elastic.co/guide/en/elasticsearch/reference/6.7/modules-node.html",
