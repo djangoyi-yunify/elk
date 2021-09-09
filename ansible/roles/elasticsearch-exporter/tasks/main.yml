@@ -1,0 +1,34 @@
+---
+- name: Install service
+  include_role:
+    name: utils
+    tasks_from: install-pkg
+  vars:
+    version: 1.1.0
+    parentRole: elasticsearch-exporter
+  loop:
+    - pkgUrl: "https://github.com/prometheus-community/elasticsearch_exporter/releases/download/v{{ version }}/elasticsearch_exporter-{{ version }}.linux-amd64.tar.gz"
+  loop_control:
+    loop_var: opts
+
+- name: install dependencies
+  vars:
+    dir: "/opt/{{ role_name }}/current"
+  shell: |
+    chown -R {{ role_name }}.svc {{ dir }}
+  args:
+    chdir: "{{ dir }}"
+    creates: "{{ dir }}/node_modules"
+    executable: /bin/bash
+
+- name: install service
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - lib/systemd/system/
+  loop_control:
+    loop_var: file_path

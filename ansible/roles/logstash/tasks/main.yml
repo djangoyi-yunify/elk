@@ -11,7 +11,7 @@
     version: "{{ elk_version }}"
     parentRole: logstash
   loop:
-    - pkgUrl: "https://artifacts.elastic.co/downloads/logstash/logstash-oss-{{ version }}.tar.gz"
+    - pkgUrl: "https://artifacts.elastic.co/downloads/logstash/logstash-oss-{{ version }}-linux-x86_64.tar.gz"
       svcHome: "{{ ls_home }}"
   loop_control:
     loop_var: opts

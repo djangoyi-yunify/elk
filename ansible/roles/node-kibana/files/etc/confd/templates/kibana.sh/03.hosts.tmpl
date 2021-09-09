@@ -1,0 +1,9 @@
+hostsFile=/etc/hosts
+ES_VIP={{ getv "/cluster/endpoints/reserved_ips/esvip/value" }}
+sed "/^# >> ES nodes./,/^# << ES nodes./d" $hostsFile > $hostsFile.swap
+flush >> $hostsFile.swap << HOSTS_FILE
+# >> ES nodes. WARNING: this is managed by script and please don't touch manually.
+$ES_VIP elasticsearch
+# << ES exporter. WARNING: this is managed by script and please don't touch manually.
+HOSTS_FILE
+mv $hostsFile.swap $hostsFile

@@ -28,7 +28,7 @@
     }, {
       "key": "resource_group",
       "label": "Express Configuration",
-      "description": "Test: ES * 2, Logstash * 1, Kibana * 1; Pre-prod: ES * 2, ES M * 1, Logstash * 1, Kibana * 1; Prod HA: ES * 3, ES Master * 3, Logstash * 1, Kibana * 2",
+      "description": "Test: ES * 1, Logstash * 1, Kibana * 1; Pre-prod: ES * 2, ES M * 1, Logstash * 1, Kibana * 1; Prod HA: ES * 3, ES Master * 3, Logstash * 1, Kibana * 2",
       "type": "string",
       "default": "Pre-prod",
       "range": [
@@ -74,7 +74,8 @@
           32768,
           40960,
           49152,
-          65536
+          65536,
+          131072
         ],
         "default": 4096,
         "resource_group": [2048, 4096, 4096],
@@ -87,7 +88,7 @@
         "min": 0,
         "max": 200,
         "default": 3,
-        "resource_group": [2, 2, 3],
+        "resource_group": [1, 2, 3],
         "required": "yes"
       }, {
         "key": "instance_class",
@@ -163,7 +164,8 @@
           32768,
           40960,
           49152,
-          65536
+          65536,
+          131072
         ],
         "default": 2048,
         "resource_group": [2048, 2048, 4096],
@@ -255,7 +257,8 @@
           32768,
           40960,
           49152,
-          65536
+          65536,
+          131072
         ],
         "default": 4096,
         "resource_group": [2048, 4096, 4096],
@@ -343,7 +346,8 @@
           32768,
           40960,
           49152,
-          65536
+          65536,
+          131072
         ],
         "default": 4096,
         "resource_group": [2048, 4096, 4096],
@@ -431,7 +435,8 @@
           32768,
           40960,
           49152,
-          65536
+          65536,
+          131072
         ],
         "default": 4096,
         "resource_group": [1024, 4096, 4096],
@@ -537,6 +542,32 @@
       "description": "The role configuration properties of the application",
       "type": "array",
       "properties": [{
+        "key": "prometheus.node.exporter",
+        "label": "prometheus.node.exporter",
+        "description": "Prometheus exporter for hardware and OS metrics exposed by *NIX kernels with pluggable metric collectors.",
+        "type": "string",
+        "default": "true",
+        "range": ["true", "false"],
+        "required": "no"
+      }, {
+        "key": "thread_pool.write.queue_size",
+        "label": "thread_pool.write.queue_size",
+        "description": "The queue_size allows to control the size of the queue of pending requests that have no threads to execute them.",
+        "type": "integer",
+        "min": 200,
+        "max": 10240,
+        "default": 1024,
+        "required": "no"
+      }, {
+        "key": "thread_pool.search.queue_size",
+        "label": "thread_pool.search.queue_size",
+        "description": "The queue_size allows to control the initial size of the queue of pending requests that have no threads to execute them.",
+        "type": "integer",
+        "min": 1000,
+        "max": 10240,
+        "default": 1024,
+        "required": "no"
+      }, {
         "key": "action.destructive_requires_name",
         "label": "action.destructive_requires_name",
         "description": "In order to enable allowing to delete indices via wildcards or _all, set this config to false.",
@@ -861,6 +892,14 @@
       "description": "The role configuration properties of the application",
       "type": "array",
       "properties": [{
+        "key": "prometheus.elasticsearch.exporter",
+        "label": "prometheus.elasticsearch.exporter",
+        "description": "Prometheus exporter for various metrics about ElasticSearch.",
+        "type": "string",
+        "default": "true",
+        "range": ["true", "false"],
+        "required": "no"
+      }, {
         "key": "enable_elasticsearch_head",
         "label": "enable_elasticsearch_head",
         "description": "Whether to enable elasticsearch-head.",
@@ -965,7 +1004,7 @@
         "label": "server.rewriteBasePath",
         "description": "Specifies whether Kibana should rewrite requests that are prefixed with server.basePath or require that they are rewritten by your reverse proxy",
         "type": "boolean",
-        "default": true,
+        "default": false,
         "changeable": true,
         "required": "no"
       }]

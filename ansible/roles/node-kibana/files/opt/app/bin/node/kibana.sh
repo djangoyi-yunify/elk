@@ -27,3 +27,8 @@ checkSvc() {
   _checkSvc $@ || return $?
   if [ "$1" == "kibana" ]; then checkEndpoint http:9200 $ES_VIP; fi
 }
+
+upgrade() {
+  [ "$MY_IP" = "${KIBANA_NODES%% *}" ] || retry 60 1 0 checkKibanaIndexCreated || log "WARN: index still not created."
+  _start
+}

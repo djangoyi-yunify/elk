@@ -1,8 +1,8 @@
 flush > /opt/app/conf/kibana/kibana.yml << KIBANA_YML_EOF
 server.port: 5601
 server.host: {{ getv "/host/ip" }}
-server.basePath: "{{ getv "/env/server.basePath" "" }}"
 {{- if (getv "/env/server.basePath" "") }}
+server.basePath: "{{ getv "/env/server.basePath" "" }}"
 server.rewriteBasePath: {{ getv "/env/server.rewriteBasePath" "false" }}
 {{- end }}
 server.maxPayloadBytes: 1048576
@@ -14,8 +14,6 @@ kibana.defaultAppId: "home"
 elasticsearch.username: "user"
 elasticsearch.password: "pass"
 server.ssl.enabled: false
-server.ssl.certificate: /path/to/your/server.crt
-server.ssl.key: /path/to/your/server.key
 elasticsearch.pingTimeout: 1500
 elasticsearch.requestTimeout: 30000
 elasticsearch.requestHeadersWhitelist: [ authorization ]

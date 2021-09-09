@@ -46,6 +46,7 @@ initNode() {
   prepareEsDirs
   local htmlPath=/data/elasticsearch/index.html
   [ -e $htmlPath ] || ln -s /opt/app/conf/caddy/index.html $htmlPath
+
 }
 
 start() {
@@ -65,7 +66,7 @@ restart() {
     local nodes; nodes=$(parseJsonField node.ip ${@:2})
     if [[ ",${nodes:=${ROLE_NODES// /,}}," != *",$MY_IP,"* ]]; then return 0; fi
     local opTimeout; opTimeout=$(parseJsonField timeout "${@:2}")
-    timeout --preserver-status ${opTimeout:-600} appctl restartInOrder $nodes $earliest $IS_MASTER || {
+    timeout --preserve-status ${opTimeout:-600} appctl restartInOrder $nodes $earliest $IS_MASTER || {
       log "WARN: failed to restart nodes '$nodes' in order ($?)"
       return 0
     }
@@ -123,8 +124,8 @@ preScaleIn() {
   # disallow remove all master nodes if there are any
   [ -z "$LEAVING_MASTER_NODES" -o -n "$STABLE_MASTER_NODES" ] || return $EC_SCLIN_NO_MASTER_LEFT
 
-  retry 10 1 0 checkClusterHealthy
-  if [ -n "$LEAVING_DATA_NODES" ]; then retry 10 1 0 checkNoClosed; fi
+  retry 120 1 0 checkClusterHealthy
+  if [ -n "$LEAVING_DATA_NODES" ]; then retry 120 1 0 checkNoClosed; fi
   checkNodeRolesMatched
   checkDataNodeRoles $(getExcludedVotingNodes)
   resetExcludedVotingNodes
@@ -166,10 +167,10 @@ checkNoClosed() {
 checkNodeRolesMatched() {
   local expectedNodes
   if [ -z "$STABLE_MASTER_NODES$LEAVING_MASTER_NODES" ]; then
-    expectedNodes="$(echo $STABLE_DATA_NODES $LEAVING_DATA_NODES | xargs -n1 | sed 's#$#/dim#g' | sort)"
+    expectedNodes="$(echo $STABLE_DATA_NODES $LEAVING_DATA_NODES | xargs -n1 | sed 's#$#/dimr#g' | sort)"
   else
-    local masterNodes="$(echo $STABLE_MASTER_NODES $LEAVING_MASTER_NODES | xargs -n1 | sed 's#$#/m#g')"
-    local dataNodes="$(echo $STABLE_DATA_NODES $LEAVING_DATA_NODES | xargs -n1 | sed 's#$#/di#g')"
+    local masterNodes="$(echo $STABLE_MASTER_NODES $LEAVING_MASTER_NODES | xargs -n1 | sed 's#$#/mr#g')"
+    local dataNodes="$(echo $STABLE_DATA_NODES $LEAVING_DATA_NODES | xargs -n1 | sed 's#$#/dir#g')"
     expectedNodes="$(echo $masterNodes $dataNodes | xargs -n1 | sort)"
   fi
 
@@ -392,7 +393,7 @@ upgrade() {
 checkNodeJoined() {
   local result node=${1:-$MY_IP}
   local knownNode=${2:-$node}
-  result="$(curl -s -m 3 $knownNode:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^(m|dim?)$/ {print $1}')"
+  result="$(curl -s -m 3 $knownNode:9200/_cat/nodes?h=ip,node.role | awk '$1 == "'$node'" && $2 ~ /^(m|mr|dim?|dim?r)$/ {print $1}')"
   [ "$result" = "$node" ] || return $EC_UPG_NOT_JOINED
 }
 

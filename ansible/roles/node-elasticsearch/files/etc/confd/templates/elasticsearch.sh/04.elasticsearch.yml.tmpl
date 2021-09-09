@@ -49,6 +49,9 @@ indices.memory.index_buffer_size: {{ getv "/env/indices.memory.index_buffer_size
 indices.queries.cache.size: {{ getv "/env/indices.queries.cache.size" "10%" }}
 indices.requests.cache.size: {{ getv "/env/indices.requests.cache.size" "1%" }}
 
+thread_pool.write.queue_size: {{ getv "/env/thread_pool.write.queue_size" }}
+thread_pool.search.queue_size: {{ getv "/env/thread_pool.search.queue_size" }}
+
 network.host: {{ $myIp }}
 
 {{- if not (getvs "/env/es_additional_line*" | filter "node.attr.data:.*") }}

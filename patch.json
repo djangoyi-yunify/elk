@@ -1,0 +1,47 @@
+{
+  "patch_policy": [""],
+  "patch_nodes": [{
+    "container": {
+      "snapshot": "ss-vpntiftp",
+      "zone": "pek3a"
+    },
+    "patch": [{
+      "mount_role": "es_node",
+      "mount_point": "/upgrade",
+      "mount_options": "defaults,noatime",
+      "filesystem": "ext4",
+      "cmd": "/upgrade/patch-exporter/node-exporter.sh"
+    },{
+      "mount_role": "es_master_node",
+      "mount_point": "/upgrade",
+      "mount_options": "defaults,noatime",
+      "filesystem": "ext4",
+      "cmd": "/upgrade/patch-exporter/node-exporter.sh"
+    },{
+      "mount_role": "es_node_2",
+      "mount_point": "/upgrade",
+      "mount_options": "defaults,noatime",
+      "filesystem": "ext4",
+      "cmd": "/upgrade/patch-exporter/node-exporter.sh"
+    },{
+      "mount_role": "es_node_3",
+      "mount_point": "/upgrade",
+      "mount_options": "defaults,noatime",
+      "filesystem": "ext4",
+      "cmd": "/upgrade/patch-exporter/node-exporter.sh"
+    },{
+      "mount_role": "kbn_node",
+      "mount_point": "/upgrade",
+      "mount_options": "defaults,noatime",
+      "filesystem": "ext4",
+      "cmd": "/upgrade/patch-exporter/es-exporter.sh"
+    }],
+    "rollback": [{
+      "mount_role": "es_node",
+      "mount_point": "/upgrade",
+      "mount_options": "defaults,noatime",
+      "filesystem": "ext4",
+      "cmd": "echo"
+    }]
+  }]
+}

@@ -81,6 +81,8 @@
     "Whether to enable heap dump on out of memory error.": "Whether to enable heap dump on out of memory error.",
     "The path of heap dump.": "The path of heap dump.",
     "Clean logs older than n days, n can be changed here.": "Clean logs older than n days, n can be changed here.",
+    "The queue_size allows to control the size of the queue of pending requests that have no threads to execute them.": "The queue_size allows to control the size of the queue of pending requests that have no threads to execute them.",
+    "The queue_size allows to control the initial size of the queue of pending requests that have no threads to execute them.": "The queue_size allows to control the initial size of the queue of pending requests that have no threads to execute them.",
     "err_code21": "Can't retrieve cluster health info",
     "err_code22": "Cluster is unhealthy if nodes removed",
     "err_code23": "Can't stop ES",

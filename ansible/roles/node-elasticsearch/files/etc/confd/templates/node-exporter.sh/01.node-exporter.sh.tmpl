@@ -1,0 +1,3 @@
+flush > /opt/app/bin/envs/svc-node-exporter.env << SVC_NODE_EOF
+SERVICES="\$SERVICES node_exporter/{{ getv "/env/prometheus.node.exporter" "false" }}/http:9100"
+SVC_NODE_EOF

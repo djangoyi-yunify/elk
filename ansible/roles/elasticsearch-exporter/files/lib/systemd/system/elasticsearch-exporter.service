@@ -1,0 +1,23 @@
+[Unit]
+Description=ElasticSearch Exporter
+After=network-online.target
+
+[Service]
+Type=simple
+User=elasticsearch-exporter
+Group=svc
+ExecStart=/opt/elasticsearch-exporter/current/elasticsearch_exporter \
+	--es.all --es.indices \
+	--es.cluster_settings \
+	--es.indices_settings \
+	--es.shards --es.snapshots \
+	--web.listen-address ":9108" \
+	--es.timeout 20s \
+	--es.uri http://elasticsearch:9200
+
+Restart=on-failure
+WorkingDirectory=/opt/elasticsearch-exporter/current
+
+
+[Install]
+WantedBy=multi-user.target

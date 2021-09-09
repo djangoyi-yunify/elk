@@ -27,6 +27,7 @@
     - elasticsearch
     - jq-1.0.3
     - node-elasticsearch
+    - node-exporter-0.18.1
     loop_control:
       loop_var: svc_name
 
@@ -59,5 +60,6 @@
     - haproxy-1.0.3
     - keepalived-1.0.1
     - node-kibana
+    - elasticsearch-exporter
     loop_control:
       loop_var: svc_name

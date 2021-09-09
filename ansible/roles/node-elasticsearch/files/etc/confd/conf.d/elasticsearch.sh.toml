@@ -5,4 +5,4 @@ mode = "0700"
 keys = [
   "/",
 ]
-reload_cmd = "/opt/app/bin/tmpl/elasticsearch.sh"
+reload_cmd = "/opt/app/bin/tmpl/elasticsearch.sh; appctl reload elasticsearch"

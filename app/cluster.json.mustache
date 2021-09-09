@@ -6,13 +6,16 @@
   "advanced_actions": [
     "scale_horizontal"
   ],
+  "upgrade_policy": [
+    "appv-dy6k7pd0"
+  ],
   "upgrading_policy": "sequential",
   "nodes": [{
     "role": "es_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-cvqm5ll7"
+      "zone": "pek3",
+      "image": "img-rbfddc2t"
     },
     "instance_class": {{cluster.es_node.instance_class}},
     "count": {{cluster.es_node.count}},
@@ -95,6 +98,9 @@
       "heap_dump_path": {{env.es_node.heap_dump_path}},
       "http.cors.enabled": {{env.es_node.http.cors.enabled}},
       "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
+      "prometheus.node.exporter": {{env.es_node.prometheus.node.exporter}},
+      "thread_pool.write.queue_size": {{env.es_node.thread_pool.write.queue_size}},
+      "thread_pool.search.queue_size": {{env.es_node.thread_pool.search.queue_size}},
       "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
       "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
       "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
@@ -222,8 +228,8 @@
     "role": "es_master_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-cvqm5ll7"
+      "zone": "pek3",
+      "image": "img-rbfddc2t"
     },
     "instance_class": {{cluster.es_master_node.instance_class}},
     "count": {{cluster.es_master_node.count}},
@@ -299,6 +305,9 @@
       "es_additional_line1": {{env.es_node.es_additional_line1}},
       "es_additional_line2": {{env.es_node.es_additional_line2}},
       "es_additional_line3": {{env.es_node.es_additional_line3}},
+      "prometheus.node.exporter": {{env.es_node.prometheus.node.exporter}},
+      "thread_pool.write.queue_size": {{env.es_node.thread_pool.write.queue_size}},
+      "thread_pool.search.queue_size": {{env.es_node.thread_pool.search.queue_size}},
       "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
       "gateway.recover_after_time": {{env.es_node.gateway.recover_after_time}},
       "heap_dump_path": {{env.es_node.heap_dump_path}},
@@ -429,8 +438,8 @@
     "role": "es_node_2",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-cvqm5ll7"
+      "zone": "pek3",
+      "image": "img-rbfddc2t"
     },
     "instance_class": {{cluster.es_node_2.instance_class}},
     "count": {{cluster.es_node_2.count}},
@@ -513,6 +522,9 @@
       "heap_dump_path": {{env.es_node.heap_dump_path}},
       "http.cors.enabled": {{env.es_node.http.cors.enabled}},
       "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
+      "prometheus.node.exporter": {{env.es_node.prometheus.node.exporter}},
+      "thread_pool.write.queue_size": {{env.es_node.thread_pool.write.queue_size}},
+      "thread_pool.search.queue_size": {{env.es_node.thread_pool.search.queue_size}},
       "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
       "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
       "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
@@ -640,8 +652,8 @@
     "role": "es_node_3",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-cvqm5ll7"
+      "zone": "pek3",
+      "image": "img-rbfddc2t"
     },
     "instance_class": {{cluster.es_node_3.instance_class}},
     "count": {{cluster.es_node_3.count}},
@@ -724,6 +736,9 @@
       "heap_dump_path": {{env.es_node.heap_dump_path}},
       "http.cors.enabled": {{env.es_node.http.cors.enabled}},
       "http.cors.allow-origin": {{env.es_node.http.cors.allow-origin}},
+      "prometheus.node.exporter": {{env.es_node.prometheus.node.exporter}},
+      "thread_pool.write.queue_size": {{env.es_node.thread_pool.write.queue_size}},
+      "thread_pool.search.queue_size": {{env.es_node.thread_pool.search.queue_size}},
       "indices.fielddata.cache.size": {{env.es_node.indices.fielddata.cache.size}},
       "indices.queries.cache.size": {{env.es_node.indices.queries.cache.size}},
       "indices.memory.index_buffer_size": {{env.es_node.indices.memory.index_buffer_size}},
@@ -851,8 +866,8 @@
     "role": "lst_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-gegi7by6"
+      "zone": "pek3",
+      "image": "img-2a5sdbqj"
     },
     "instance_class": {{cluster.lst_node.instance_class}},
     "count": {{cluster.lst_node.count}},
@@ -900,8 +915,8 @@
     "role": "kbn_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-mc397efw"
+      "zone": "pek3",
+      "image": "img-pe7y6kkf"
     },
     "instance_class": {{cluster.kbn_node.instance_class}},
     "count": {{cluster.kbn_node.count}},
@@ -924,6 +939,7 @@
       }
     },
     "env": {
+      "prometheus.elasticsearch.exporter": {{env.kbn_node.prometheus.elasticsearch.exporter}},
       "server.basePath": {{env.kbn_node.server.basePath}},
       "server.rewriteBasePath": {{env.kbn_node.server.rewriteBasePath}},
       "enable_elasticsearch_head": {{env.kbn_node.enable_elasticsearch_head}},
@@ -974,6 +990,14 @@
       "protocol": "http"
     },
     "ES Head on Kibana": {
+      "port": 9100,
+      "protocol": "http"
+    },
+    "EsExporter on KBN": {
+      "port": 9108,
+      "protocol": "http"
+    },
+    "NodeExporter on ES": {
       "port": 9100,
       "protocol": "http"
     },
