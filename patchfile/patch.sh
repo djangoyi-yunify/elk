@@ -133,6 +133,13 @@ rollback() {
 }
 
 info() {
+  if [ $NODE_CTL = "elasticsearch" ]; then
+    ls -l /etc/confd/templates/elasticsearch.sh.tmpl
+    cat /etc/confd/templates/elasticsearch.sh.tmpl | grep log4j
+    return
+  fi
+  ls -l /etc/confd/templates/logstash.sh.tmpl
+  cat /etc/confd/templates/logstash.sh.tmpl | grep log4j
   local target
   local oldpath
   local newpath
