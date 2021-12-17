@@ -1,0 +1,366 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+myPath="$0"
+
+cleanUp() {
+  local rc=$?
+  [ "$rc" -eq 0 ] || echo "# Failed ($rc)! Please check confd logs." >> $myPath
+  return $rc
+}
+
+trap cleanUp EXIT
+
+rotate() {
+  local path=$1 maxFilesCount=5
+  for i in $(seq 1 $maxFilesCount | tac); do
+    if [ -f "${path}.$i" ]; then mv ${path}.$i ${path}.$(($i+1)); fi
+  done
+  if [ -f "$path" ]; then cp $path ${path}.1; fi
+}
+
+flush() {
+  local targetFile=$1
+  if [ -n "$targetFile" ]; then
+    rotate $targetFile
+    cat > $targetFile -
+  else
+    cat -
+  fi
+}
+{{- $rolesMap := map "es_node" "elasticsearch-1" "es_node_2" "elasticsearch-2" "es_node_3" "elasticsearch-3" "es_master_node" "elasticsearch-master" }}
+{{- $myRole := index $rolesMap (getv "/host/role") }}
+{{- $mySid := getv "/host/sid" }}
+{{- $myIp := getv "/host/ip" }}
+
+allNodes="$(sort -V << ALL_NODES_EOF
+{{- $groupsMap := map "2" "n2" "3" "n3" "master" "m" }}
+{{- range $nodeRole := lsdir "/hosts" | filter "es_*" }}
+{{- $joiningNodes := lsdir (printf "/adding-hosts/%s" $nodeRole) }}
+{{- $leavingNodes := lsdir (printf "/deleting-hosts/%s" $nodeRole) }}
+{{- range $instanceId := lsdir (printf "/hosts/%s" $nodeRole) }}
+{{- if $joiningNodes | filter $instanceId }}
+joining/
+{{- else if $leavingNodes | filter $instanceId }}
+leaving/
+{{- else }}
+stable/
+{{- end }}
+{{- $nodeRole }}/
+{{- $instanceId }}/
+{{- getv "/cluster/cluster_id" }}-
+{{- range split $nodeRole "_" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}
+{{- getv (printf "/hosts/%s/%s/sid" $nodeRole $instanceId) }}/
+{{- getv (printf "/hosts/%s/%s/ip" $nodeRole $instanceId) }}
+{{- end }}
+{{- end }}
+ALL_NODES_EOF
+)"
+
+flush > /opt/app/bin/envs/node.env << ES_ENV_EOF
+NODE_CTL=elasticsearch
+DATA_MOUNTS="/data"
+MY_IP={{ $myIp }}
+MY_ROLE={{ $myRole }}
+{{- range gets "/env/appctl.*" }}
+{{ replace (base .Key) "." "_" -1 | toUpper }}={{ .Value }}
+{{- end }}
+IS_MASTER={{ eq $myRole "elasticsearch-master" }}
+HEAP_DUMP_PATH="{{ getv "/env/heap_dump_path" "/data/elasticsearch/dump" }}"
+SERVICES="\$SERVICES elasticsearch/true/http:9200"
+ROLE_NODES="$(echo "{{ join (getvs (printf "/hosts/%s/*/ip" (getv "/host/role"))) " " }}" | xargs -n1 | sort -V | xargs)"
+JOINING_DATA_NODES="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_node/ {print $5}' | sort -V | xargs)"
+STABLE_DATA_NODES="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_node/ {print $5}' | sort -V | xargs)"
+LEAVING_DATA_NODES="$(echo "$allNodes" | awk -F/ '$1~/^l/ && $2~/^es_node/ {print $5}' | sort -V | xargs)"
+JOINING_MASTER_NODES="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_master/ {print $5}' | sort -V | xargs)"
+STABLE_MASTER_NODES="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_master/ {print $5}' | sort -V | xargs)"
+LEAVING_MASTER_NODES="$(echo "$allNodes" | awk -F/ '$1~/^l/ && $2~/^es_master/ {print $5}' | sort -V | xargs)"
+ES_ENV_EOF
+
+{{- $maxHeapSize := mul 31 1024 }}
+{{- $halfMemory := div (getv "/host/memory") 2 }}
+{{- $heapSize := min $halfMemory $maxHeapSize }}
+flush > /opt/app/conf/elasticsearch/jvm.options << ES_JVM_EOF
+-Xms{{ $heapSize }}m
+-Xmx{{ $heapSize }}m
+
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+
+-Des.networkaddress.cache.ttl=60
+-Des.networkaddress.cache.negative.ttl=10
+-Des.allow_insecure_settings=true
+
+-Djava.security.policy=file:///opt/app/conf/elasticsearch/dicts.policy
+
+-XX:+AlwaysPreTouch
+
+-Xss1m
+
+-Djava.awt.headless=true
+
+-Dfile.encoding=UTF-8
+
+-Djna.nosys=true
+
+-XX:-OmitStackTraceInFastThrow
+
+-Dio.netty.noUnsafe=true
+-Dio.netty.noKeySetOptimization=true
+-Dio.netty.recycler.maxCapacityPerThread=0
+
+-Dlog4j.shutdownHookEnabled=false
+-Dlog4j2.disable.jmx=true
+-Dlog4j.skipJansi=true
+-Dlog4j2.formatMsgNoLookups=true
+
+{{- if eq (getv "/env/enable_heap_dump" "") "true" }}
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath={{ getv "/env/heap_dump_path" "/data/elasticsearch/dump" }}
+{{- end }}
+
+-XX:+ExitOnOutOfMemoryError
+
+-XX:ErrorFile=/data/elasticsearch/logs/hs_err_pid%p.log
+
+-XX:+PrintGCDetails
+-XX:+PrintGCTimeStamps
+-XX:+PrintGCDateStamps
+-XX:+PrintClassHistogram
+-XX:+PrintTenuringDistribution
+-XX:+PrintGCApplicationStoppedTime
+-Xloggc:/data/elasticsearch/logs/gc.log
+-XX:+UseGCLogFileRotation
+-XX:NumberOfGCLogFiles=5
+-XX:GCLogFileSize=2m
+ES_JVM_EOF
+
+flush > /opt/app/conf/elasticsearch/log4j2.properties << 'ES_LOG4J_EOF'
+status = error
+
+# log action execution errors for easier debugging
+logger.action.name = org.elasticsearch.action
+logger.action.level = {{ getv "/env/logger.action.level" "info" }}
+
+appender.console.type = Console
+appender.console.name = console
+appender.console.layout.type = PatternLayout
+appender.console.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] [%node_name]%marker %m%n
+
+appender.rolling.type = RollingFile
+appender.rolling.name = rolling
+appender.rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}.log
+appender.rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}-%d{yyyy-MM-dd}-%i.log
+appender.rolling.layout.type = PatternLayout
+appender.rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] [%node_name]%marker %.-10000m%n
+appender.rolling.policies.type = Policies
+appender.rolling.policies.time.type = TimeBasedTriggeringPolicy
+appender.rolling.policies.time.interval = 1
+appender.rolling.policies.time.modulate = true
+appender.rolling.policies.size.type = SizeBasedTriggeringPolicy
+appender.rolling.policies.size.size = 2MB
+appender.rolling.strategy.type = DefaultRolloverStrategy
+appender.rolling.strategy.action.type = Delete
+appender.rolling.strategy.action.basepath = ${sys:es.logs.base_path}
+appender.rolling.strategy.action.condition.type = IfFileName
+appender.rolling.strategy.action.condition.glob = ${sys:es.logs.cluster_name}-*
+appender.rolling.strategy.action.condition.nested_condition.type = IfAny
+appender.rolling.strategy.action.condition.nested_condition.lastMod.type = IfLastModified
+appender.rolling.strategy.action.condition.nested_condition.lastMod.age = {{ getv "/env/clean_logs_older_than_n_days" "7" }}D
+appender.rolling.strategy.action.condition.nested_condition.fileSize.type = IfAccumulatedFileSize
+appender.rolling.strategy.action.condition.nested_condition.fileSize.exceeds = 200MB
+
+rootLogger.level = {{ getv "/env/rootLogger.level" "info" }}
+rootLogger.appenderRef.rolling.ref = rolling
+
+appender.deprecation_rolling.type = RollingFile
+appender.deprecation_rolling.name = deprecation_rolling
+appender.deprecation_rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_deprecation.log
+appender.deprecation_rolling.layout.type = PatternLayout
+appender.deprecation_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] [%node_name]%marker %.-10000m%n
+appender.deprecation_rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_deprecation-%i.log
+appender.deprecation_rolling.policies.type = Policies
+appender.deprecation_rolling.policies.size.type = SizeBasedTriggeringPolicy
+appender.deprecation_rolling.policies.size.size = 2MB
+appender.deprecation_rolling.strategy.type = DefaultRolloverStrategy
+appender.deprecation_rolling.strategy.max = 50
+
+logger.deprecation.name = org.elasticsearch.deprecation
+logger.deprecation.level = {{ getv "/env/logger.deprecation.level" "warn" }}
+logger.deprecation.appenderRef.deprecation_rolling.ref = deprecation_rolling
+logger.deprecation.additivity = false
+
+appender.index_search_slowlog_rolling.type = RollingFile
+appender.index_search_slowlog_rolling.name = index_search_slowlog_rolling
+appender.index_search_slowlog_rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_search_slowlog.log
+appender.index_search_slowlog_rolling.layout.type = PatternLayout
+appender.index_search_slowlog_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c] [%node_name]%marker %.-10000m%n
+appender.index_search_slowlog_rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_search_slowlog-%d{yyyy-MM-dd}.log
+appender.index_search_slowlog_rolling.policies.type = Policies
+appender.index_search_slowlog_rolling.policies.time.type = TimeBasedTriggeringPolicy
+appender.index_search_slowlog_rolling.policies.time.interval = 1
+appender.index_search_slowlog_rolling.policies.time.modulate = true
+appender.index_search_slowlog_rolling.strategy.type = DefaultRolloverStrategy
+appender.index_search_slowlog_rolling.strategy.max = 50
+
+logger.index_search_slowlog_rolling.name = index.search.slowlog
+logger.index_search_slowlog_rolling.level = {{ getv "/env/logger.index_search_slowlog_rolling.level" "trace" }}
+logger.index_search_slowlog_rolling.appenderRef.index_search_slowlog_rolling.ref = index_search_slowlog_rolling
+logger.index_search_slowlog_rolling.additivity = false
+
+appender.index_indexing_slowlog_rolling.type = RollingFile
+appender.index_indexing_slowlog_rolling.name = index_indexing_slowlog_rolling
+appender.index_indexing_slowlog_rolling.fileName = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_indexing_slowlog.log
+appender.index_indexing_slowlog_rolling.layout.type = PatternLayout
+appender.index_indexing_slowlog_rolling.layout.pattern = [%d{ISO8601}][%-5p][%-25c] [%node_name]%marker %.-10000m%n
+appender.index_indexing_slowlog_rolling.filePattern = ${sys:es.logs.base_path}${sys:file.separator}${sys:es.logs.cluster_name}_index_indexing_slowlog-%d{yyyy-MM-dd}.log
+appender.index_indexing_slowlog_rolling.policies.type = Policies
+appender.index_indexing_slowlog_rolling.policies.time.type = TimeBasedTriggeringPolicy
+appender.index_indexing_slowlog_rolling.policies.time.interval = 1
+appender.index_indexing_slowlog_rolling.policies.time.modulate = true
+appender.index_indexing_slowlog_rolling.strategy.type = DefaultRolloverStrategy
+appender.index_indexing_slowlog_rolling.strategy.max = 50
+
+logger.index_indexing_slowlog.name = index.indexing.slowlog.index
+logger.index_indexing_slowlog.level = {{ getv "/env/logger.index_indexing_slowlog.level" "trace" }}
+logger.index_indexing_slowlog.appenderRef.index_indexing_slowlog_rolling.ref = index_indexing_slowlog_rolling
+logger.index_indexing_slowlog.additivity = false
+ES_LOG4J_EOF
+
+joiningGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_node/ {print $4}' | xargs)"
+stableGenericNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_node/ {print $4}' | xargs)"
+joiningMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^j/ && $2~/^es_master/ {print $4}' | xargs)"
+stableMasterNodes="$(echo "$allNodes" | awk -F/ '$1~/^s/ && $2~/^es_master/ {print $4}' | xargs)"
+
+expectedGenericNodes="$(echo $joiningGenericNodes $stableGenericNodes)"
+expectedGenNodesCount=$(echo $expectedGenericNodes | wc -w)
+expectedGenericQuorum=$(( $expectedGenNodesCount / 2 + 1 ))
+recoverAfterGenCount=$(( $expectedGenericQuorum > $expectedGenNodesCount - 2 ? $expectedGenericQuorum : $expectedGenNodesCount - 2 ))
+
+expectedMasterNodes="$(echo $joiningMasterNodes $stableMasterNodes)"
+expectedMastersCount=$(echo ${expectedMasterNodes:=$expectedGenericNodes} | wc -w)
+expectedMasterQuorum=$(( $expectedMastersCount / 2 + 1 ))
+recoverAfterMastersCount=$(( $expectedMasterQuorum > $expectedMastersCount - 2 ? $expectedMasterQuorum : $expectedMastersCount - 2 ))
+
+{{- $isDedicatedMaster := eq $myRole "elasticsearch-master" }}
+discoveryHosts="${stableMasterNodes:-$stableGenericNodes}"
+
+dataDirs="$(egrep -o " /data[23]? " /proc/mounts | sed 's#^#-#g; s# $#/elasticsearch/data#g')"
+
+flush > /opt/app/conf/elasticsearch/elasticsearch.yml << ES_YML_EOF
+action.destructive_requires_name: {{ getv "/env/action.destructive_requires_name" "true" }}
+bootstrap.memory_lock: true
+
+cluster.name: {{ getv "/cluster/cluster_id" }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "cluster.routing.allocation.awareness.attributes:.*") }}
+cluster.routing.allocation.awareness.attributes: zone
+{{- end }}
+
+discovery.zen.fd.ping_interval: 1s
+discovery.zen.fd.ping_retries: 3
+discovery.zen.fd.ping_timeout: 30s
+discovery.zen.minimum_master_nodes: $expectedMasterQuorum
+discovery.zen.no_master_block: {{ getv "/env/discovery.zen.no_master_block" "write" }}
+discovery.zen.ping_timeout: 3s
+discovery.zen.ping.unicast.hosts: [ ${discoveryHosts// /,} ]
+
+gateway.expected_data_nodes: $expectedGenNodesCount
+gateway.expected_master_nodes: $expectedMastersCount
+gateway.recover_after_data_nodes: $recoverAfterGenCount
+gateway.recover_after_master_nodes: $recoverAfterMastersCount
+gateway.recover_after_time: {{ getv "/env/gateway.recover_after_time" "5m" }}
+
+http.cors.allow-origin: "{{ getv "/env/http.cors.allow-origin" "" }}"
+http.cors.enabled: {{ getv "/env/http.cors.enabled" "false" }}
+http.port: 9200
+
+indices.fielddata.cache.size: {{ getv "/env/indices.fielddata.cache.size" "90%" }}
+indices.memory.index_buffer_size: {{ getv "/env/indices.memory.index_buffer_size" "10%" }}
+indices.queries.cache.size: {{ getv "/env/indices.queries.cache.size" "10%" }}
+indices.requests.cache.size: {{ getv "/env/indices.requests.cache.size" "1%" }}
+
+network.host: {{ $myIp }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "node.attr.data:.*") }}
+{{- if not $isDedicatedMaster }}
+node.attr.data: "{{ getv "/env/node.attr.data" "hot" }}"
+{{- end }}
+{{- end }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "node.attr.zone:.*") }}
+node.attr.zone: {{ getv "/host/zone" (getv "/cluster/zone") }}
+{{- end }}
+
+node.data: {{ not $isDedicatedMaster }}
+node.ingest: {{ not $isDedicatedMaster }}
+node.master: {{ or $isDedicatedMaster (not (ls "/hosts/es_master_node")) }}
+node.name: {{ getv "/cluster/cluster_id" }}-{{ range split $myRole "-" | filter "2|3|master" }}{{ index $groupsMap . }}-{{ end }}{{ getv "/host/sid" }}
+
+path.data:
+$dataDirs
+
+path.logs: /data/elasticsearch/logs
+
+{{- with getv "/env/path.repo" "[]" }}
+path.repo: {{ . }}
+{{- end }}
+
+{{- if not (getvs "/env/es_additional_line*" | filter "reindex.remote.whitelist:.*") }}
+reindex.remote.whitelist: "{{ getv "/env/reindex.remote.whitelist" "" }}"
+{{- end }}
+{{- with getv "/env/repositories.url.allowed_urls" "[]" }}
+repositories.url.allowed_urls: {{ . }}
+{{- end }}
+
+{{- with getv "/env/script.allowed_types" }}
+script.allowed_types: {{ . }}
+{{- end }}
+
+{{- with getv "/env/script.allowed_contexts" }}
+script.allowed_contexts: {{ . }}
+{{- end }}
+
+{{- range getvs "/env/es_additional_line*" }}
+{{ . }}
+{{- end }}
+ES_YML_EOF
+
+flush > /opt/elasticsearch/current/plugins/analysis-ik/config/IKAnalyzer.cfg.xml << IK_ANALYZER_CFG_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="ext_dict">custom/jieba.dic;extra_main.dic</entry>
+  <entry key="ext_stopwords">custom/extra_stopword.dic</entry>
+  <entry key="remote_ext_dict">{{ getv "/env/remote_ext_dict" "" }}</entry>
+  <entry key="remote_ext_stopwords">{{ getv "/env/remote_ext_stopwords" "" }}</entry>
+</properties>
+IK_ANALYZER_CFG_EOF
+
+sysctlConf=/etc/sysctl.conf
+
+sed -i '/# >> Managed by confd./,/# << Managed by confd./d' $sysctlConf
+
+flush >> $sysctlConf << SYSCTL_CONF_EOF
+# >> Managed by confd.
+{{- range gets "/env/appctl.tcp_keepalive*" }}
+net.ipv4.{{ replace (base .Key) "appctl." "" -1 }}={{ .Value }}
+{{- end }}
+vm.max_map_count=262144
+vm.swappiness=1
+# << Managed by confd.
+SYSCTL_CONF_EOF
+
+sysctl -p
+
+hostsFile=/etc/hosts
+sed "/^# >> ES nodes./,/^# << ES nodes./d" $hostsFile > $hostsFile.swap
+flush >> $hostsFile.swap << HOSTS_FILE
+# >> ES nodes. WARNING: this is managed by script and please don't touch manually.
+$(echo "$allNodes" | awk -F/ '{print $5, $4}')
+# << ES nodes. WARNING: this is managed by script and please don't touch manually.
+HOSTS_FILE
+mv $hostsFile.swap $hostsFile
+
