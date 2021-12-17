@@ -14,52 +14,6 @@ log() {
   echo "$1" >> $LOG_FILE
 }
 
-backupJar() {
-  local from
-  local folder
-  local status
-  local info=$(cat $PATCH_FOLDER/back.conf)
-  for line in $(echo "$info"); do
-    from=$(echo $line | cut -d':' -f1)
-    folder=$(echo $line | cut -d':' -f2)
-    status=$(echo $line | cut -d':' -f3)
-    if [ $status = "yes" ]; then continue; fi
-    if [ -n "$folder" ]; then
-      mkdir -p $BACK_FOLDER/$folder
-      cp -rf $from $BACK_FOLDER/$folder
-    else
-      cp -rf $from $BACK_FOLDER
-    fi
-    sed -i "s#$from:$folder:$status#$from:$folder:yes#g" $PATCH_FOLDER/back.conf
-  done
-}
-
-replaceJar() {
-  local target
-  local oldpath
-  local newpath
-  local subinfo
-  local status
-  local tmp
-  local info=$(cat $PATCH_FOLDER/replace.conf)
-  for line in $(echo "$info"); do
-    target=$(echo $line | cut -d':' -f1)
-    oldpath=$(echo $line | cut -d':' -f2)
-    newpath=$(echo $line | cut -d':' -f3)
-    subinfo=$(echo $line | cut -d':' -f4)
-    status=$(echo $line | cut -d':' -f5)
-    if [ $status = "yes" ]; then continue; fi
-    tmp=${oldpath%%/*}
-    rm -rf $target/$tmp
-    if [ -z "$subinfo" ]; then
-      tmp=$newpath
-    fi
-    cp -rf $PATCH_FOLDER/replace/$tmp $target
-    chown -R logstash $target
-    sed -i "s#$target:$oldpath:$newpath:$subinfo:$status#$target:$oldpath:$newpath:$subinfo:yes#g" $PATCH_FOLDER/replace.conf
-  done
-}
-
 apply() {
   log "backup"
   mkdir -p $BACK_FOLDER
@@ -71,7 +25,9 @@ apply() {
     if [ ! -f $BACK_FOLDER/logstash.sh.tmpl ]; then
       cp /etc/confd/templates/logstash.sh.tmpl $BACK_FOLDER
     fi
-    backupJar
+    if [ ! -f $BACK_FOLDER/log4j-core-2.11.1.jar ]; then
+      cp /usr/share/logstash/logstash-core/lib/jars/log4j-core-2.11.1.jar $BACK_FOLDER
+    fi
   fi
 
   log "replace"
@@ -79,42 +35,12 @@ apply() {
     cp -f $PATCH_FOLDER/etc/confd/templates/elasticsearch.sh.tmpl /etc/confd/templates/elasticsearch.sh.tmpl
   else
     cp -f $PATCH_FOLDER/etc/confd/templates/logstash.sh.tmpl /etc/confd/templates/logstash.sh.tmpl
-    replaceJar
+    cp -f $PATCH_FOLDER/usr/share/logstash/logstash-core/lib/jars/log4j-core-2.11.1.jar /usr/share/logstash/logstash-core/lib/jars/log4j-core-2.11.1.jar
+    chown logstash:svc /usr/share/logstash/logstash-core/lib/jars/log4j-core-2.11.1.jar
   fi
 
   $CONFD_PATH/confd --onetime
-  if [ $NODE_CTL = "logstash" ]; then
-    systemctl restart logstash.service || :
-  fi
   log "done"
-}
-
-restoreJar() {
-  local target
-  local oldpath
-  local newpath
-  local subinfo
-  local status
-  local tmp
-  local info=$(cat $PATCH_FOLDER/replace.conf)
-  for line in $(echo "$info"); do
-    target=$(echo $line | cut -d':' -f1)
-    oldpath=$(echo $line | cut -d':' -f2)
-    newpath=$(echo $line | cut -d':' -f3)
-    subinfo=$(echo $line | cut -d':' -f4)
-    status=$(echo $line | cut -d':' -f5)
-    if [ $status = "no" ]; then continue; fi
-    tmp=${newpath%%/*}
-    rm -rf $target/$tmp
-    if [ -n "$subinfo" ]; then
-      tmp=$subinfo/$tmp
-    else
-      tmp=$oldpath
-    fi
-    cp -rf $BACK_FOLDER/$tmp $target
-    chown -R logstash $target
-    sed -i "s#$target:$oldpath:$newpath:$subinfo:$status#$target:$oldpath:$newpath:$subinfo:no#g" $PATCH_FOLDER/replace.conf
-  done
 }
 
 rollback() {
@@ -123,12 +49,11 @@ rollback() {
     cp -f $BACK_FOLDER/elasticsearch.sh.tmpl /etc/confd/templates/elasticsearch.sh.tmpl
   else
     cp -f $BACK_FOLDER/logstash.sh.tmpl /etc/confd/templates/logstash.sh.tmpl
-    restoreJar
+    cp -f $BACK_FOLDER/log4j-core-2.11.1.jar /usr/share/logstash/logstash-core/lib/jars/log4j-core-2.11.1.jar
+    chown logstash:svc /usr/share/logstash/logstash-core/lib/jars/log4j-core-2.11.1.jar
   fi
+
   $CONFD_PATH/confd --onetime
-  if [ $NODE_CTL = "logstash" ]; then
-    systemctl restart logstash.service || :
-  fi
   log "done"
 }
 
@@ -136,29 +61,16 @@ info() {
   if [ $NODE_CTL = "elasticsearch" ]; then
     ls -l /etc/confd/templates/elasticsearch.sh.tmpl
     cat /etc/confd/templates/elasticsearch.sh.tmpl | grep log4j
-    return
-  fi
-  ls -l /etc/confd/templates/logstash.sh.tmpl
-  cat /etc/confd/templates/logstash.sh.tmpl | grep log4j
-  local target
-  local oldpath
-  local newpath
-  local subinfo
-  local status
-  local tmp
-  local info=$(cat $PATCH_FOLDER/replace.conf)
-  for line in $(echo "$info"); do
-    target=$(echo $line | cut -d':' -f1)
-    oldpath=$(echo $line | cut -d':' -f2)
-    newpath=$(echo $line | cut -d':' -f3)
-    subinfo=$(echo $line | cut -d':' -f4)
-    status=$(echo $line | cut -d':' -f5)
-    if [ "$status" = yes ]; then
-      ls -l $target/$newpath
-    else
-      ls -l $target/$oldpath
+  else
+    ls -l /etc/confd/templates/logstash.sh.tmpl
+    cat /etc/confd/templates/logstash.sh.tmpl | grep log4j
+    if [ -f $BACK_FOLDER/log4j-core-2.11.1.jar ]; then
+      echo "*****backup jar info*****"
+      /usr/bin/jar -tf $BACK_FOLDER/log4j-core-2.11.1.jar | grep -i jndi
     fi
-  done
+    echo "*****sys jar info*****"
+    /usr/bin/jar -tf /usr/share/logstash/logstash-core/lib/jars/log4j-core-2.11.1.jar | grep -i jndi
+  fi
 }
 
 dev() {
