@@ -109,8 +109,7 @@
           0,
           2,
           3,
-          5,
-          6
+          5
         ],
         "default": 3,
         "required": "yes"
@@ -288,8 +287,7 @@
           0,
           2,
           3,
-          5,
-          6
+          5
         ],
         "default": 3,
         "required": "yes"
@@ -376,8 +374,7 @@
           0,
           2,
           3,
-          5,
-          6
+          5
         ],
         "default": 5,
         "required": "yes"
