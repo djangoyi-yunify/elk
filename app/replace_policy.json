@@ -37,20 +37,12 @@
     }]
   },
   "gd2a": {
-    "instance_class": [{
-      "src": "202",
-      "dst": 201
-    }],
     "volume_class": [{
       "src": "6",
       "dst": 5
     }]
   },
   "gd2b": {
-    "instance_class": [{
-      "src": "202",
-      "dst": 201
-    }],
     "volume_class": [{
       "src": "6",
       "dst": 5
@@ -67,3 +59,4 @@
     }]
   }
 }
+

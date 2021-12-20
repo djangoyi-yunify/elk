@@ -1,0 +1,77 @@
+{
+    "version": "1.0",
+    "resources": [
+      {
+        "type": "vxnet",
+        "key": "vxnet",
+        "vxnet_name": {
+          "type": "string",
+          "default": "",
+          "required": true,
+          "parameter": true
+        },
+        "mode": {
+          "type": "string",
+          "default": "1",
+          "required": true,
+          "parameter": true
+        },
+        "vxnet_type": {
+          "type": "integer",
+          "default": 1,
+          "required": false,
+          "parameter": true
+        },
+        "vpc": {
+          "Ref": "vxnet_vpc"
+        }
+      },
+      {
+        "type": "vpc",
+        "key": "vxnet_vpc",
+        "coupon_id": {
+          "type": "string",
+          "default": "",
+          "required": true,
+          "parameter": true
+        },
+        "router_name": {
+          "type": "string",
+          "default": "",
+          "required": true,
+          "parameter": true
+        },
+        "vpc_network": {
+          "type": "string",
+          "default": "192.168.0.0/16",
+          "required": false,
+          "parameter": true
+        },
+        "vpc_ipv6_network": {
+          "type": "string",
+          "default": "",
+          "required": false,
+          "parameter": true
+        },
+        "router_type": {
+          "type": "integer",
+          "default": 1,
+          "required": false,
+          "parameter": true
+        },
+        "base_vxnet": {
+          "type": "string",
+          "default": "",
+          "required": false,
+          "parameter": true
+        },
+        "security_group": {
+          "type": "string",
+          "default": "",
+          "required": false,
+          "parameter": true
+        }
+      }
+    ]
+  }
+  
