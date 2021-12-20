@@ -7,6 +7,7 @@
     "scale_horizontal"
   ],
   "upgrade_policy": [
+    "appv-awfpglqn",
     "appv-wdtrs13h",
     "appv-7z9cbi2f"
   ],
@@ -16,7 +17,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-ahnhxy6n"
     },
     "instance_class": {{cluster.es_node.instance_class}},
     "count": {{cluster.es_node.count}},
@@ -231,7 +232,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-ahnhxy6n"
     },
     "instance_class": {{cluster.es_master_node.instance_class}},
     "count": {{cluster.es_master_node.count}},
@@ -437,7 +438,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-ahnhxy6n"
     },
     "instance_class": {{cluster.es_node_2.instance_class}},
     "count": {{cluster.es_node_2.count}},
@@ -652,7 +653,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-a2ntf2gf"
+      "image": "img-ahnhxy6n"
     },
     "instance_class": {{cluster.es_node_3.instance_class}},
     "count": {{cluster.es_node_3.count}},
@@ -867,7 +868,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-aba5ixin"
+      "image": "img-sgkwy0l0"
     },
     "instance_class": {{cluster.lst_node.instance_class}},
     "count": {{cluster.lst_node.count}},
@@ -908,7 +909,8 @@
       "timeout_sec": 10,
       "healthy_threshold": 2,
       "unhealthy_threshold": 2,
-      "check_cmd": "appctl check"
+      "check_cmd": "appctl check",
+      "action_cmd": "appctl revive"
     }
   }, {
     "role": "kbn_node",
