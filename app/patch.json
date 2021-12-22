@@ -1,0 +1,79 @@
+{
+    "patch_policy": [""],
+    "patch_nodes": [{
+        "container": {
+            "snapshot": "ss-zpfn21j1",
+            "zone": "pek3"
+        },
+        "patch": [{
+            "mount_role": "es_node",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "mkdir -p /data/patch001 && cp -rf /upgrade/* /data/patch001 && /data/patch001/patch.sh apply"
+        },
+        {
+            "mount_role": "es_master_node",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "mkdir -p /data/patch001 && cp -rf /upgrade/* /data/patch001 && /data/patch001/patch.sh apply"
+        },
+        {
+            "mount_role": "es_node_2",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "mkdir -p /data/patch001 && cp -rf /upgrade/* /data/patch001 && /data/patch001/patch.sh apply"
+        },
+        {
+            "mount_role": "es_node_3",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "mkdir -p /data/patch001 && cp -rf /upgrade/* /data/patch001 && /data/patch001/patch.sh apply"
+        },
+        {
+            "mount_role": "lst_node",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "mkdir -p /data/patch001 && cp -rf /upgrade/* /data/patch001 && /data/patch001/patch.sh apply"
+        }],
+        "rollback": [{
+            "mount_role": "es_node",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/data/patch001/patch.sh rollback"
+        },
+        {
+            "mount_role": "es_master_node",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/data/patch001/patch.sh rollback"
+        },
+        {
+            "mount_role": "es_node_2",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/data/patch001/patch.sh rollback"
+        },
+        {
+            "mount_role": "es_node_3",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/data/patch001/patch.sh rollback"
+        },
+        {
+            "mount_role": "lst_node",
+            "mount_point": "/upgrade",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/data/patch001/patch.sh rollback"
+        }]
+    }]
+}
