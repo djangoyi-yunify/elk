@@ -2,14 +2,15 @@
     "name": {{cluster.name}},
     "description": {{cluster.description}},
     "vxnet": {{cluster.vxnet}},
-    "upgrade_policy": ["appv-dd93di9d", "appv-je6ftfs2", "appv-rgbvk8q2", "appv-3dbgkiwr", "appv-0nbffjvb", "appv-uvvpqdue", "appv-peerfx0a", "appv-2jen6hgl"],
+    "upgrading_policy": "sequential",
+    "upgrade_policy": ["appv-7xf9bg1l","appv-peerfx0a"],
     "nodes": [
         {
             "role": "es_node",
             "container": {
                 "type": "kvm",
                 "zone": "pek3a",
-                "image": "img-q6pd0byf"
+                "image": "img-6rtnsl2h"
             },
             "instance_class": {{cluster.es_node.instance_class}},
             "count": {{cluster.es_node.count}},
@@ -22,16 +23,16 @@
             "vertical_scaling_policy": "sequential",
             "services": {
                 "init": {
-                    "cmd": "/opt/common/bin/init.sh elasticsearch:v1.2.6"
+                    "cmd": "/opt/common/bin/init.sh elasticsearch:v1.2.7"
                 },
                 "start": {
-                    "cmd": "/opt/common/bin/start.sh elasticsearch:v1.2.6"
+                    "cmd": "/opt/common/bin/start.sh elasticsearch:v1.2.7"
                 },
                 "stop": {
-                    "cmd": "/opt/common/bin/stop.sh elasticsearch:v1.2.6"
+                    "cmd": "/opt/common/bin/stop.sh elasticsearch:v1.2.7"
                 },
                 "restart": {
-                    "cmd": "/opt/common/bin/dorestart.sh elasticsearch:v1.2.6"
+                    "cmd": "/opt/common/bin/dorestart.sh elasticsearch:v1.2.7"
                 },
                 "scale_in": {
                     "nodes_to_execute_on": 1,
@@ -42,6 +43,10 @@
                 "collect_es_log": {
                     "cmd": "/opt/common/bin/collect_es_log.sh",
                     "type": "custom"
+                },
+                "upgrade": {
+                    "cmd": ":",
+                    "order": 1
                 }
             },
             "env": {
@@ -85,11 +90,11 @@
                 "healthy_threshold": 2,
                 "unhealthy_threshold": 2,
                 "check_cmd": "curl --connect-timeout 10 http://localhost:80/ && curl --connect-timeout 10 http://localhost:9200/",
-                "action_cmd": "systemctl start caddy;/opt/common/bin/start.sh elasticsearch:v1.2.6"
+                "action_cmd": "systemctl start caddy;/opt/common/bin/start.sh elasticsearch:v1.2.7"
             },
             "monitor": {
                 "enable": true,
-                "cmd": "/opt/common/bin/monitor.sh elasticsearch:v1.2.6",
+                "cmd": "/opt/common/bin/monitor.sh elasticsearch:v1.2.7",
                 "items": {
                     "cluster_status": {
                         "unit": "",
@@ -227,7 +232,7 @@
             "container": {
                 "type": "kvm",
                 "zone": "pek3a",
-                "image": "img-u9npxydv"
+                "image": "img-j1mfajyt"
             },
             "instance_class": {{cluster.lst_node.instance_class}},
             "count": {{cluster.lst_node.count}},
@@ -249,6 +254,10 @@
                 },
                 "restart": {
                     "cmd": "/usr/share/logstash/sbin/dorestart.sh"
+                },
+                "upgrade": {
+                    "cmd": ":",
+                    "order": 2
                 }
             },
             "env": {
