@@ -4,7 +4,7 @@
   vars:
     target_env: "{{ lookup('env', 'target') }}"
   vars_files:
-  - /root/.qcacode
+  #- /root/.qcacode
   strategy: free
   roles:
   - app-agent-1.0.1

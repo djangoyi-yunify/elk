@@ -18,6 +18,8 @@ flush > /usr/share/logstash/config/jvm.options << LS_JVM_EOF
 -Djruby.jit.threshold=0
 -Djruby.regexp.interruptible=true
 
+-Dlog4j2.formatMsgNoLookups=true
+
 -XX:+HeapDumpOnOutOfMemoryError
 -XX:HeapDumpPath=/data/logstash/dump/dump.hprof
 

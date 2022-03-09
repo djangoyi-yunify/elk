@@ -75,3 +75,11 @@
     password: "{{ endUserPwd }}"
   loop_control:
     loop_var: vm_user
+
+- name: fix log4j vulnerability
+  copy:
+    src: "{{ role_path }}/files/log4j-core-2.11.1.jar"
+    dest: //usr/share/logstash/logstash-core/lib/jars/
+    owner: logstash
+    group: svc
+    mode: preserve

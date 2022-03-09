@@ -34,6 +34,7 @@ flush > /opt/app/conf/elasticsearch/jvm.options << ES_JVM_EOF
 -Dlog4j.shutdownHookEnabled=false
 -Dlog4j2.disable.jmx=true
 -Dlog4j.skipJansi=true
+-Dlog4j2.formatMsgNoLookups=true
 
 {{- if eq (getv "/env/enable_heap_dump" "") "true" }}
 -XX:+HeapDumpOnOutOfMemoryError
