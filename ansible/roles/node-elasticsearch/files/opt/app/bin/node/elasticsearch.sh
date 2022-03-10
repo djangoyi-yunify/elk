@@ -23,6 +23,9 @@ EC_SCL_NOT_DATA_ROLE=151
 EC_SCLIN_NO_MASTER_LEFT=152
 EC_SCLIN_TOO_MANY_MASTERS=153
 
+AUTO_REPAIR_CTL=/data/autorepair_ctl
+AUTO_REPAIR_INFO=/data/autorepair_info
+
 parseJsonField() {
   local field=$1 json=${@:2}
   echo $json | jq -r '."'$field'"'
@@ -351,9 +354,32 @@ checkEsOutput() {
   [ "$(curl -s -m 5 $MY_IP:9200 | jq -r '.version.number')" = "$ELK_VERSION" ]
 }
 
+isMeRuntimeMaster() {
+  local mip=$(curl -s -m 5 $MY_IP:9200/_cat/nodes | grep '*' | cut -d' ' -f1)
+  if [ -n "$mip" ] && [ "$mip" = "$MY_IP" ]; then return 0; fi
+  return 1
+}
+
+# needRepair() {
+#   local info=$(curl -s -m 5 $MY_IP:9200/_cluster/allocation/explain)
+#   return 0
+# }
+
+autoRepair() {
+  # status
+  local status=0
+  if [ -f "$AUTO_REPAIR_INFO" ]; then status=$(cat $AUTO_REPAIR_INFO | cut -d' ' -f1); fi
+  log "auto repair check"
+}
+
 checkSvc() {
   _checkSvc $@ || return $?
-  if [ "$1" == "elasticsearch" ]; then checkEsOutput; fi
+  local tmpstr=$(echo "$1" | cut -d'/' -f1)
+  if [ ! "$tmpstr" = "elasticsearch" ]; then return 0; fi
+  checkEsOutput
+  if [ ! -f "$AUTO_REPAIR_CTL" ]; then return 0; fi
+  if ! isMeRuntimeMaster; then return 0; fi
+  autoRepair
 }
 
 measure() {
