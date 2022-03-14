@@ -25,6 +25,7 @@ EC_SCLIN_TOO_MANY_MASTERS=153
 
 AUTO_REPAIR_CTL=/data/autorepair_ctl
 AUTO_REPAIR_INFO=/data/autorepair_info
+AUTO_REPAIR_INTERVAL=600 # take action every 600 seconds
 
 parseJsonField() {
   local field=$1 json=${@:2}
@@ -49,6 +50,8 @@ initNode() {
   prepareEsDirs
   local htmlPath=/data/elasticsearch/index.html
   [ -e $htmlPath ] || ln -s /opt/app/conf/caddy/index.html $htmlPath
+  # turn on autorepair
+  touch $AUTO_REPAIR_CTL
 }
 
 start() {
@@ -360,16 +363,42 @@ isMeRuntimeMaster() {
   return 1
 }
 
-# needRepair() {
-#   local info=$(curl -s -m 5 $MY_IP:9200/_cluster/allocation/explain)
-#   return 0
-# }
+needRepair() {
+  local info=$(curl -s -m 30 $MY_IP:9200/_cluster/allocation/explain)
+  echo "$info" | grep '\[/_cluster/reroute?retry_failed=true\]' >/dev/null 2>&1
+}
 
 autoRepair() {
-  # status
-  local status=0
-  if [ -f "$AUTO_REPAIR_INFO" ]; then status=$(cat $AUTO_REPAIR_INFO | cut -d' ' -f1); fi
-  log "auto repair check"
+  # use the last error time to determin when to repair
+  local lasttime=""
+  if [ -f $AUTO_REPAIR_INFO ]; then lasttime=$(cat $AUTO_REPAIR_INFO); fi
+  
+  local nr="false"
+  if needRepair; then nr="true"; fi
+
+  if [ $nr = "false" ] && [ -n "$lasttime" ]; then
+    log "auto repair: already repaired! clear recorded time"
+    : > $AUTO_REPAIR_INFO
+    return 0
+  fi
+  if [ $nr = "true" ] && [ -z "$lasttime" ]; then
+    log "auto repair: first detected! record the time"
+    date -Ins > $AUTO_REPAIR_INFO
+    return 0
+  fi
+
+  local timediff
+  if [ $nr = "true" ] && [ -n "$lasttime" ]; then
+    log "auto repair: check if $AUTO_REPAIR_INTERVAL seconds is up"
+    timediff=$(($(date +%s)-$(date +%s -d "$lasttime")))
+    if [ $timediff -gt $AUTO_REPAIR_INTERVAL ]; then
+      log "auto repair: call reroute"
+      date -Ins > $AUTO_REPAIR_INFO
+      curl -s -m 30 -XPOST $MY_IP:9200/_cluster/reroute?retry_failed=true | :
+    else
+      log "auto repair: wait for $(($AUTO_REPAIR_INTERVAL - $timediff)) seconds to trigger"
+    fi
+  fi
 }
 
 checkSvc() {
